@@ -71,9 +71,10 @@ export default defineContentScript({
               width: 0 !important;
               height: 0 !important;
             }
-            html, body {
+            html, body, * {
               scrollbar-width: none !important;
               -ms-overflow-style: none !important;
+              scroll-behavior: auto !important;
             }
           `;
           document.head.appendChild(scrollbarStyleEl);
@@ -118,27 +119,30 @@ export default defineContentScript({
       return result;
     };
 
-    // 智能处理吸顶与吸底元素
+    // 智能处理吸顶与吸底元素（精准识别全局顶部栏与底部挂件，绝不误伤正文业务组件）
     const toggleFixedElements = (hideTop: boolean, hideBottom: boolean) => {
-      const fixedEls = Array.from(document.querySelectorAll<HTMLElement>('*')).filter((el) => {
+      const allFixed = Array.from(document.querySelectorAll<HTMLElement>('*')).filter((el) => {
         if (el.id === '__100free_screenshot_indicator__' || el.id === '__100free_table_overlay__') return false;
         const pos = window.getComputedStyle(el).position;
-        return pos === 'fixed' || pos === 'sticky';
+        return pos === 'fixed';
       });
 
-      fixedEls.forEach((el) => {
+      allFixed.forEach((el) => {
         const rect = el.getBoundingClientRect();
-        const isNearBottom = rect.bottom > window.innerHeight - 80 && rect.top > window.innerHeight / 2;
+        // 只有紧贴视口顶部且高度适中的全局导航栏才算吸顶栏
+        const isHeader = rect.top <= 10 && rect.height <= 140 && rect.width >= window.innerWidth * 0.5;
+        // 只有紧贴视口底部的挂件才算吸底栏
+        const isFooter = rect.bottom >= window.innerHeight - 30 && rect.top > window.innerHeight / 2;
 
-        if (isNearBottom) {
-          if (hideBottom) {
+        if (isHeader) {
+          if (hideTop) {
             el.dataset.screenshotOriginalVisibility = el.style.visibility || '';
             el.style.visibility = 'hidden';
           } else {
             el.style.visibility = el.dataset.screenshotOriginalVisibility || '';
           }
-        } else {
-          if (hideTop) {
+        } else if (isFooter) {
+          if (hideBottom) {
             el.dataset.screenshotOriginalVisibility = el.style.visibility || '';
             el.style.visibility = 'hidden';
           } else {
@@ -148,9 +152,9 @@ export default defineContentScript({
       });
     };
 
-    // 拼接多屏并触发下载（精确基于 clientWidth 绘制，剔除多余边距）
+    // 拼接多屏并触发下载（工业级增量缝合，按实际像素步进严丝合缝）
     const stitchAndDownload = async (
-      slices: ScreenShotSlice[],
+      slices: { dataUrl: string; sourceY: number; drawHeight: number }[],
       contentWidth: number,
       totalHeight: number,
       dpr: number,
@@ -162,11 +166,12 @@ export default defineContentScript({
       }
 
       const canvas = document.createElement('canvas');
-      canvas.width = contentWidth * dpr;
-      canvas.height = totalHeight * dpr;
+      canvas.width = Math.round(contentWidth * dpr);
+      canvas.height = Math.round(totalHeight * dpr);
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      let currentDrawY = 0;
       for (const slice of slices) {
         await new Promise<void>((resolve) => {
           const img = new Image();
@@ -174,14 +179,15 @@ export default defineContentScript({
             ctx.drawImage(
               img,
               0,
-              slice.sourceY * dpr,
-              contentWidth * dpr,
-              slice.sourceHeight * dpr,
+              Math.round(slice.sourceY * dpr),
+              Math.round(contentWidth * dpr),
+              Math.round(slice.drawHeight * dpr),
               0,
-              slice.y * dpr,
-              contentWidth * dpr,
-              slice.sourceHeight * dpr
+              Math.round(currentDrawY * dpr),
+              Math.round(contentWidth * dpr),
+              Math.round(slice.drawHeight * dpr)
             );
+            currentDrawY += slice.drawHeight;
             resolve();
           };
           img.src = slice.dataUrl;
@@ -202,7 +208,7 @@ export default defineContentScript({
       hideProgress();
     };
 
-    // 核心自动滚动截屏引擎（支持 1x 标准与 2x 矢量级高清）
+    // 工业级自动滚动截屏引擎（基于真实滚动增量追加，杜绝断裂、留白与重复）
     const startFullPageCapture = async (options?: { hd?: boolean }) => {
       const isHd = !!options?.hd;
       const originalScrollY = window.scrollY;
@@ -210,83 +216,119 @@ export default defineContentScript({
       let originalZoom: number | null = null;
 
       try {
-        // 如果开启了高清模式，临时将当前 Tab 渲染缩放提升为 2.0x 矢量超清
         if (isHd) {
           const zoomRes = await chrome.runtime.sendMessage({ type: 'SET_TAB_ZOOM', zoom: 2.0 });
           if (zoomRes?.success && typeof zoomRes.originalZoom === 'number') {
             originalZoom = zoomRes.originalZoom;
           }
-          await new Promise((r) => setTimeout(r, 120));
+          await new Promise((r) => setTimeout(r, 150));
         }
 
-        // 核心一：在截屏全程动态隐藏浏览器原生滚动条并等待样式生效
+        // 核心：在截屏全程动态隐藏浏览器原生滚动条并强制禁用平滑滚动
         await toggleScrollbars(true);
 
-        // 隐藏滚动条后再读取视口与内容尺寸，确保无滚动条挤压误差
         const contentWidth = document.documentElement.clientWidth || window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const fullHeight = Math.max(
-          document.documentElement.scrollHeight,
-          document.body.scrollHeight,
-          viewportHeight
-        );
-
         const dpr = window.devicePixelRatio || 1;
-        const totalScreens = Math.ceil(fullHeight / viewportHeight);
-        const slices: ScreenShotSlice[] = [];
 
-        for (let i = 0; i < totalScreens; i++) {
-          const isFirstScreen = i === 0;
-          const isLastScreen = i === totalScreens - 1;
+        // 先滚到最顶部起始点
+        window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+        await new Promise((r) => setTimeout(r, 100));
 
-          let targetScrollY = i * viewportHeight;
-          let sourceY = 0;
-          let sourceHeight = viewportHeight;
+        let currentScrollY = window.scrollY;
+        let screenIndex = 0;
+        const slices: { dataUrl: string; sourceY: number; drawHeight: number }[] = [];
+        let accumulatedHeight = 0;
 
-          if (isLastScreen && totalScreens > 1) {
-            targetScrollY = fullHeight - viewportHeight;
-            const overlap = (i * viewportHeight) - targetScrollY;
-            sourceY = overlap;
-            sourceHeight = viewportHeight - overlap;
-          }
+        // 最大保护步数（防止极端死循环页面）
+        const MAX_STEPS = 60;
 
-          window.scrollTo(0, targetScrollY);
-          showProgress(i + 1, totalScreens, isHd);
+        while (screenIndex < MAX_STEPS) {
+          const isFirstScreen = screenIndex === 0;
 
-          // 等待页面滚动静止
-          await new Promise((r) => setTimeout(r, 200));
+          // 吸顶与吸底状态控制：非第一屏隐藏吸顶；只要还能往下滚就隐藏吸底
+          toggleFixedElements(!isFirstScreen, true);
 
-          // 智能吸顶与吸底元素显隐
-          toggleFixedElements(!isFirstScreen, !isLastScreen);
+          showProgress(screenIndex + 1, Math.max(screenIndex + 1, Math.ceil(document.documentElement.scrollHeight / viewportHeight)), isHd);
 
-          // 核心：强制隐藏指示器并拍照
+          // 核心：强制隐藏自身指示器并抓取当前视口
           const response = await withInvisibleIndicator(async () => {
             return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
           });
 
-          if (response?.success && response.dataUrl) {
+          if (!response?.success || !response.dataUrl) {
+            console.error('[100Free Screenshot] 视口捕获失败');
+            break;
+          }
+
+          if (isFirstScreen) {
+            // 第一屏：完整使用当前视口高度
             slices.push({
-              y: i * viewportHeight,
               dataUrl: response.dataUrl,
-              sourceY,
-              sourceHeight
+              sourceY: 0,
+              drawHeight: viewportHeight
             });
+            accumulatedHeight += viewportHeight;
+          }
+
+          // 计算尝试滚动的下一个目标
+          const targetY = currentScrollY + viewportHeight;
+          window.scrollTo({ left: 0, top: targetY, behavior: 'instant' });
+
+          // 等待滚动瞬时完成与 DOM 稳定
+          await new Promise((r) => setTimeout(r, 220));
+
+          const newScrollY = window.scrollY;
+          const actualDelta = newScrollY - currentScrollY;
+
+          // 如果滚动位置没有发生任何位移，说明已经触碰页面物理最底部！
+          if (actualDelta <= 1) {
+            // 如果只有一屏，第一屏已经添加，直接结束
+            break;
+          }
+
+          // 抓取新露出的增量内容
+          // 增量实际位移是 actualDelta，新内容位于当前视口底部的 actualDelta 区域
+          currentScrollY = newScrollY;
+          screenIndex++;
+
+          // 如果这是最后一屏（已经滚到底部，恢复吸底元素呈现）
+          const isAtBottom = currentScrollY + viewportHeight >= document.documentElement.scrollHeight - 2;
+          toggleFixedElements(true, !isAtBottom);
+
+          // 再次抓取移动后的视口
+          const nextResponse = await withInvisibleIndicator(async () => {
+            return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+          });
+
+          if (nextResponse?.success && nextResponse.dataUrl) {
+            // 源图像只裁取底部新露出的 actualDelta 高度
+            const sourceY = Math.max(0, viewportHeight - actualDelta);
+            slices.push({
+              dataUrl: nextResponse.dataUrl,
+              sourceY,
+              drawHeight: actualDelta
+            });
+            accumulatedHeight += actualDelta;
+          }
+
+          if (isAtBottom) {
+            break;
           }
         }
 
-        // 拼接下载（只裁剪有效 contentWidth，杜绝任何滚动条边缘）
-        await stitchAndDownload(slices, contentWidth, fullHeight, dpr, isHd);
+        // 最终拼接并下载
+        await stitchAndDownload(slices, contentWidth, accumulatedHeight, dpr, isHd);
       } catch (err) {
         console.error('[100Free Screenshot] 截屏异常:', err);
         hideProgress();
       } finally {
-        // 彻底还原元素、滚动条、页面缩放与滚动位置
         toggleFixedElements(false, false);
         await toggleScrollbars(false);
         if (originalZoom !== null) {
           await chrome.runtime.sendMessage({ type: 'RESTORE_TAB_ZOOM', originalZoom });
         }
-        window.scrollTo(originalScrollX, originalScrollY);
+        window.scrollTo({ left: originalScrollX, top: originalScrollY, behavior: 'instant' });
       }
     };
 

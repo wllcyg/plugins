@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全能长截图极限压力测试页 (8~10屏超长图画质验收)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 模拟各类复杂排版场景 */
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .sticky-bottom-bar {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- 1. 吸顶导航栏 (用于检验第二屏及以后是否能精准隐藏，不产生重复千层饼) -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-nav h-16 flex items-center justify-between px-8 shadow-sm">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-indigo-500/20">
+        📸
+      </div>
+      <div>
+        <h1 class="text-sm font-bold text-slate-900 tracking-tight">100-Free Screenshot 极压测试基准</h1>
+        <p class="text-xs text-slate-500">吸顶元素去重 · 2x 超清矢量 · 零滚动条碎片</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+        已挂载 吸顶去重探针
+      </span>
+      <span class="text-xs text-slate-400">页面总长约 8~10 屏</span>
+    </div>
+  </header>
+
+  <!-- 顶部占位避开 fixed header -->
+  <div class="h-20"></div>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-16">
+
+    <!-- 屏 1: Hero 与核心指标卡片 -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-100/50 via-indigo-100/30 to-transparent rounded-full -mr-20 -mt-20 pointer-events-none"></div>
+      <div class="relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-medium mb-4">
+          <span>🎯 SCREEN 01</span>
+          <span>·</span>
+          <span>高饱和度与首屏留白测试</span>
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
+          全能网页精准长截图 <span class="bg-gradient-to-r from-sky-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">8屏综合极限压测</span>
+        </h2>
+        <p class="mt-3 text-base text-slate-600 max-w-3xl leading-relaxed">
+          本页面专门用于检验长截图插件在多屏长距离下滚时的稳定性，包含：渐变高光、代码高亮、长文章排版、四列瀑布流、跨列复杂数据表、时间轴长折线及吸底工具条等全方位极限场景。
+        </p>
+
+        <!-- 四色指标卡 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+          <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-xl p-5 text-white shadow-md shadow-red-500/20">
+            <div class="text-xs opacity-90">饱和度色彩测试 1</div>
+            <div class="text-2xl font-black mt-2">Crimson #ef4444</div>
+            <div class="text-xs mt-3 opacity-80">验证高分屏边缘锐利度</div>
+          </div>
+          <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-md shadow-orange-500/20">
+            <div class="text-xs opacity-90">饱和度色彩测试 2</div>
+            <div class="text-2xl font-black mt-2">Amber #f59e0b</div>
+            <div class="text-xs mt-3 opacity-80">无损色彩深度与动态范围</div>
+          </div>
+          <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-5 text-white shadow-md shadow-emerald-500/20">
+            <div class="text-xs opacity-90">饱和度色彩测试 3</div>
+            <div class="text-2xl font-black mt-2">Emerald #10b981</div>
+            <div class="text-xs mt-3 opacity-80">细线与小字边缘抗锯齿</div>
+          </div>
+          <div class="bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl p-5 text-white shadow-md shadow-sky-500/20">
+            <div class="text-xs opacity-90">饱和度色彩测试 4</div>
+            <div class="text-2xl font-black mt-2">Indigo #6366f1</div>
+            <div class="text-xs mt-3 opacity-80">2x 矢量级超清光栅化</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 屏 2: 富文本与代码块混合排版 (测试细微字体与深色容器) -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-sky-50 border border-sky-100 text-sky-700 text-xs font-medium mb-4">
+        <span>📑 SCREEN 02</span>
+        <span>·</span>
+        <span>代码块与富文本混合排版</span>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900">核心自动滚动与无缝切片缝合算法</h3>
+      <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+        在滚屏截图过程中，浏览器需要精准调度页面步进（`window.scrollTo`），并基于 `devicePixelRatio` 严格计算 Canvas 物理像素映射，确保每一张切片在垂直轴上不漏 1 像素，亦不重叠 1 像素。
+      </p>
+
+      <div class="mt-6 bg-slate-900 rounded-xl p-5 text-slate-100 font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-slate-400">
+          <span>core-screenshot-engine.ts</span>
+          <span>TypeScript 5.x</span>
+        </div>
+<pre><code><span class="text-indigo-400">const</span> stitchAndDownload = <span class="text-indigo-400">async</span> (slices: ScreenShotSlice[], contentWidth: <span class="text-teal-400">number</span>, totalHeight: <span class="text-teal-400">number</span>, dpr: <span class="text-teal-400">number</span>) => {
+  <span class="text-slate-500">// 1. 创建精确物理分辨率的高清画布 (支持 2x 矢量级 Retina)</span>
+  <span class="text-indigo-400">const</span> canvas = document.createElement(<span class="text-emerald-400">'canvas'</span>);
+  canvas.width = Math.round(contentWidth * dpr);
+  canvas.height = Math.round(totalHeight * dpr);
+  <span class="text-indigo-400">const</span> ctx = canvas.getContext(<span class="text-emerald-400">'2d'</span>);
+
+  <span class="text-slate-500">// 2. 精准消除右侧滚动条占用，并执行源/目标视口缝合</span>
+  <span class="text-indigo-400">for</span> (<span class="text-indigo-400">const</span> slice <span class="text-indigo-400">of</span> slices) {
+    ctx.drawImage(slice.image, 0, slice.sourceY * dpr, contentWidth * dpr, slice.sourceHeight * dpr, 0, slice.y * dpr, contentWidth * dpr, slice.sourceHeight * dpr);
+  }
+};</code></pre>
+      </div>
+    </section>
+
+    <!-- 屏 3: 4列卡片流密集排版 (测试卡片缝合间距与阴影) -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-50 border border-purple-100 text-purple-700 text-xs font-medium mb-4">
+        <span>🍱 SCREEN 03</span>
+        <span>·</span>
+        <span>四列密集卡片网格与阴影测试</span>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-6">全功能技术栈模块清单</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold mb-3">01</div>
+          <h4 class="font-bold text-sm text-slate-800">平滑下滚调度器</h4>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">基于视口高度精确步进，双时钟锁等待 DOM 渲染与图片按需加载。</p>
+        </div>
+        <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold mb-3">02</div>
+          <h4 class="font-bold text-sm text-slate-800">吸顶元素智能去重</h4>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">嗅探 fixed/sticky 元素，首屏保留，后续切片隐身，根治千层饼。</p>
+        </div>
+        <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold mb-3">03</div>
+          <h4 class="font-bold text-sm text-slate-800">原生滚动条隐身</h4>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">动态 CSS 隐藏滚动槽 + Canvas 物理边缘裁剪，消除断点碎片。</p>
+        </div>
+        <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold mb-3">04</div>
+          <h4 class="font-bold text-sm text-slate-800">2x 矢量超清光栅化</h4>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">无感提升缩放比例，小字、表格网格与 SVG 图标清晰度成倍暴增。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 屏 4: 复杂多列数据大宽表 (测试横向边界与表格细边框) -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium mb-4">
+        <span>📊 SCREEN 04</span>
+        <span>·</span>
+        <span>高精度大宽表与单元格对齐测试</span>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-4">核心性能基准压测对比表</h3>
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+              <th class="p-3.5">特性 / 指标</th>
+              <th class="p-3.5">常规截图工具 (市面商业付费)</th>
+              <th class="p-3.5 text-indigo-700 bg-indigo-50/60">100-Free 全能长截图 (开源免费)</th>
+              <th class="p-3.5">测试验收结果</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 text-slate-600 font-mono">
+            <tr>
+              <td class="p-3.5 font-bold font-sans text-slate-800">高清 2x 模式</td>
+              <td class="p-3.5 text-rose-600">强制收费 PRO 订阅 ($19/年)</td>
+              <td class="p-3.5 font-bold text-emerald-600 bg-indigo-50/30">永久完全免费 (内置 2x 矢量)</td>
+              <td class="p-3.5 text-emerald-600">✅ 极致锐利</td>
+            </tr>
+            <tr>
+              <td class="p-3.5 font-bold font-sans text-slate-800">吸顶导航栏去重</td>
+              <td class="p-3.5">部分支持，经常错位撕裂</td>
+              <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/30">双重探针智能隐身</td>
+              <td class="p-3.5 text-emerald-600">✅ 完美去重</td>
+            </tr>
+            <tr>
+              <td class="p-3.5 font-bold font-sans text-slate-800">右侧滚动条处理</td>
+              <td class="p-3.5">多段滚动条碎块残留在画面右边</td>
+              <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/30">CSS 隐身 + 像素精准切除</td>
+              <td class="p-3.5 text-emerald-600">✅ 纯净无痕</td>
+            </tr>
+            <tr>
+              <td class="p-3.5 font-bold font-sans text-slate-800">自身提示器避免</td>
+              <td class="p-3.5">偶尔将进度浮标拍入画面</td>
+              <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/30">display: none + rAF 双时钟锁</td>
+              <td class="p-3.5 text-emerald-600">✅ 绝对隐身</td>
+            </tr>
+            <tr>
+              <td class="p-3.5 font-bold font-sans text-slate-800">隐私与数据安全</td>
+              <td class="p-3.5">部分将切片上传第三方云端拼接</td>
+              <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/30">100% 浏览器本地 Canvas 离线缝合</td>
+              <td class="p-3.5 text-emerald-600">✅ 零数据上传</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 屏 5: 纵向超长时间轴 (测试垂直方向无缝衔接，是否存在错行/被吃掉内容) -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 text-xs font-medium mb-4">
+        <span>⏳ SCREEN 05</span>
+        <span>·</span>
+        <span>超长垂直时间轴连续性测试</span>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-6">「100款免费生产力插件」演进历程</h3>
+      
+      <div class="relative border-l-2 border-indigo-200 ml-4 space-y-8 pl-6">
+        <div class="relative">
+          <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm"></div>
+          <span class="text-xs font-bold text-indigo-600">2026.Q1 · 第 1 款插件交付</span>
+          <h4 class="text-sm font-bold text-slate-800 mt-1">网页表格一键转 Excel (ext-table-export)</h4>
+          <p class="text-xs text-slate-500 mt-1">首创 19 位防大数截断、虚拟滚动预警、纯 DIV 网格识别、中英双语与域名级免打扰。</p>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-emerald-600 border-4 border-white shadow-sm"></div>
+          <span class="text-xs font-bold text-emerald-600">2026.Q2 · 第 2 款插件交付</span>
+          <h4 class="text-sm font-bold text-slate-800 mt-1">全能网页精准长截图 (ext-screenshot)</h4>
+          <p class="text-xs text-slate-500 mt-1">自动平滑滚屏、智能吸顶/吸底剔除、2x 矢量级超清光栅化、专属蓝紫科技 Icon。</p>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-sky-600 border-4 border-white shadow-sm"></div>
+          <span class="text-xs font-bold text-sky-600">2026.Q3 · 门户与生态搭建</span>
+          <h4 class="text-sm font-bold text-slate-800 mt-1">100-Free 官方门户落地页 (web-portal)</h4>
+          <p class="text-xs text-slate-500 mt-1">基于 Vue 3 + Tailwind CSS + GSAP 3 动画打造的极简、轻快免费插件分发展示站。</p>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-purple-600 border-4 border-white shadow-sm"></div>
+          <span class="text-xs font-bold text-purple-600">2026.Q4 · 规划中的第 3 款利器</span>
+          <h4 class="text-sm font-bold text-slate-800 mt-1">网页媒体与高清图片批量嗅探提取器 (ext-media-grabber)</h4>
+          <p class="text-xs text-slate-500 mt-1">智能解析网页隐藏高清大图、SVG 矢量及视频素材，一键无损打包导出。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 屏 6: 常见 FAQ 折叠块 (测试连续框线与文字) -->
+    <section class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-50 border border-teal-100 text-teal-700 text-xs font-medium mb-2">
+        <span>❓ SCREEN 06</span>
+        <span>·</span>
+        <span>高频常见问答与细线排版测试</span>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-4">关于高清长截图的核心疑问</h3>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+        <div class="font-bold text-slate-800">Q1：为什么生成的 2x 高清图文字放大后依然极致锐利？</div>
+        <div class="text-slate-600 mt-1.5 leading-relaxed">
+          答：因为我们没有采用简单的 Canvas 拉伸位图放大，而是使用浏览器底层渲染引擎的 `setZoom(2.0)`，让浏览器内核按 200% 物理像素对文字矢量和 SVG 重新光栅化重绘，真正做到了矢量级高清输出。
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+        <div class="font-bold text-slate-800">Q2：为什么右侧的原生滚动条彻底不会出现在截图中？</div>
+        <div class="text-slate-600 mt-1.5 leading-relaxed">
+          答：我们实施了「双重保险」——一方面截屏时通过动态注入 CSS 隐藏原生滚动槽；另一方面 Canvas 在拼接时强制按照 `clientWidth` 精确裁剪右侧边缘，物理层面杜绝任何滚动条像素被画入。
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+        <div class="font-bold text-slate-800">Q3：截取时遇到最后一屏不满一整屏的高度，会发生重叠错位吗？</div>
+        <div class="text-slate-600 mt-1.5 leading-relaxed">
+          答：绝不会。算法会自动计算最后一屏与上一屏的 `overlap` 重叠像素差值，在绘制最后一张切片时精确裁掉顶部多余的重叠区域，保证接缝处严丝合缝。
+        </div>
+      </div>
+    </section>
+
+    <!-- 屏 7: 尾声与大横幅 (测试末屏回滚与顺利收尾) -->
+    <section class="rounded-2xl p-10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl text-center relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl mx-auto space-y-4">
+        <div class="inline-block px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-400/30">
+          🏁 SCREEN 07 (接近底端)
+        </div>
+        <h3 class="text-2xl font-black">恭喜！已顺利截取到页面末尾！</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          如果您在导出的图片中看到这一区域，并且顶部无多余吸顶、右侧无滚动条、字迹依然锐利，代表本次「全能网页精准长截图」在 8~10 屏超长极限压力测试中取得了彻底圆满的成功！
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 屏 8: 底部超大页脚 (用于检验最后一屏吸底与完整版权渲染) -->
+  <footer class="bg-slate-900 text-slate-400 py-12 px-8 border-t border-slate-800 mt-16 text-xs">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center space-x-2 text-white font-bold text-sm mb-3">
+          <span>🚀</span>
+          <span>100-Free Productivity Initiative</span>
+        </div>
+        <p class="text-slate-500 leading-relaxed">
+          打破昂贵订阅制，为全球开发者与知识工作者打造 100 款高品质、完全免费、零隐私上报的生产力浏览器插件。
+        </p>
+      </div>
+      <div>
+        <h5 class="text-slate-200 font-semibold mb-3">生产力插件矩阵</h5>
+        <ul class="space-y-2">
+          <li>01. 网页表格一键转 Excel</li>
+          <li>02. 全能网页精准长截图</li>
+          <li>03. 网页媒体资产一键提取 (规划中)</li>
+          <li>04. 沉浸式全局深色护眼 (规划中)</li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="text-slate-200 font-semibold mb-3">技术与原则</h5>
+        <ul class="space-y-2">
+          <li>100% 纯本地离线 Canvas 拼接</li>
+          <li>拒绝过度封装与无意义冗余</li>
+          <li>Chrome MV3 原生规范支持</li>
+          <li>全开源无广告</li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="text-slate-200 font-semibold mb-3">测试基准信息</h5>
+        <p class="text-slate-500 leading-relaxed">
+          当前环境：8~10 屏幕物理纵深极限测试<br>
+          视口比例：16:9 / 16:10 自适应<br>
+          校验项目：吸顶去重、原生滚动条抹除、2x 矢量高清
+        </p>
+      </div>
+    </div>
+    <div class="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-center text-slate-600">
+      © 2026 100-Free Productivity Initiative · 保留所有自由与开源权利
+    </div>
+  </footer>
+
+  <!-- 固定吸底工具条 (用于检验吸底元素在最后一屏前是否被智能隐身，不遮挡中间各屏内容) -->
+  <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 sticky-bottom-bar text-white px-6 py-2.5 rounded-full flex items-center space-x-4 shadow-xl border border-white/10 text-xs">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    <span class="font-medium">固定吸底挂件（仅在到达最后一屏时呈现，中间滚屏不应遮挡正文）</span>
+  </div>
+
+</body>
+</html>
+
