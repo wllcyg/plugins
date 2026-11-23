@@ -152,6 +152,8 @@ export default defineContentScript({
       vueApp = createApp(TableActionBar, {
         rowCount: cachedData.rowCount,
         colCount: cachedData.colCount,
+        isVirtualScroll: cachedData.isVirtualScroll,
+        virtualHint: cachedData.virtualHint,
         onExportExcel: () => {
           if (cachedData) exportToExcel(cachedData);
         },
