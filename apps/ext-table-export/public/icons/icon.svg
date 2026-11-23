@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- 主体圆角矩形 -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#bgGrad)" filter="url(#shadow)" />
+
+  <!-- 内部表格网格 -->
+  <rect x="26" y="26" width="76" height="76" rx="8" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="4" />
+  
+  <!-- 表头分隔线 -->
+  <line x1="26" y1="50" x2="102" y2="50" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- 列分隔线 -->
+  <line x1="56" y1="26" x2="56" y2="102" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- 单元格高亮小格 (右下导出提示) -->
+  <rect x="64" y="58" width="30" height="36" rx="4" fill="#ffffff" />
+  
+  <!-- 绿色下载箭头 -->
+  <path d="M79 66v14m-5-5l5 5 5-5" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
+
