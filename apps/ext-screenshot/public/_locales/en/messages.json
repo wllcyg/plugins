@@ -1,4 +1,112 @@
 {
+  "selectedCapturePreview": {
+    "message": "Open preview"
+  },
+  "resultTitle": {
+    "message": "Screenshot preview"
+  },
+  "resultOpenFailed": {
+    "message": "Could not open the screenshot preview. Try again."
+  },
+  "resultUnavailable": {
+    "message": "This screenshot is unavailable. Capture it again."
+  },
+  "resultCopied": {
+    "message": "Image copied"
+  },
+  "resultCopyFailed": {
+    "message": "Could not copy the image. Download the PNG instead."
+  },
+  "resultZoom": {
+    "message": "Preview zoom"
+  },
+  "resultZoomOut": {
+    "message": "Zoom out"
+  },
+  "resultZoomIn": {
+    "message": "Zoom in"
+  },
+  "resultPrint": {
+    "message": "Print"
+  },
+  "resultPrintFailed": {
+    "message": "Could not print. Download the PNG and try again."
+  },
+  "editorTitle": {
+    "message": "Edit screenshot"
+  },
+  "editorSelect": {
+    "message": "Select"
+  },
+  "editorPan": {
+    "message": "Pan"
+  },
+  "editorRectangle": {
+    "message": "Rectangle"
+  },
+  "editorArrow": {
+    "message": "Arrow"
+  },
+  "editorText": {
+    "message": "Text"
+  },
+  "editorCrop": {
+    "message": "Crop"
+  },
+  "editorColor": {
+    "message": "Color"
+  },
+  "editorFontSize": {
+    "message": "Font size"
+  },
+  "editorPen": {
+    "message": "Pen"
+  },
+  "editorHighlight": {
+    "message": "Highlighter"
+  },
+  "editorRedact": {
+    "message": "Redact"
+  },
+  "editorNumber": {
+    "message": "Number"
+  },
+  "editorStroke": {
+    "message": "Stroke"
+  },
+  "editorDelete": {
+    "message": "Delete"
+  },
+  "editorUndo": {
+    "message": "Undo"
+  },
+  "editorRedo": {
+    "message": "Redo"
+  },
+  "editorFit": {
+    "message": "Fit to window"
+  },
+  "editorBack": {
+    "message": "Back to screenshot"
+  },
+  "editorSave": {
+    "message": "Save and return"
+  },
+  "editorDiscard": {
+    "message": "Discard unsaved edits?"
+  },
+  "editorNavigationShortcuts": {
+    "message": "Space + drag to pan · Space + scroll to zoom"
+  },
+  "editorTools": {
+    "message": "Editing tools"
+  },
+  "editorLoadFailed": {
+    "message": "Could not load the screenshot. Go back and try again."
+  },
+  "editorSaveFailed": {
+    "message": "Could not save the edits. Try again."
+  },
   "extensionName": {
     "message": "Smart Full Page Screenshot - Auto Scroll",
     "description": "Extension name"
@@ -7,17 +115,65 @@
     "message": "One-click auto-scrolling full page screenshot. Smart fixed header de-duplication. 100% private local canvas stitching.",
     "description": "Extension description"
   },
+  "capturePageRestricted": {
+    "message": "Screenshot tools are restricted on this page. Switch to a regular webpage and try again."
+  },
+  "captureStartFailed": {
+    "message": "Could not start capture. Reload the page and try again."
+  },
   "captureFullPage": {
     "message": "Capture Entire Page"
   },
   "captureFullPageHd": {
     "message": "HD Full Page Screenshot"
   },
+  "captureCurrentPosition": {
+    "message": "Capture from current position"
+  },
+  "currentPositionCaptureFailed": {
+    "message": "Could not capture from the current position. Try again."
+  },
   "captureVisible": {
     "message": "Capture Visible Part"
   },
+  "visibleCaptureFailed": {
+    "message": "Could not capture the visible area. Try again."
+  },
   "captureSelected": {
-    "message": "Capture Selected Area"
+    "message": "Capture selected area"
+  },
+  "selectedCaptureHint": {
+    "message": "Drag to select an area. Press Esc to cancel."
+  },
+  "selectedCaptureDownload": {
+    "message": "Download PNG"
+  },
+  "selectedCaptureCopy": {
+    "message": "Copy image"
+  },
+  "selectedCaptureCancel": {
+    "message": "Cancel"
+  },
+  "selectedCaptureFailed": {
+    "message": "Could not capture the selection. Try again."
+  },
+  "selectedCopyFailed": {
+    "message": "Could not copy the image. Select the area again and download it."
+  },
+  "captureScrollArea": {
+    "message": "Capture scrollable area"
+  },
+  "scrollAreaPick": {
+    "message": "Click a scrollable area to capture it. Press Esc to cancel."
+  },
+  "scrollAreaFit": {
+    "message": "Bring the entire scrollable area into view, then try again."
+  },
+  "scrollAreaChanged": {
+    "message": "The scrollable area changed during capture. Try again."
+  },
+  "scrollAreaFailed": {
+    "message": "Could not capture the scrollable area."
   },
   "capturingProgress": {
     "message": "Auto-scrolling capture: screen $CURRENT$ of $TOTAL$...",

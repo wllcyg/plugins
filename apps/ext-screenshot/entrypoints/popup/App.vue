@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Camera, Image as ImageIcon, Monitor, MessageSquare, Globe, Sparkles } from 'lucide-vue-next';
+import { Camera, Image as ImageIcon, Monitor, Globe, Scan, ArrowDownCircle, Crop } from 'lucide-vue-next';
 import { t } from '../../src/utils/i18n';
 
 const isCapturing = ref(false);
+const captureError = ref('');
 
 // 健壮的消息调度器：如果检测到页面尚未注入 Content Script（如重载插件后未刷新网页），自动动态注入并重试
 const sendTabMessage = async (tabId: number, message: Record<string, unknown>) => {
@@ -20,56 +21,53 @@ const sendTabMessage = async (tabId: number, message: Record<string, unknown>) =
         await new Promise((r) => setTimeout(r, 100));
         return await chrome.tabs.sendMessage(tabId, message);
       } catch (injectErr) {
-        console.warn('[100Free Screenshot] 特殊页面受限:', injectErr);
-        alert('提示：无法在 Chrome 系统页面（chrome://）、应用商店或空白标签页中进行截图，请在常规网页上使用。');
-        return;
+        const reason = String(injectErr);
+        if (/Cannot access|Missing host permission|extensions gallery/i.test(reason)) {
+          captureError.value = t('capturePageRestricted');
+          return false;
+        }
+        throw injectErr;
       }
     }
     throw err;
   }
 };
 
-const captureFullPage = async (hd = false) => {
+const startCapture = async (message: Record<string, unknown>) => {
   if (isCapturing.value) return;
   isCapturing.value = true;
+  captureError.value = '';
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      await sendTabMessage(tab.id, { type: 'START_FULL_PAGE_CAPTURE', hd });
-      window.close(); // 关闭 popup 让页面平稳滚动
+    const url = tab?.url ? new URL(tab.url) : undefined;
+    if (!tab?.id || !url || !['http:', 'https:', 'file:'].includes(url.protocol) ||
+        url.hostname === 'chromewebstore.google.com' ||
+        (url.hostname === 'chrome.google.com' && url.pathname.startsWith('/webstore'))) {
+      captureError.value = t('capturePageRestricted');
+      return;
     }
+    const response = await sendTabMessage(tab.id, message);
+    if (response?.success) window.close();
+    else if (!captureError.value) captureError.value = t('captureStartFailed');
+  } catch {
+    captureError.value = t('captureStartFailed');
   } finally {
     isCapturing.value = false;
   }
 };
 
-const captureVisible = async () => {
-  if (isCapturing.value) return;
-  isCapturing.value = true;
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      await sendTabMessage(tab.id, { type: 'CAPTURE_VISIBLE_ONLY' });
-      window.close();
-    }
-  } finally {
-    isCapturing.value = false;
-  }
-};
+const captureFullPage = (hd = false) => startCapture({ type: 'START_FULL_PAGE_CAPTURE', hd });
+const captureMode = (type: string) => startCapture({ type });
 
 const openPortal = () => {
   chrome.tabs.create({ url: 'http://localhost:5173' });
-  window.close();
-};
-
-const openFeedback = () => {
-  chrome.tabs.create({ url: 'https://github.com/wllcyg' });
   window.close();
 };
 </script>
 
 <template>
   <div class="menu-container">
+    <p v-if="captureError" class="capture-error" role="alert">{{ captureError }}</p>
     <!-- 主操作菜单列表 -->
     <div class="menu-group">
       <!-- 截图整个页面 -->
@@ -95,11 +93,31 @@ const openFeedback = () => {
         </div>
       </button>
 
+      <button class="menu-item" @click="captureMode('START_SCROLL_AREA_CAPTURE')">
+        <div class="item-left">
+          <Scan class="item-icon icon-blue" />
+          <span class="item-label">{{ t('captureScrollArea') }}</span>
+        </div>
+      </button>
+
+      <button class="menu-item" @click="captureMode('START_CURRENT_POSITION_CAPTURE')">
+        <div class="item-left">
+          <ArrowDownCircle class="item-icon icon-blue" />
+          <span class="item-label">{{ t('captureCurrentPosition') }}</span>
+        </div>
+      </button>
+
       <!-- 截图可见部分 -->
-      <button class="menu-item" @click="captureVisible">
+      <button class="menu-item" @click="captureMode('CAPTURE_VISIBLE_ONLY')">
         <div class="item-left">
           <Monitor class="item-icon icon-cyan" />
           <span class="item-label">{{ t('captureVisible') }}</span>
+        </div>
+      </button>
+      <button class="menu-item" @click="captureMode('START_SELECTED_AREA_CAPTURE')">
+        <div class="item-left">
+          <Crop class="item-icon icon-cyan" />
+          <span class="item-label">{{ t('captureSelected') }}</span>
         </div>
       </button>
     </div>
@@ -109,13 +127,6 @@ const openFeedback = () => {
 
     <!-- 辅助选项组 -->
     <div class="menu-group">
-      <button class="menu-item sub-item" @click="openFeedback">
-        <div class="item-left">
-          <MessageSquare class="item-icon icon-slate" />
-          <span class="item-label">反馈问题及建议</span>
-        </div>
-      </button>
-
       <button class="menu-item sub-item" @click="openPortal">
         <div class="item-left">
           <Globe class="item-icon icon-emerald" />
@@ -139,6 +150,16 @@ const openFeedback = () => {
   box-sizing: border-box;
   padding: 6px 0;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.capture-error {
+  margin: 6px 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .menu-group {
@@ -190,10 +211,6 @@ const openFeedback = () => {
 
 .icon-cyan {
   color: #0d9488;
-}
-
-.icon-slate {
-  color: #64748b;
 }
 
 .icon-emerald {

@@ -1,6 +1,27 @@
+import { saveResult } from '../src/utils/result-store';
+
 export default defineBackground(() => {
   // 监听来自 Content Script 或 Popup 的截图与缩放请求
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'OPEN_CAPTURE_RESULT') {
+      const openResult = async () => {
+        const { dataUrl, filename } = message;
+        if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,') ||
+            typeof filename !== 'string') throw new Error('Invalid screenshot');
+        const id = crypto.randomUUID();
+        const image = await (await fetch(dataUrl)).blob();
+        await saveResult({ id, image, filename, createdAt: Date.now() });
+        const url = new URL(chrome.runtime.getURL('result.html'));
+        url.searchParams.set('id', id);
+        await chrome.tabs.create({ windowId: sender.tab?.windowId, url: url.href });
+      };
+      void openResult().then(() => sendResponse({ success: true }), (error) => {
+        console.error('[100Free Screenshot] Could not open result', error);
+        sendResponse({ success: false });
+      });
+      return true;
+    }
+
     if (message.type === 'CAPTURE_VISIBLE_TAB') {
       const windowId = sender.tab?.windowId;
       // 工业级自动重试：带指数退避，彻底化解 Chrome 底层速率限制与焦点晃动

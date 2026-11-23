@@ -1,4 +1,112 @@
 {
+  "selectedCapturePreview": {
+    "message": "打开预览"
+  },
+  "resultTitle": {
+    "message": "截图预览"
+  },
+  "resultOpenFailed": {
+    "message": "无法打开截图预览，请重试。"
+  },
+  "resultUnavailable": {
+    "message": "这张截图无法读取，请重新截图。"
+  },
+  "resultCopied": {
+    "message": "已复制图片"
+  },
+  "resultCopyFailed": {
+    "message": "无法复制图片，请下载 PNG。"
+  },
+  "resultZoom": {
+    "message": "预览缩放"
+  },
+  "resultZoomOut": {
+    "message": "缩小"
+  },
+  "resultZoomIn": {
+    "message": "放大"
+  },
+  "resultPrint": {
+    "message": "打印"
+  },
+  "resultPrintFailed": {
+    "message": "无法打印，请下载 PNG 后再试。"
+  },
+  "editorTitle": {
+    "message": "编辑截图"
+  },
+  "editorSelect": {
+    "message": "选择"
+  },
+  "editorPan": {
+    "message": "平移"
+  },
+  "editorRectangle": {
+    "message": "矩形"
+  },
+  "editorArrow": {
+    "message": "箭头"
+  },
+  "editorText": {
+    "message": "文字"
+  },
+  "editorCrop": {
+    "message": "裁剪"
+  },
+  "editorColor": {
+    "message": "颜色"
+  },
+  "editorFontSize": {
+    "message": "字号"
+  },
+  "editorPen": {
+    "message": "画笔"
+  },
+  "editorHighlight": {
+    "message": "荧光笔"
+  },
+  "editorRedact": {
+    "message": "实色遮挡"
+  },
+  "editorNumber": {
+    "message": "编号"
+  },
+  "editorStroke": {
+    "message": "线宽"
+  },
+  "editorDelete": {
+    "message": "删除"
+  },
+  "editorUndo": {
+    "message": "撤销"
+  },
+  "editorRedo": {
+    "message": "重做"
+  },
+  "editorFit": {
+    "message": "适应窗口"
+  },
+  "editorBack": {
+    "message": "返回截图"
+  },
+  "editorSave": {
+    "message": "保存并返回"
+  },
+  "editorDiscard": {
+    "message": "放弃未保存的编辑吗？"
+  },
+  "editorNavigationShortcuts": {
+    "message": "空格 + 拖动：平移 · 空格 + 滚轮：缩放"
+  },
+  "editorTools": {
+    "message": "编辑工具"
+  },
+  "editorLoadFailed": {
+    "message": "无法载入截图，请返回后重试。"
+  },
+  "editorSaveFailed": {
+    "message": "无法保存编辑结果，请重试。"
+  },
   "extensionName": {
     "message": "全能网页精准长截图 - 自动滚动拼图",
     "description": "扩展名称"
@@ -7,17 +115,65 @@
     "message": "一键自动滚动截取整页长图，智能消除重复吸顶导航栏，纯本地 Canvas 拼接渲染，绝不上报隐私。",
     "description": "扩展描述"
   },
+  "capturePageRestricted": {
+    "message": "当前页面限制网页截图。请切换到普通网页后再试。"
+  },
+  "captureStartFailed": {
+    "message": "无法启动截图，请刷新网页后再试。"
+  },
   "captureFullPage": {
     "message": "截图整个页面"
   },
   "captureFullPageHd": {
     "message": "高清整页截图"
   },
+  "captureCurrentPosition": {
+    "message": "当前位置滚动截图"
+  },
+  "currentPositionCaptureFailed": {
+    "message": "当前位置滚动截图失败，请重试。"
+  },
   "captureVisible": {
     "message": "截图可见部分"
   },
+  "visibleCaptureFailed": {
+    "message": "可见部分截图失败，请重试。"
+  },
   "captureSelected": {
-    "message": "选区 / 局部滚动截图"
+    "message": "截图选中部分"
+  },
+  "selectedCaptureHint": {
+    "message": "拖动框选截图范围，按 Esc 取消"
+  },
+  "selectedCaptureDownload": {
+    "message": "下载 PNG"
+  },
+  "selectedCaptureCopy": {
+    "message": "复制图片"
+  },
+  "selectedCaptureCancel": {
+    "message": "取消"
+  },
+  "selectedCaptureFailed": {
+    "message": "选区截图失败，请重试。"
+  },
+  "selectedCopyFailed": {
+    "message": "无法复制图片，请重新框选并下载。"
+  },
+  "captureScrollArea": {
+    "message": "截图可滚动区域"
+  },
+  "scrollAreaPick": {
+    "message": "点击要截图的滚动区域，按 Esc 取消"
+  },
+  "scrollAreaFit": {
+    "message": "请先将整个滚动区域移入视口，再重新截图。"
+  },
+  "scrollAreaChanged": {
+    "message": "截图期间滚动区域发生变化，请重新截图。"
+  },
+  "scrollAreaFailed": {
+    "message": "无法生成滚动区域截图。"
   },
   "capturingProgress": {
     "message": "正在自动滚动截取: 第 $CURRENT$ / $TOTAL$ 屏...",

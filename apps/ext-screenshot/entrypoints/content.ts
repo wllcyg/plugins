@@ -1,4 +1,7 @@
+import { openCaptureResult } from '../src/utils/open-result';
+import { captureSelectedArea } from '../src/utils/selected-area';
 import { t } from '../src/utils/i18n';
+import { captureScrollArea, isScrollArea, selectScrollArea } from '../src/utils/scroll-area';
 
 interface ScreenShotSlice {
   y: number;
@@ -100,6 +103,7 @@ export default defineContentScript({
       }
       // 临时隐藏其它插件的遮罩（例如表格插件的悬浮框）
       const otherOverlays = document.querySelectorAll<HTMLElement>('#__100free_table_overlay__');
+      const previousDisplays = Array.from(otherOverlays, (el) => el.style.display);
       otherOverlays.forEach((el) => {
         el.style.display = 'none';
       });
@@ -111,12 +115,14 @@ export default defineContentScript({
         });
       });
 
-      const result = await fn();
-
-      if (indicatorEl) {
-        indicatorEl.style.display = 'flex';
+      try {
+        return await fn();
+      } finally {
+        if (indicatorEl) indicatorEl.style.display = 'flex';
+        otherOverlays.forEach((el, index) => {
+          el.style.display = previousDisplays[index];
+        });
       }
-      return result;
     };
 
     // 智能处理吸顶与吸底元素（精准识别全局顶部栏与底部挂件，绝不误伤正文业务组件）
@@ -152,8 +158,8 @@ export default defineContentScript({
       });
     };
 
-    // 拼接多屏并触发下载（严丝合缝像素无缝缝合）
-    const stitchAndDownload = async (
+    // 拼接多屏并生成 PNG
+    const stitchScreenshot = async (
       slices: { dataUrl: string; sourceY: number; drawHeight: number; destY: number }[],
       contentWidth: number,
       totalHeight: number,
@@ -192,26 +198,16 @@ export default defineContentScript({
         });
       }
 
-      const finalUrl = canvas.toDataURL('image/png');
-      const filename = `Screenshot_${isHd ? 'HD_2x_' : ''}${document.title.replace(/[\\/:*?"<>|]/g, '_')}_${Date.now()}.png`;
-
-      // 触发下载
-      const anchor = document.createElement('a');
-      anchor.href = finalUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-
-      hideProgress();
+      return canvas.toDataURL('image/png');
     };
 
     // 工业级稳健自动滚动截屏引擎（严密坐标网格 + 完整视口覆盖）
-    const startFullPageCapture = async (options?: { hd?: boolean }) => {
+    const startFullPageCapture = async (options?: { hd?: boolean; fromCurrent?: boolean }) => {
       const isHd = !!options?.hd;
       const originalScrollY = window.scrollY;
       const originalScrollX = window.scrollX;
       let originalZoom: number | null = null;
+      let image: string | undefined;
 
       try {
         if (isHd) {
@@ -225,8 +221,8 @@ export default defineContentScript({
         // 核心：隐藏滚动条并禁用平滑滚动
         await toggleScrollbars(true);
 
-        // 先回到最顶部
-        window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+        // Read the actual start after layout changes or browser scroll clamping.
+        window.scrollTo({ left: 0, top: options?.fromCurrent ? originalScrollY : 0, behavior: 'instant' });
         await new Promise((r) => setTimeout(r, 100));
 
         const contentWidth = document.documentElement.clientWidth || window.innerWidth;
@@ -239,16 +235,18 @@ export default defineContentScript({
           viewportHeight
         );
         const dpr = window.devicePixelRatio || 1;
+        const startY = options?.fromCurrent ? Math.max(0, window.scrollY) : 0;
+        const captureHeight = fullHeight - startY;
 
         // 构建绝对平整的步进目标点序列
         const targetYPositions: number[] = [];
-        let curY = 0;
+        let curY = startY;
         while (curY + viewportHeight < fullHeight) {
           targetYPositions.push(curY);
           curY += viewportHeight;
         }
         // 压入最后一屏物理底端目标
-        const lastScrollY = Math.max(0, fullHeight - viewportHeight);
+        const lastScrollY = Math.max(startY, fullHeight - viewportHeight);
         if (targetYPositions.length === 0 || targetYPositions[targetYPositions.length - 1] !== lastScrollY) {
           targetYPositions.push(lastScrollY);
         }
@@ -288,6 +286,7 @@ export default defineContentScript({
           }
 
           if (!response?.success || !response.dataUrl) {
+            if (options?.fromCurrent) throw new Error(t('currentPositionCaptureFailed'));
             console.error(`[100Free Screenshot] 第 ${idx + 1} 屏捕获失败:`, response?.error || '无图像数据');
             continue;
           }
@@ -297,7 +296,7 @@ export default defineContentScript({
             slices.push({
               dataUrl: response.dataUrl,
               sourceY: 0,
-              drawHeight: fullHeight,
+              drawHeight: captureHeight,
               destY: 0
             });
           } else if (idx < totalSteps - 1) {
@@ -311,7 +310,7 @@ export default defineContentScript({
           } else {
             // 最后一屏：补齐剩余的高度差，严丝合缝
             const drawnSoFar = (totalSteps - 1) * viewportHeight;
-            const remainingHeight = fullHeight - drawnSoFar;
+            const remainingHeight = captureHeight - drawnSoFar;
             if (remainingHeight > 0) {
               const sourceY = Math.max(0, viewportHeight - remainingHeight);
               slices.push({
@@ -324,11 +323,11 @@ export default defineContentScript({
           }
         }
 
-        // 最终拼接并触发下载
-        await stitchAndDownload(slices, contentWidth, fullHeight, dpr, isHd);
+        image = await stitchScreenshot(slices, contentWidth, captureHeight, dpr, isHd);
       } catch (err) {
         console.error('[100Free Screenshot] 截屏异常:', err);
         hideProgress();
+        if (options?.fromCurrent) throw err;
       } finally {
         toggleFixedElements(false, false);
         await toggleScrollbars(false);
@@ -337,49 +336,77 @@ export default defineContentScript({
         }
         window.scrollTo({ left: originalScrollX, top: originalScrollY, behavior: 'instant' });
       }
+      if (image) {
+        const title = document.title.replace(/[\\/:*?"<>|]/g, '_');
+        await openCaptureResult(image, `Screenshot_${isHd ? 'HD_2x_' : ''}${title}_${Date.now()}.png`);
+      }
     };
 
     const captureVisibleOnly = async () => {
-      await toggleScrollbars(true);
-      const contentWidth = document.documentElement.clientWidth || window.innerWidth;
-      const contentHeight = window.innerHeight;
-      const dpr = window.devicePixelRatio || 1;
+      const response = await withInvisibleIndicator(() =>
+        chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' })
+      );
+      if (!response?.success || !response.dataUrl) throw new Error(t('visibleCaptureFailed'));
 
-      const response = await withInvisibleIndicator(async () => {
-        return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
-      });
+      await openCaptureResult(response.dataUrl, `Screenshot_Visible_${Date.now()}.png`);
+    };
 
-      await toggleScrollbars(false);
-
-      if (response?.success && response.dataUrl) {
-        // 如果有微小滚动条留存，裁切掉右侧多余像素
-        const canvas = document.createElement('canvas');
-        canvas.width = contentWidth * dpr;
-        canvas.height = contentHeight * dpr;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          const img = new Image();
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0, contentWidth * dpr, contentHeight * dpr, 0, 0, contentWidth * dpr, contentHeight * dpr);
-            const finalUrl = canvas.toDataURL('image/png');
-            const anchor = document.createElement('a');
-            anchor.href = finalUrl;
-            anchor.download = `Screenshot_Visible_${Date.now()}.png`;
-            anchor.click();
-          };
-          img.src = response.dataUrl;
-        }
+    let captureInProgress = false;
+    const runCapture = async (task: () => Promise<void>) => {
+      captureInProgress = true;
+      try {
+        await task();
+      } catch (error) {
+        console.error('[100Free Screenshot]', error);
+        alert(error instanceof Error ? error.message : t('scrollAreaFailed'));
+      } finally {
+        hideProgress();
+        captureInProgress = false;
       }
     };
 
+    let lastScrollArea: HTMLElement | undefined;
+    window.addEventListener('scroll', (event) => {
+      if (captureInProgress) return;
+      if (isScrollArea(event.target)) lastScrollArea = event.target;
+      else if (event.target === document) lastScrollArea = undefined;
+    }, { capture: true, passive: true });
+
+    const captureArea = async (area: HTMLElement, fromCurrent = false) => {
+      const image = await captureScrollArea(area, async () => {
+        const response = await withInvisibleIndicator(() =>
+          chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' })
+        );
+        if (!response?.success || !response.dataUrl) throw new Error(t('scrollAreaFailed'));
+        return response.dataUrl;
+      }, showProgress, fromCurrent);
+      if (image) await openCaptureResult(image, `Screenshot_ScrollArea_${Date.now()}.png`);
+    };
+
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message.type === 'START_FULL_PAGE_CAPTURE') {
-        startFullPageCapture({ hd: !!message.hd });
-        sendResponse({ success: true });
-      } else if (message.type === 'CAPTURE_VISIBLE_ONLY') {
-        captureVisibleOnly();
-        sendResponse({ success: true });
-      }
+      const tasks: Record<string, () => Promise<void>> = {
+        START_FULL_PAGE_CAPTURE: () => startFullPageCapture({ hd: !!message.hd }),
+        START_CURRENT_POSITION_CAPTURE: () => {
+          const area = lastScrollArea;
+          if (area?.isConnected && isScrollArea(area)) return captureArea(area, true);
+          return startFullPageCapture({ fromCurrent: true });
+        },
+        CAPTURE_VISIBLE_ONLY: captureVisibleOnly,
+        START_SELECTED_AREA_CAPTURE: () => captureSelectedArea(async () => {
+          const response = await withInvisibleIndicator(() =>
+            chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' })
+          );
+          if (!response?.success || !response.dataUrl) throw new Error(t('selectedCaptureFailed'));
+          return response.dataUrl;
+        }),
+        START_SCROLL_AREA_CAPTURE: async () => {
+          const area = await selectScrollArea();
+          if (area) await captureArea(area);
+        }
+      };
+      if (!Object.hasOwn(tasks, message.type)) return;
+      if (!captureInProgress) void runCapture(tasks[message.type]);
+      sendResponse({ success: true });
     });
 
     console.log('[100Free Screenshot] 智能长截图 Content Script 就绪');

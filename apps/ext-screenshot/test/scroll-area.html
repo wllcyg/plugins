@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>可滚动区域截图测试</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px system-ui, sans-serif; color: #172554; background: #f1f5f9; }
+    main { width: min(740px, calc(100% - 32px)); margin: 16px auto; }
+    h1 { font-size: 22px; margin: 0; }
+    p { margin: 8px 0; }
+    .panel-wrap { position: relative; }
+    #bottom-overlay { position: absolute; inset: auto 2px 2px; height: 44px; background: linear-gradient(transparent, #fde68a); text-align: center; pointer-events: none; }
+    #panel { height: clamp(140px, 48vh, 360px); overflow: auto; border: 2px solid #94a3b8; border-radius: 8px; background: white; }
+    header { position: sticky; top: 0; padding: 12px; background: #1e3a8a; color: white; }
+    .row { display: flex; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid #cbd5e1; }
+    .row:nth-child(odd) { background: #eff6ff; }
+    output { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>可滚动区域截图测试</h1>
+    <p>先把面板滚到中间，再点击扩展的「截图可滚动区域」，悬停并点击下面的面板。</p>
+    <p>检查 PNG 是否包含第 01–48 行、蓝色表头是否只出现一次，以及滚动位置是否恢复。</p>
+    <div class="panel-wrap">
+    <div id="panel" tabindex="0" aria-label="可滚动订单列表">
+      <header>订单列表 · 吸顶表头</header>
+      <div id="rows"></div>
+    </div>
+      <div id="bottom-overlay" aria-hidden="true">⌄</div>
+    </div>
+    <p>面板滚动位置 <output id="position">0</output> px</p>
+  </main>
+  <script>
+    const panel = document.getElementById('panel');
+    const rows = document.getElementById('rows');
+    const position = document.getElementById('position');
+
+    for (let index = 1; index <= 48; index++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const label = document.createElement('span');
+      label.textContent = `第 ${String(index).padStart(2, '0')} 行`;
+      const description = document.createElement('span');
+      description.textContent = index === 1 ? '起始行' : index === 48 ? '结束行' : `订单 ${1000 + index}`;
+      row.append(label, description);
+      rows.append(row);
+    }
+
+    panel.addEventListener('scroll', () => { position.value = String(panel.scrollTop); });
+  </script>
+</body>
+</html>

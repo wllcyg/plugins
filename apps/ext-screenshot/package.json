@@ -15,6 +15,7 @@
   "dependencies": {
     "@100free/core": "workspace:*",
     "@100free/ui": "workspace:*",
+    "fabric": "^6.9.1",
     "lucide-vue-next": "^0.460.0",
     "vue": "^3.5.13"
   },
