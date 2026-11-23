@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>表格导出插件 · 工业级极端场景综合测试套件</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; background: #f8fafc; color: #1e293b; max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 20px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 24px; }
+    .test-card { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .test-title { font-size: 15px; font-weight: 600; color: #0f172a; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .test-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 700; background: #e0f2fe; color: #0369a1; }
+    .test-desc { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+    
+    /* 基础表格样式 */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; }
+    tr:nth-child(even) { background: #f8fafc; }
+
+    /* 虚拟滚动仿真容器 */
+    .virtual-scroll-container { height: 180px; overflow-y: auto; border: 1px solid #cbd5e1; position: relative; }
+    .virtual-phantom { height: 2000px; width: 100%; position: absolute; left: 0; top: 0; pointer-events: none; z-index: -1; }
+    
+    /* 纯 DIV 打造的 ARIA Grid */
+    .aria-grid { display: flex; flex-direction: column; border: 1px solid #cbd5e1; font-size: 12px; }
+    .aria-row { display: flex; border-bottom: 1px solid #cbd5e1; }
+    .aria-header { background: #f1f5f9; font-weight: 600; }
+    .aria-cell { flex: 1; padding: 8px 12px; border-right: 1px solid #cbd5e1; }
+    .aria-cell:last-child { border-right: none; }
+  </style>
+</head>
+<body>
+
+  <h1>🧪 100-Free Table Export 场景测试套件</h1>
+
+  <!-- 测试用例 1：19位大订单号与身份证号（检验防科学计数法截断） -->
+  <div class="test-card">
+    <div class="test-title">
+      <span>用例 1：19位超长订单号 / 银行卡 / 身份证号</span>
+      <span class="test-badge">P0 精度测试</span>
+    </div>
+    <div class="test-desc">
+      检验目标：导出 Excel 或 CSV 后，双击打开长数字不能变成 <code>1.79541E+18</code> 科学计数法，末尾数位必须保持精准无截断。
+    </div>
+    <table id="large-number-table">
+      <thead>
+        <tr>
+          <th>序号</th>
+          <th>客户姓名</th>
+          <th>19位电商订单编号（防截断）</th>
+          <th>18位公民身份证号</th>
+          <th>交易金额 (元)</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>张银峰</td>
+          <td>1795412177040171443</td>
+          <td>110101199003072391</td>
+          <td>88,290.00</td>
+          <td>已结算</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>孟帅</td>
+          <td>1795412163768916428</td>
+          <td>310115199208154567</td>
+          <td>12,450.50</td>
+          <td>已发货</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>刘仕捷</td>
+          <td>2124738556117204993</td>
+          <td>440301198811203322</td>
+          <td>3,999.00</td>
+          <td>已完成</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 测试用例 2：跨行跨列（rowspan / colspan）复合财务报表 -->
+  <div class="test-card">
+    <div class="test-title">
+      <span>用例 2：多层合并复杂表头与跨行单元格 (rowspan / colspan)</span>
+      <span class="test-badge">P1 布局矩阵</span>
+    </div>
+    <div class="test-desc">
+      检验目标：多级表头不应出现后续列向右偏移或错位串行，合并单元格应正常占位。
+    </div>
+    <table id="merge-table">
+      <thead>
+        <tr>
+          <th rowspan="2">部门架构</th>
+          <th rowspan="2">负责人</th>
+          <th colspan="2" style="text-align: center;">2026 第一季度</th>
+          <th colspan="2" style="text-align: center;">2026 第二季度</th>
+          <th rowspan="2">年度总评</th>
+        </tr>
+        <tr>
+          <th>营业收入 (万)</th>
+          <th>净利润 (万)</th>
+          <th>营业收入 (万)</th>
+          <th>净利润 (万)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="2">研发创新中心</td>
+          <td>李工</td>
+          <td>1,200</td>
+          <td>450</td>
+          <td>1,500</td>
+          <td>600</td>
+          <td>卓越</td>
+        </tr>
+        <tr>
+          <td>王工</td>
+          <td>800</td>
+          <td>320</td>
+          <td>950</td>
+          <td>410</td>
+          <td>良好</td>
+        </tr>
+        <tr>
+          <td>海外增长部</td>
+          <td>Sarah</td>
+          <td>3,200</td>
+          <td>1,100</td>
+          <td>4,000</td>
+          <td>1,650</td>
+          <td>卓越</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 测试用例 3：纯 DIV 模拟的 ARIA Grid 表格 -->
+  <div class="test-card">
+    <div class="test-title">
+      <span>用例 3：无原生 table 标签的 DIV ARIA Grid（类 Notion / 飞书）</span>
+      <span class="test-badge">P1 现代语义化</span>
+    </div>
+    <div class="test-desc">
+      检验目标：没有 <code>&lt;table&gt;</code>、<code>&lt;tr&gt;</code> 标签，完全由 <code>role="grid"</code>、<code>role="row"</code> 构成，插件应能识别并唤起浮标导出。
+    </div>
+    <div class="aria-grid" role="grid" aria-label="项目进展看板">
+      <div class="aria-row aria-header" role="row">
+        <div class="aria-cell" role="columnheader">任务代号</div>
+        <div class="aria-cell" role="columnheader">特性描述</div>
+        <div class="aria-cell" role="columnheader">执行人</div>
+        <div class="aria-cell" role="columnheader">当前进度</div>
+      </div>
+      <div class="aria-row" role="row">
+        <div class="aria-cell" role="gridcell">TASK-101</div>
+        <div class="aria-cell" role="gridcell">表格大数字精度保护算法</div>
+        <div class="aria-cell" role="gridcell">架构组</div>
+        <div class="aria-cell" role="gridcell">100% 已合入</div>
+      </div>
+      <div class="aria-row" role="row">
+        <div class="aria-cell" role="gridcell">TASK-102</div>
+        <div class="aria-cell" role="gridcell">虚拟滚动智能侦测提示</div>
+        <div class="aria-cell" role="gridcell">前端团队</div>
+        <div class="aria-cell" role="gridcell">100% 已验证</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 测试用例 4：虚拟滚动容器仿真（检测黄色预警气泡） -->
+  <div class="test-card">
+    <div class="test-title">
+      <span>用例 4：启用虚拟滚动的大数据表格</span>
+      <span class="test-badge">P0 体验防护</span>
+    </div>
+    <div class="test-desc">
+      检验目标：鼠标悬停在表格上时，操作条上方应智能弹出 <b>“⚠️ 虚拟滚动：当前仅捕获屏幕已挂载的可视行”</b> 醒目提示，避免用户误解。
+    </div>
+    <div class="ant-table-wrapper">
+      <div class="virtual-scroll-container ant-table-body" style="height: 140px;">
+        <!-- 仿真虚拟列表的超高占位 Phantom -->
+        <div class="virtual-phantom" style="height: 1600px;"></div>
+        <table style="position: relative;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>系统日志类型</th>
+              <th>耗时 (ms)</th>
+              <th>捕获时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>#1001</td><td>SQL_SLOW_QUERY</td><td>1,240ms</td><td>14:30:01</td></tr>
+            <tr><td>#1002</td><td>API_TIMEOUT_RETRY</td><td>2,450ms</td><td>14:30:05</td></tr>
+            <tr><td>#1003</td><td>REDIS_CACHE_MISS</td><td>12ms</td><td>14:30:10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
