@@ -183,3 +183,4 @@ export default defineContentScript({
     console.log('[100Free Screenshot] 智能长截图 Content Script 就绪');
   }
 });
+

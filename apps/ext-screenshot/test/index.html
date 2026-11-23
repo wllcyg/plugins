@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>全能网页精准长截图 · 深度极限测试页</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    /* 经典吸顶导航栏（Fixed Header），用于检验智能去重防断层 */
+    .sticky-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .sticky-logo { font-weight: 700; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .sticky-badge { background: #0284c7; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+
+    /* 页面主体内容：设计为多屏超长排版 */
+    .container {
+      max-width: 1000px;
+      margin: 90px auto 100px;
+      padding: 0 20px;
+    }
+
+    .hero-box {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: white;
+      padding: 48px 36px;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.3);
+    }
+    .hero-title { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .hero-desc { font-size: 16px; opacity: 0.9; max-width: 700px; }
+
+    /* 滚动章节卡片 */
+    .section-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 36px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-badge {
+      font-size: 12px;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* 复杂的图表与色块展示 */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .color-item {
+      height: 90px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* 模拟超长列表 */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .timeline-item {
+      padding: 16px 20px;
+      border-left: 3px solid #0ea5e9;
+      background: #f8fafc;
+      border-radius: 0 10px 10px 0;
+    }
+    .timeline-time { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+    .timeline-content { font-size: 14px; color: #334155; }
+
+    /* 底部固定工具条（Sticky Footer），检验吸底去重 */
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 吸顶导航栏（测试智能剔除重复） -->
+  <header class="sticky-header">
+    <div class="sticky-logo">
+      <span>📸</span>
+      <span>100-Free Screenshot 测试环境</span>
+      <span class="sticky-badge">吸顶组件</span>
+    </div>
+    <div style="font-size: 12px; opacity: 0.8;">
+      检验指标：截出的长图第 2 屏及以后不应重复出现此导航
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="hero-box">
+      <div class="hero-title">📸 全能网页精准长截图测试页</div>
+      <div class="hero-desc">
+        本页面全长约 4~5 个屏幕高度，包含固定吸顶条、多级高饱和度色块、长图表与复杂排版。请使用插件点击「截取整页长图」进行验收。
+      </div>
+    </div>
+
+    <!-- 屏 1 -->
+    <section class="section-card">
+      <div class="section-title">
+        <span>第一屏：视觉层级与高饱和度渲染</span>
+        <span class="section-badge">Screen 1</span>
+      </div>
+      <p style="color: #475569; font-size: 14px;">
+        测试图像采集在 Device Pixel Ratio（高清视网膜屏幕）下的边缘锐利度与色彩还原度。
+      </p>
+      <div class="color-grid">
+        <div class="color-item" style="background: #ef4444;">Crimson Red<br><small>#ef4444</small></div>
+        <div class="color-item" style="background: #f97316;">Amber Orange<br><small>#f97316</small></div>
+        <div class="color-item" style="background: #10b981;">Emerald Green<br><small>#10b981</small></div>
+        <div class="color-item" style="background: #0ea5e9;">Sky Blue<br><small>#0ea5e9</small></div>
+      </div>
+    </section>
+
+    <!-- 屏 2 -->
+    <section class="section-card">
+      <div class="section-title">
+        <span>第二屏：时间轴排版与滚动平滑衔接</span>
+        <span class="section-badge">Screen 2</span>
+      </div>
+      <p style="color: #475569; font-size: 14px;">
+        测试自动滚屏从第一屏跨入第二屏时，接缝处是否存在内容丢失、截断或重叠像素。
+      </p>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">10:00:00</div>
+          <div class="timeline-content">启动自动滚动截屏任务，计算整页 scrollHeight 与视口比例。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00:01</div>
+          <div class="timeline-content">完成第一屏高清切片捕获，临时隐藏吸顶 fixed 元素避免重复。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00:02</div>
+          <div class="timeline-content">自动平滑滚至第二屏，等待 DOM 异步元素与图片重绘完成。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00:03</div>
+          <div class="timeline-content">向 Background 发送抓取指令，存入内存切片序列。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 屏 3 -->
+    <section class="section-card">
+      <div class="section-title">
+        <span>第三屏：复杂数据表格与多列栅格</span>
+        <span class="section-badge">Screen 3</span>
+      </div>
+      <p style="color: #475569; font-size: 14px;">
+        在长截图过程中对网页里的数据表格进行长宽比保真测试。
+      </p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px;">
+        <thead>
+          <tr style="background: #f1f5f9; text-align: left;">
+            <th style="padding: 10px; border: 1px solid #cbd5e1;">模块名称</th>
+            <th style="padding: 10px; border: 1px solid #cbd5e1;">核心功能</th>
+            <th style="padding: 10px; border: 1px solid #cbd5e1;">技术方案</th>
+            <th style="padding: 10px; border: 1px solid #cbd5e1;">状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 600;">滚动捕获器</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">驱动视口逐屏自动下滚</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">window.scrollTo + 定时防抖</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #16a34a; font-weight: 600;">已就绪</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 600;">吸顶消除器</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">解决长图多条吸顶横栏重叠</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">动态 CSS 隔离与恢复</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #16a34a; font-weight: 600;">已就绪</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 600;">Canvas 缝合引擎</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">多切片纵向拼接出图</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1;">本地离线 Canvas 2D</td>
+            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #16a34a; font-weight: 600;">已就绪</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 屏 4 -->
+    <section class="section-card">
+      <div class="section-title">
+        <span>第四屏：尾页内容与顺利回滚验收</span>
+        <span class="section-badge">Screen 4 (底部)</span>
+      </div>
+      <p style="color: #475569; font-size: 14px;">
+        测试截图到底后，网页是否平稳恢复到用户最开始的阅读位置，并在右上角显示“无缝缝合图像”并自动弹出下载。
+      </p>
+      <div style="margin-top: 20px; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; color: #166534; font-size: 13px;">
+        🎉 恭喜！如果你能看到这张截好的超长 PNG，且图片顶部干净、中间无吸顶重影断层，则代表本次「全能网页精准长截图」插件验收大获全胜！
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部固定吸底条 -->
+  <footer class="sticky-footer">
+    <span>© 2026 100-Free Productivity Initiative · 长截图测试基准</span>
+    <span style="color: #0284c7; font-weight: 600;">吸底元素自动去重测试</span>
+  </footer>
+
+</body>
+</html>

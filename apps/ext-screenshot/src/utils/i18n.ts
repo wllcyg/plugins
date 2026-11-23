@@ -5,3 +5,4 @@ export function t(key: string, substitutions?: string | string[]): string {
   }
   return key;
 }
+
