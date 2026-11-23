@@ -1,6 +1,7 @@
 import { createApp, type App } from 'vue';
 import { parseHtmlTable, exportToExcel, exportToCsv, copyTableToClipboard, type ParsedTableData } from '../src/utils/table-parser';
 import TableActionBar from '../src/components/TableActionBar.vue';
+import overlayStyles from '../src/styles/overlay.css?inline';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -9,6 +10,7 @@ export default defineContentScript({
     let currentTable: HTMLTableElement | null = null;
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
+    let mountContainer: HTMLElement | null = null;
     let vueApp: App | null = null;
     let hideTimer: number | null = null;
     let cachedData: ParsedTableData | null = null;
@@ -20,12 +22,20 @@ export default defineContentScript({
       overlayHost = document.createElement('div');
       overlayHost.id = '__100free_table_overlay__';
       overlayHost.style.position = 'absolute';
-      overlayHost.style.zIndex = '2147483646';
-      overlayHost.style.pointerEvents = 'none';
-      overlayHost.style.transition = 'all 0.12s ease';
+      overlayHost.style.zIndex = '2147483647';
+      overlayHost.style.pointerEvents = 'auto';
       overlayHost.style.display = 'none';
 
       shadowRoot = overlayHost.attachShadow({ mode: 'open' });
+
+      // 将内联样式直接插入 Shadow DOM，确保绝不受宿主环境影响且 100% 渲染
+      const styleEl = document.createElement('style');
+      styleEl.textContent = overlayStyles;
+      shadowRoot.appendChild(styleEl);
+
+      mountContainer = document.createElement('div');
+      shadowRoot.appendChild(mountContainer);
+
       document.body.appendChild(overlayHost);
     };
 
@@ -57,7 +67,7 @@ export default defineContentScript({
 
       currentTable = table;
       initOverlay();
-      if (!overlayHost || !shadowRoot) return;
+      if (!overlayHost || !shadowRoot || !mountContainer) return;
 
       // 解析当前表格尺寸
       cachedData = parseHtmlTable(table);
@@ -66,27 +76,27 @@ export default defineContentScript({
         return;
       }
 
-      // 高亮目标表格
+      // 高亮目标表格（精致的翡翠绿半透明边框与圆角）
       currentTable.style.outline = '2px dashed #10b981';
       currentTable.style.outlineOffset = '2px';
 
-      // 定位操作栏到表格右上角上方
+      // 计算悬浮工具条坐标：靠右并位于表格顶部外侧 40px
       const rect = table.getBoundingClientRect();
       const scrollX = window.scrollX;
       const scrollY = window.scrollY;
 
+      const topPos = Math.max(8, rect.top + scrollY - 44);
+      const barWidthEstimate = 310;
+      const leftPos = Math.max(8, rect.right + scrollX - barWidthEstimate);
+
       overlayHost.style.display = 'block';
-      overlayHost.style.top = `${rect.top + scrollY - 38}px`;
-      overlayHost.style.left = `${rect.left + scrollX + Math.max(0, rect.width - 260)}px`;
-      overlayHost.style.pointerEvents = 'auto';
+      overlayHost.style.top = `${topPos}px`;
+      overlayHost.style.left = `${leftPos}px`;
 
       removeCurrentApp();
 
       // 挂载 Vue 悬停条
-      const container = document.createElement('div');
-      shadowRoot.innerHTML = '';
-      shadowRoot.appendChild(container);
-
+      mountContainer.innerHTML = '';
       vueApp = createApp(TableActionBar, {
         rowCount: cachedData.rowCount,
         colCount: cachedData.colCount,
@@ -104,15 +114,15 @@ export default defineContentScript({
         }
       });
 
-      vueApp.mount(container);
+      vueApp.mount(mountContainer);
     };
 
-    // 鼠标在页面移动时探测表格
+    // 监听鼠标移动，平滑探测
     document.addEventListener('mouseover', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
 
-      // 如果鼠标在操作栏内部，取消隐藏倒计时
+      // 鼠标在操作栏内部时保持显示
       if (overlayHost && overlayHost.contains(target)) {
         if (hideTimer) clearTimeout(hideTimer);
         return;
@@ -123,15 +133,15 @@ export default defineContentScript({
         if (hideTimer) clearTimeout(hideTimer);
         showOverlayForTable(table);
       } else if (currentTable) {
-        // 延时隐藏，方便鼠标平滑移动到操作栏上
+        // 延时隐藏，方便鼠标平滑移动到操作栏上点击
         if (hideTimer) clearTimeout(hideTimer);
         hideTimer = window.setTimeout(() => {
           hideOverlay();
-        }, 300);
+        }, 400);
       }
     });
 
-    // 接收来自 Popup 的指令（如扫描页面所有表格并批量导出）
+    // 接收来自 Popup 的全页导出消息
     chrome.runtime?.onMessage?.addListener((message, _sender, sendResponse) => {
       if (message.type === 'SCAN_TABLES') {
         const tables = Array.from(document.querySelectorAll('table'));
@@ -166,4 +176,3 @@ export default defineContentScript({
     console.log('[100Free Table Exporter] 页面表格嗅探器已启动');
   }
 });
-
