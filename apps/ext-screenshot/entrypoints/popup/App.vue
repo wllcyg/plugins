@@ -5,13 +5,37 @@ import { t } from '../../src/utils/i18n';
 
 const isCapturing = ref(false);
 
+// 健壮的消息调度器：如果检测到页面尚未注入 Content Script（如重载插件后未刷新网页），自动动态注入并重试
+const sendTabMessage = async (tabId: number, message: Record<string, unknown>) => {
+  try {
+    return await chrome.tabs.sendMessage(tabId, message);
+  } catch (err: unknown) {
+    const errorMsg = String(err);
+    if (errorMsg.includes('Receiving end does not exist') || errorMsg.includes('Could not establish connection')) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ['content-scripts/content.js']
+        });
+        await new Promise((r) => setTimeout(r, 100));
+        return await chrome.tabs.sendMessage(tabId, message);
+      } catch (injectErr) {
+        console.warn('[100Free Screenshot] 特殊页面受限:', injectErr);
+        alert('提示：无法在 Chrome 系统页面（chrome://）、应用商店或空白标签页中进行截图，请在常规网页上使用。');
+        return;
+      }
+    }
+    throw err;
+  }
+};
+
 const captureFullPage = async (hd = false) => {
   if (isCapturing.value) return;
   isCapturing.value = true;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      await chrome.tabs.sendMessage(tab.id, { type: 'START_FULL_PAGE_CAPTURE', hd });
+      await sendTabMessage(tab.id, { type: 'START_FULL_PAGE_CAPTURE', hd });
       window.close(); // 关闭 popup 让页面平稳滚动
     }
   } finally {
@@ -25,7 +49,7 @@ const captureVisible = async () => {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      await chrome.tabs.sendMessage(tab.id, { type: 'CAPTURE_VISIBLE_ONLY' });
+      await sendTabMessage(tab.id, { type: 'CAPTURE_VISIBLE_ONLY' });
       window.close();
     }
   } finally {

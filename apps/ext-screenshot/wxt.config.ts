@@ -15,7 +15,7 @@ export default defineConfig({
     description: '__MSG_extensionDescription__',
     default_locale: 'zh_CN',
     version: '1.0.0',
-    permissions: ['activeTab', 'tabs', 'storage'],
+    permissions: ['activeTab', 'tabs', 'storage', 'scripting'],
     icons: {
       16: '/icons/icon-16.png',
       32: '/icons/icon-32.png',
