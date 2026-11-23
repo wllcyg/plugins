@@ -3,6 +3,8 @@ import { t } from '../src/utils/i18n';
 interface ScreenShotSlice {
   y: number;
   dataUrl: string;
+  sourceY: number; // 切片在当前视口中的起始 Y（处理最后一屏不满视口的重叠裁切）
+  sourceHeight: number;
 }
 
 export default defineContentScript({
@@ -21,7 +23,7 @@ export default defineContentScript({
           top: 24px;
           right: 24px;
           z-index: 2147483647;
-          background: rgba(15, 23, 42, 0.92);
+          background: rgba(15, 23, 42, 0.94);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           color: #f8fafc;
@@ -35,10 +37,12 @@ export default defineContentScript({
           align-items: center;
           gap: 10px;
           border: 1px solid rgba(255, 255, 255, 0.15);
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: opacity 0.1s ease;
+          pointer-events: none;
         `;
         document.body.appendChild(indicatorEl);
       }
+      indicatorEl.style.opacity = '1';
       indicatorEl.innerHTML = `
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;animation:pulse 1s infinite;"></span>
         <span>${t('capturingProgress', [String(current), String(total)])}</span>
@@ -52,8 +56,19 @@ export default defineContentScript({
       }
     };
 
-    // 智能处理吸顶元素：除第一屏外，临时隐藏 fixed/sticky 元素以防长图重复断层
-    const toggleFixedElements = (hide: boolean) => {
+    // 拍照瞬间纯隐蔽自身进度条，杜绝把自身进度条截进画面
+    const withInvisibleIndicator = async <T>(fn: () => Promise<T>): Promise<T> => {
+      if (indicatorEl) indicatorEl.style.opacity = '0';
+      // 强制微小等待确保 DOM 渲染层更新
+      await new Promise((r) => setTimeout(r, 30));
+      const result = await fn();
+      if (indicatorEl) indicatorEl.style.opacity = '1';
+      return result;
+    };
+
+    // 智能处理吸顶与吸底元素
+    // 规则：吸顶元素在第二屏及以后隐藏；吸底元素除了最后一屏外全程隐藏
+    const toggleFixedElements = (hideTop: boolean, hideBottom: boolean) => {
       const fixedEls = Array.from(document.querySelectorAll<HTMLElement>('*')).filter((el) => {
         if (el.id === '__100free_screenshot_indicator__') return false;
         const pos = window.getComputedStyle(el).position;
@@ -61,11 +76,23 @@ export default defineContentScript({
       });
 
       fixedEls.forEach((el) => {
-        if (hide) {
-          el.dataset.screenshotOriginalOpacity = el.style.opacity || '1';
-          el.style.opacity = '0';
+        const rect = el.getBoundingClientRect();
+        const isNearBottom = rect.bottom > window.innerHeight - 80 && rect.top > window.innerHeight / 2;
+
+        if (isNearBottom) {
+          if (hideBottom) {
+            el.dataset.screenshotOriginalOpacity = el.style.opacity || '1';
+            el.style.opacity = '0';
+          } else {
+            el.style.opacity = el.dataset.screenshotOriginalOpacity || '';
+          }
         } else {
-          el.style.opacity = el.dataset.screenshotOriginalOpacity || '';
+          if (hideTop) {
+            el.dataset.screenshotOriginalOpacity = el.style.opacity || '1';
+            el.style.opacity = '0';
+          } else {
+            el.style.opacity = el.dataset.screenshotOriginalOpacity || '';
+          }
         }
       });
     };
@@ -86,7 +113,18 @@ export default defineContentScript({
         await new Promise<void>((resolve) => {
           const img = new Image();
           img.onload = () => {
-            ctx.drawImage(img, 0, slice.y * dpr);
+            // 精确像素切片绘制（支持处理重叠裁剪）
+            ctx.drawImage(
+              img,
+              0,
+              slice.sourceY * dpr,
+              totalWidth * dpr,
+              slice.sourceHeight * dpr,
+              0,
+              slice.y * dpr,
+              totalWidth * dpr,
+              slice.sourceHeight * dpr
+            );
             resolve();
           };
           img.src = slice.dataUrl;
@@ -126,34 +164,54 @@ export default defineContentScript({
 
       try {
         for (let i = 0; i < totalScreens; i++) {
-          const targetY = i * viewportHeight;
-          window.scrollTo(0, targetY);
+          const isFirstScreen = i === 0;
+          const isLastScreen = i === totalScreens - 1;
 
-          showProgress(i + 1, totalScreens);
+          let targetScrollY = i * viewportHeight;
+          let sourceY = 0;
+          let sourceHeight = viewportHeight;
 
-          // 等待页面滚动平稳及异步图片加载
-          await new Promise((r) => setTimeout(r, 220));
-
-          // 从第二屏开始隐藏吸顶栏防重复
-          if (i === 1) {
-            toggleFixedElements(true);
+          // 处理最后一屏不够一个整视口的高度的重叠情况
+          if (isLastScreen && totalScreens > 1) {
+            targetScrollY = fullHeight - viewportHeight;
+            const overlap = (i * viewportHeight) - targetScrollY;
+            sourceY = overlap;
+            sourceHeight = viewportHeight - overlap;
           }
 
-          const response = await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+          window.scrollTo(0, targetScrollY);
+          showProgress(i + 1, totalScreens);
+
+          // 等待滚动停止与重绘
+          await new Promise((r) => setTimeout(r, 220));
+
+          // 智能剔除：非第一屏隐藏吸顶；非最后一屏隐藏吸底
+          toggleFixedElements(!isFirstScreen, !isLastScreen);
+
+          // 核心拍照瞬间：必须隐藏自身指示器
+          const response = await withInvisibleIndicator(async () => {
+            return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+          });
+
           if (response?.success && response.dataUrl) {
-            slices.push({ y: targetY, dataUrl: response.dataUrl });
+            slices.push({
+              y: i * viewportHeight,
+              dataUrl: response.dataUrl,
+              sourceY,
+              sourceHeight
+            });
           }
         }
 
-        // 恢复页面原始状态
-        toggleFixedElements(false);
+        // 彻底还原页面元素与滚动位置
+        toggleFixedElements(false, false);
         window.scrollTo(originalScrollX, originalScrollY);
 
         // 图像无缝缝合与下载
         await stitchAndDownload(slices, viewportWidth, fullHeight, dpr);
       } catch (err) {
         console.error('[100Free Screenshot] 截屏异常:', err);
-        toggleFixedElements(false);
+        toggleFixedElements(false, false);
         window.scrollTo(originalScrollX, originalScrollY);
         hideProgress();
       }
@@ -161,7 +219,9 @@ export default defineContentScript({
 
     // 截取当前视口
     const captureVisibleOnly = async () => {
-      const response = await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+      const response = await withInvisibleIndicator(async () => {
+        return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+      });
       if (response?.success && response.dataUrl) {
         const anchor = document.createElement('a');
         anchor.href = response.dataUrl;
@@ -183,4 +243,3 @@ export default defineContentScript({
     console.log('[100Free Screenshot] 智能长截图 Content Script 就绪');
   }
 });
-
