@@ -19,7 +19,6 @@ export default defineContentScript({
   main() {
     let isHoverEnabled = true;
     let currentTableRoot: HTMLElement | null = null;
-    let tempMutedTableRoot: HTMLElement | null = null; // 当前被用户手动暂时隐藏的表格
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
     let mountContainer: HTMLElement | null = null;
@@ -79,6 +78,26 @@ export default defineContentScript({
       currentTableRoot = null;
       cachedData = null;
       removeCurrentApp();
+    };
+
+    // 强状态封印算法：彻底杜绝隐藏后重新激活
+    const isTableMuted = (el: HTMLElement): boolean => {
+      const until = Number(el.dataset?.tableExportMutedUntil || 0);
+      if (Date.now() < until) return true;
+      const ancestor = el.closest<HTMLElement>('[data-table-export-muted-until]');
+      if (ancestor) {
+        return Date.now() < Number(ancestor.dataset?.tableExportMutedUntil || 0);
+      }
+      return false;
+    };
+
+    const muteTable = (el: HTMLElement, durationMs = 20000) => {
+      const until = String(Date.now() + durationMs);
+      el.dataset.tableExportMutedUntil = until;
+      const wrapper = el.closest<HTMLElement>('.ant-table-wrapper, .ant-table, .el-table');
+      if (wrapper) {
+        wrapper.dataset.tableExportMutedUntil = until;
+      }
     };
 
     // 重新计算并更新悬浮栏位置
@@ -143,7 +162,9 @@ export default defineContentScript({
           if (cachedData) copyTableToClipboard(cachedData);
         },
         onClose: () => {
-          tempMutedTableRoot = currentTableRoot;
+          if (currentTableRoot) {
+            muteTable(currentTableRoot, 20000); // 强锁定 20 秒
+          }
           hideOverlay();
         },
         onDisableFeature: async () => {
@@ -162,11 +183,6 @@ export default defineContentScript({
       const target = e.target as HTMLElement;
       if (!target) return;
 
-      // 如果鼠标已经移出了先前暂时隐藏的表格，解除静默锁定
-      if (tempMutedTableRoot && !tempMutedTableRoot.contains(target)) {
-        tempMutedTableRoot = null;
-      }
-
       // 鼠标在操作栏内部时保持显示
       if (overlayHost && overlayHost.contains(target)) {
         if (hideTimer) clearTimeout(hideTimer);
@@ -176,21 +192,17 @@ export default defineContentScript({
       // 智能寻找逻辑实体 (单体 table 或 AntD/Element 等大容器)
       const tableRoot = findLogicalTableRoot(target);
 
-      // 如果当前表格已被用户手动点击暂时隐藏，在鼠标移出前绝不重新唤醒
-      if (tableRoot && tableRoot === tempMutedTableRoot) {
+      // 若表格处于静默冷却期，绝对阻断，绝不唤起
+      if (!tableRoot || !tableRoot.isConnected || isTableMuted(tableRoot)) {
+        if (currentTableRoot && !tableRoot) {
+          if (hideTimer) clearTimeout(hideTimer);
+          hideTimer = window.setTimeout(() => hideOverlay(), 400);
+        }
         return;
       }
 
-      if (tableRoot && tableRoot.isConnected) {
-        if (hideTimer) clearTimeout(hideTimer);
-        showOverlayForTable(tableRoot);
-      } else if (currentTableRoot) {
-        // 延时隐藏，方便鼠标平滑移动到操作栏上点击
-        if (hideTimer) clearTimeout(hideTimer);
-        hideTimer = window.setTimeout(() => {
-          hideOverlay();
-        }, 400);
-      }
+      if (hideTimer) clearTimeout(hideTimer);
+      showOverlayForTable(tableRoot);
     });
 
     // 页面滚动时实时更新吸顶位置

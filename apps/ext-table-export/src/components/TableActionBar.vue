@@ -75,7 +75,7 @@ const handleClose = () => {
 
       <!-- 更多设置与关闭菜单 -->
       <div class="menu-container">
-        <button class="btn btn-icon-only" title="更多选项 / 关闭此功能" @click="showMenu = !showMenu">
+        <button class="btn btn-icon-only" title="更多选项 / 关闭此功能" @click.stop.prevent="showMenu = !showMenu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="1" />
             <circle cx="12" cy="5" r="1" />
@@ -84,18 +84,18 @@ const handleClose = () => {
         </button>
 
         <div v-if="showMenu" class="dropdown-menu">
-          <button class="menu-item" @click.stop="handleClose">
+          <button class="menu-item" @click.stop.prevent="handleClose">
             <span>仅暂时隐藏当前浮标</span>
-            <small class="menu-hint">鼠标移出该表格前不会再次出现</small>
+            <small class="menu-hint">20秒内鼠标在此表格上绝不再弹出</small>
           </button>
-          <button class="menu-item menu-item-danger" @click.stop="handleDisable">
+          <button class="menu-item menu-item-danger" @click.stop.prevent="handleDisable">
             <span>关闭表格悬浮探测功能</span>
             <small class="menu-hint">关闭后可在插件栏重新开启</small>
           </button>
         </div>
       </div>
 
-      <button class="btn btn-close" title="隐藏" @click="emit('close')">
+      <button class="btn btn-close" title="隐藏" @click.stop.prevent="handleClose">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
