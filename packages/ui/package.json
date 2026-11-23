@@ -1,0 +1,19 @@
+{
+  "name": "@100free/ui",
+  "version": "1.0.0",
+  "description": "100款免费生产力插件通用轻量 UI 组件库",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vue-tsc": "^2.2.0"
+  }
+}
+

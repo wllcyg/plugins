@@ -1,0 +1,20 @@
+{
+  "name": "project-100-free",
+  "version": "1.0.0",
+  "private": true,
+  "description": "100款免费生产力插件计划 - Monorepo 代码库",
+  "scripts": {
+    "dev:template": "pnpm --filter @100free/ext-template dev",
+    "build:template": "pnpm --filter @100free/ext-template build",
+    "build:all": "pnpm -r run build",
+    "type-check": "pnpm -r run type-check"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vue": "^3.5.13",
+    "@types/node": "^22.10.7",
+    "@types/chrome": "^0.0.304"
+  },
+  "packageManager": "pnpm@10.27.0"
+}
+
