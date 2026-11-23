@@ -4,7 +4,9 @@ export interface PluginItem {
   badge: string;
   tagline: string;
   description: string;
-  icon: string;
+  iconName: 'Table' | 'Camera' | 'Sparkles';
+  iconColor: string;
+  iconBg: string;
   version: string;
   category: 'data' | 'tool' | 'office';
   tags: string[];
@@ -21,7 +23,9 @@ export const PLUGINS_DATA: PluginItem[] = [
     badge: '首款力作 · 已上线',
     tagline: '智能识别 AntD / Element 复合表格，告别手动复制排版折磨',
     description: '无需繁琐授权，鼠标悬停即刻浮现导出条。深度兼容现代 SPA 页面与多层表头/跨行合并，一秒转为 Excel / CSV，数据本地纯净解析。',
-    icon: '📊',
+    iconName: 'Table',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50 border-emerald-100',
     version: 'v1.0.0',
     category: 'data',
     tags: ['表格导出', 'Ant Design', 'Element Plus', '零权限滥用'],
@@ -36,7 +40,9 @@ export const PLUGINS_DATA: PluginItem[] = [
     badge: '即将发布',
     tagline: '滚动截屏不再断裂，智能剔除浮动吸顶导航',
     description: '自动感知滚动区域，生成超清视网膜 PNG，一键标记、马赛克敏感数据，专为产品经理与运营研发打造。',
-    icon: '📸',
+    iconName: 'Camera',
+    iconColor: 'text-sky-600',
+    iconBg: 'bg-sky-50 border-sky-100',
     version: 'v0.1.0',
     category: 'tool',
     tags: ['长截图', '高分辨率', '隐私打码'],
@@ -49,7 +55,9 @@ export const PLUGINS_DATA: PluginItem[] = [
     badge: '即将发布',
     tagline: '随时随地选中文字，一秒唤出上下文深度提示词',
     description: '划词即分析意图，快速润色、提炼核心痛点，让普通对话秒变专家级结构化 Prompt。',
-    icon: '⚡',
+    iconName: 'Sparkles',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50 border-amber-100',
     version: 'v0.1.0',
     category: 'office',
     tags: ['AI 效能', '提示词', '划词协同'],
