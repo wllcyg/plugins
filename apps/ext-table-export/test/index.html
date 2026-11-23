@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【100Free】网页表格导出插件测试靶场</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+    h1 {
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 12px;
+      color: #0f172a;
+    }
+    .badge {
+      background: #10b981;
+      color: white;
+      font-size: 13px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      font-weight: normal;
+    }
+    .guide-box {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0 30px;
+      font-size: 14px;
+    }
+    .guide-box ol {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 36px;
+      font-size: 14px;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: #334155;
+    }
+    tr:nth-child(even) td {
+      background-color: #f1f5f9;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #e2e8f0;
+    }
+    .tag-success { background: #dcfce7; color: #166534; }
+    .tag-danger { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+
+  <h1>100-Free 网页表格导出插件 · 本地功能测试页 <span class="badge">MVP 验证</span></h1>
+  
+  <div class="guide-box">
+    <strong>💡 测试使用说明：</strong>
+    <ol>
+      <li>将鼠标移动到下方任一表格上，观察右上角是否平滑浮现 <b>绿色虚线高亮</b> 与 <b>【导出 Excel】/【CSV】操作条</b>。</li>
+      <li>点击 <b>【导出 Excel】</b>，验证浏览器是否成功下载标准 <code>.xlsx</code> 文件并能正常打开。</li>
+      <li>点击 <b>【复制】</b> 按钮，在电脑本地 Excel 或记事本中直接 <code>Ctrl + V</code> 粘贴验证制表符。</li>
+      <li>点击浏览器右上角插件图标，查看 Popup 是否精准列出了当前页面的 2 个表格及其行列数据。</li>
+    </ol>
+  </div>
+
+  <h2>表格 1：2026 跨境电商 Q3 季度爆款销量榜</h2>
+  <table id="sales-ranking">
+    <caption>跨境热门类目商品销售统计报表</caption>
+    <thead>
+      <tr>
+        <th>商品编号</th>
+        <th>类目名称</th>
+        <th>商品标题</th>
+        <th>单价 (USD)</th>
+        <th>总销量 (件)</th>
+        <th>销售额 (USD)</th>
+        <th>库存状态</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>SKU-1001</td>
+        <td>户外运动</td>
+        <td>超轻便携折叠露营椅</td>
+        <td>$28.50</td>
+        <td>12,450</td>
+        <td>$354,825</td>
+        <td><span class="tag tag-success">现货充沛</span></td>
+      </tr>
+      <tr>
+        <td>SKU-1002</td>
+        <td>3C 数码</td>
+        <td>三合一磁吸无线快充底座</td>
+        <td>$42.00</td>
+        <td>8,920</td>
+        <td>$374,640</td>
+        <td><span class="tag tag-success">热销中</span></td>
+      </tr>
+      <tr>
+        <td>SKU-1003</td>
+        <td>居家生活</td>
+        <td>智能感应静音垃圾桶 15L</td>
+        <td>$19.99</td>
+        <td>23,100</td>
+        <td>$461,769</td>
+        <td><span class="tag tag-danger">库存紧张</span></td>
+      </tr>
+      <tr>
+        <td>SKU-1004</td>
+        <td>美妆个护</td>
+        <td>便携式高频声波洁面仪</td>
+        <td>$15.80</td>
+        <td>31,400</td>
+        <td>$496,120</td>
+        <td><span class="tag tag-success">现货充沛</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>表格 2：复杂跨行跨列员工绩效考勤表 (Rowspan & Colspan)</h2>
+  <table id="performance-table">
+    <thead>
+      <tr>
+        <th rowspan="2">部门</th>
+        <th rowspan="2">姓名</th>
+        <th colspan="3">季度 KPI 评定</th>
+        <th rowspan="2">最终评级</th>
+      </tr>
+      <tr>
+        <th>业务产出 (50%)</th>
+        <th>团队协作 (30%)</th>
+        <th>技术创新 (20%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="2">研发部</td>
+        <td>张晓伟</td>
+        <td>92</td>
+        <td>88</td>
+        <td>95</td>
+        <td><b>S</b></td>
+      </tr>
+      <tr>
+        <td>李浩然</td>
+        <td>85</td>
+        <td>90</td>
+        <td>82</td>
+        <td><b>A</b></td>
+      </tr>
+      <tr>
+        <td>运营部</td>
+        <td>陈雨萱</td>
+        <td>89</td>
+        <td>94</td>
+        <td>85</td>
+        <td><b>A+</b></td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
+

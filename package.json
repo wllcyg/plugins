@@ -6,6 +6,8 @@
   "scripts": {
     "dev:template": "pnpm --filter @100free/ext-template dev",
     "build:template": "pnpm --filter @100free/ext-template build",
+    "dev:table": "pnpm --filter @100free/ext-table-export dev",
+    "build:table": "pnpm --filter @100free/ext-table-export build",
     "build:all": "pnpm -r run build",
     "type-check": "pnpm -r run type-check"
   },
