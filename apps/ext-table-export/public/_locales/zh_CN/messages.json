@@ -1,0 +1,80 @@
+{
+  "extensionName": {
+    "message": "网页表格一键转 Excel - 智能导出工具",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "一键将网页中复杂的表格 (含 Ant Design / Element Plus) 导出为 Excel 或 CSV，大数字防精度截断，数据纯本地安全解析。",
+    "description": "扩展描述"
+  },
+  "exportExcel": {
+    "message": "导出 Excel"
+  },
+  "exportCsv": {
+    "message": "CSV"
+  },
+  "copy": {
+    "message": "复制"
+  },
+  "copied": {
+    "message": "已复制"
+  },
+  "rowsCols": {
+    "message": "$ROWS$ 行 × $COLS$ 列",
+    "placeholders": {
+      "rows": { "content": "$1" },
+      "cols": { "content": "$2" }
+    }
+  },
+  "virtualScrollWarning": {
+    "message": "虚拟滚动：当前仅捕获屏幕已挂载的可视行"
+  },
+  "muteCurrent": {
+    "message": "仅暂时隐藏当前浮标"
+  },
+  "muteCurrentHint": {
+    "message": "20秒内鼠标在此表格上绝不再弹出"
+  },
+  "disableHost": {
+    "message": "在此网站 ($HOST$) 永久禁用",
+    "placeholders": {
+      "host": { "content": "$1" }
+    }
+  },
+  "disableHostHint": {
+    "message": "不影响其他网站，可在插件面板管理"
+  },
+  "disableGlobal": {
+    "message": "关闭表格悬浮探测功能"
+  },
+  "disableGlobalHint": {
+    "message": "关闭后可在插件栏重新开启"
+  },
+  "hoverDetectorLabel": {
+    "message": "网页悬停自动探测"
+  },
+  "hoverDetectorActive": {
+    "message": "鼠标悬停在表格上自动浮现操作条"
+  },
+  "hoverDetectorInactive": {
+    "message": "已停用网页浮标，不干扰正常浏览"
+  },
+  "scanningTables": {
+    "message": "正在扫描当前页面表格..."
+  },
+  "noTablesFound": {
+    "message": "当前页面未探测到标准表格"
+  },
+  "refreshTip": {
+    "message": "提示：如果页面有异步数据，可刷新重试。"
+  },
+  "foundTables": {
+    "message": "当前页发现 $COUNT$ 个表格（点击可直接导出）：",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "footerSlogan": {
+    "message": "打破昂贵订阅 · 让生产力重归自由"
+  }
+}

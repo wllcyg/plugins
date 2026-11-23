@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { ExtensionStorage } from '@100free/core';
 import { AppButton } from '@100free/ui';
+import { t } from '../../src/utils/i18n';
 
 interface TableMeta {
   index: number;
@@ -74,7 +75,7 @@ onMounted(async () => {
     <header class="header">
       <div class="title-row">
         <span class="logo">📊</span>
-        <h3 class="title">网页表格一键导出</h3>
+        <h3 class="title">{{ t('extensionName') }}</h3>
       </div>
       <span class="badge">100-Free</span>
     </header>
@@ -82,14 +83,14 @@ onMounted(async () => {
     <!-- 功能启停主控卡片 -->
     <div class="setting-card">
       <div class="setting-info">
-        <span class="setting-label">网页悬停自动探测</span>
+        <span class="setting-label">{{ t('hoverDetectorLabel') }}</span>
         <span class="setting-desc">
-          {{ hoverEnabled ? '鼠标悬停在表格上自动浮现操作条' : '已停用网页浮标，不干扰正常浏览' }}
+          {{ hoverEnabled ? t('hoverDetectorActive') : t('hoverDetectorInactive') }}
         </span>
       </div>
       <button
         :class="['switch-btn', { 'switch-active': hoverEnabled }]"
-        title="开启/关闭网页悬停探测"
+        :title="t('hoverDetectorLabel')"
         @click="toggleHoverDetector"
       >
         <span class="switch-handle" />
@@ -98,28 +99,28 @@ onMounted(async () => {
 
     <main class="content">
       <div v-if="loading" class="empty-state">
-        正在扫描当前页面表格...
+        {{ t('scanningTables') }}
       </div>
 
       <div v-else-if="tables.length === 0" class="empty-state">
-        <p>当前页面未探测到标准表格</p>
-        <span class="tip">提示：如果页面有异步数据，可刷新重试。</span>
+        <p>{{ t('noTablesFound') }}</p>
+        <span class="tip">{{ t('refreshTip') }}</span>
       </div>
 
       <div v-else class="table-list">
         <div class="list-summary">
-          当前页发现 <b>{{ tables.length }}</b> 个表格（点击可直接导出）：
+          {{ t('foundTables', [String(tables.length)]) }}
         </div>
-        <div v-for="t in tables" :key="t.index" class="table-item">
+        <div v-for="tItem in tables" :key="tItem.index" class="table-item">
           <div class="table-info">
-            <span class="name" :title="t.title">{{ t.title }}</span>
-            <span class="meta">{{ t.rowCount }} 行 × {{ t.colCount }} 列</span>
+            <span class="name" :title="tItem.title">{{ tItem.title }}</span>
+            <span class="meta">{{ t('rowsCols', [String(tItem.rowCount), String(tItem.colCount)]) }}</span>
           </div>
           <div class="table-actions">
-            <AppButton size="sm" variant="primary" @click="handleExport(t.index, 'excel')">
+            <AppButton size="sm" variant="primary" @click="handleExport(tItem.index, 'excel')">
               Excel
             </AppButton>
-            <AppButton size="sm" variant="secondary" @click="handleExport(t.index, 'csv')">
+            <AppButton size="sm" variant="secondary" @click="handleExport(tItem.index, 'csv')">
               CSV
             </AppButton>
           </div>
@@ -128,7 +129,7 @@ onMounted(async () => {
     </main>
 
     <footer class="footer">
-      <span>打破昂贵订阅 · 让生产力重归自由</span>
+      <span>{{ t('footerSlogan') }}</span>
     </footer>
   </div>
 </template>

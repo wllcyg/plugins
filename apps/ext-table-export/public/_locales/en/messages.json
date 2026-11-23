@@ -1,0 +1,80 @@
+{
+  "extensionName": {
+    "message": "Web Table to Excel - Smart Export Tool",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "One-click export of complex web tables (including AntD / Element) to Excel & CSV. Anti-truncation for long IDs. 100% private & local.",
+    "description": "Extension description"
+  },
+  "exportExcel": {
+    "message": "Export Excel"
+  },
+  "exportCsv": {
+    "message": "CSV"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "rowsCols": {
+    "message": "$ROWS$ Rows × $COLS$ Cols",
+    "placeholders": {
+      "rows": { "content": "$1" },
+      "cols": { "content": "$2" }
+    }
+  },
+  "virtualScrollWarning": {
+    "message": "Virtual Scroll: Only visible mounted rows are captured"
+  },
+  "muteCurrent": {
+    "message": "Hide temporarily on this table"
+  },
+  "muteCurrentHint": {
+    "message": "Will not pop up on this table for 20 seconds"
+  },
+  "disableHost": {
+    "message": "Disable permanently on $HOST$",
+    "placeholders": {
+      "host": { "content": "$1" }
+    }
+  },
+  "disableHostHint": {
+    "message": "Other sites won't be affected. Manageable in popup"
+  },
+  "disableGlobal": {
+    "message": "Turn off hover detection globally"
+  },
+  "disableGlobalHint": {
+    "message": "You can turn it back on anytime from the extension popup"
+  },
+  "hoverDetectorLabel": {
+    "message": "Hover Auto Detection"
+  },
+  "hoverDetectorActive": {
+    "message": "Float bar appears when hovering over any table"
+  },
+  "hoverDetectorInactive": {
+    "message": "Hover bar paused. Browse without distraction"
+  },
+  "scanningTables": {
+    "message": "Scanning tables on current page..."
+  },
+  "noTablesFound": {
+    "message": "No standard tables detected on this page"
+  },
+  "refreshTip": {
+    "message": "Tip: If data loads asynchronously, refresh and retry."
+  },
+  "foundTables": {
+    "message": "Found $COUNT$ table(s) on this page (Click to export):",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "footerSlogan": {
+    "message": "Break Expensive Subscriptions · Reclaim Productivity"
+  }
+}

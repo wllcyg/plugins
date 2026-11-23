@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { t } from '../utils/i18n';
 
 interface Props {
   rowCount: number;
@@ -60,7 +61,7 @@ const handleClose = () => {
         <line x1="12" y1="9" x2="12" y2="13" />
         <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
-      <span>虚拟滚动：当前仅捕获屏幕已挂载的可视行</span>
+      <span>{{ t('virtualScrollWarning') }}</span>
     </div>
 
     <div class="table-capsule">
@@ -70,23 +71,23 @@ const handleClose = () => {
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
         </svg>
-        <span class="meta-text">{{ rowCount }} 行 × {{ colCount }} 列</span>
+        <span class="meta-text">{{ t('rowsCols', [String(rowCount), String(colCount)]) }}</span>
       </div>
 
       <!-- 按钮动作组 -->
       <div class="btn-group">
-        <button class="btn btn-excel" title="导出为标准 Excel (.xlsx，已防大数截断)" @click="emit('export-excel')">
+        <button class="btn btn-excel" title="Excel (.xlsx)" @click="emit('export-excel')">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
-          <span>导出 Excel</span>
+          <span>{{ t('exportExcel') }}</span>
         </button>
 
-        <button class="btn btn-secondary" title="导出为纯文本 CSV" @click="emit('export-csv')">
-          <span>CSV</span>
+        <button class="btn btn-secondary" title="CSV" @click="emit('export-csv')">
+          <span>{{ t('exportCsv') }}</span>
         </button>
 
-        <button :class="['btn', 'btn-secondary', { 'btn-copied': copied }]" title="复制数据，可直接在表格软件中粘贴" @click="handleCopy">
+        <button :class="['btn', 'btn-secondary', { 'btn-copied': copied }]" title="Copy" @click="handleCopy">
           <svg v-if="!copied" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
@@ -94,12 +95,12 @@ const handleClose = () => {
           <svg v-else class="btn-icon success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          <span>{{ copied ? '已复制' : '复制' }}</span>
+          <span>{{ copied ? t('copied') : t('copy') }}</span>
         </button>
 
         <!-- 更多设置与关闭菜单 -->
         <div class="menu-container">
-          <button class="btn btn-icon-only" title="更多选项 / 关闭此功能" @click.stop.prevent="showMenu = !showMenu">
+          <button class="btn btn-icon-only" title="Options" @click.stop.prevent="showMenu = !showMenu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="1" />
               <circle cx="12" cy="5" r="1" />
@@ -109,21 +110,21 @@ const handleClose = () => {
 
           <div v-if="showMenu" class="dropdown-menu">
             <button class="menu-item" @click.stop.prevent="handleClose">
-              <span>仅暂时隐藏当前浮标</span>
-              <small class="menu-hint">20秒内鼠标在此表格上绝不再弹出</small>
+              <span>{{ t('muteCurrent') }}</span>
+              <small class="menu-hint">{{ t('muteCurrentHint') }}</small>
             </button>
             <button v-if="hostname" class="menu-item" @click.stop.prevent="handleDisableHost">
-              <span>在此网站 ({{ hostname }}) 永久禁用</span>
-              <small class="menu-hint">不影响其他网站，可在插件面板管理</small>
+              <span>{{ t('disableHost', [hostname]) }}</span>
+              <small class="menu-hint">{{ t('disableHostHint') }}</small>
             </button>
             <button class="menu-item menu-item-danger" @click.stop.prevent="handleDisable">
-              <span>关闭表格悬浮探测功能</span>
-              <small class="menu-hint">关闭后可在插件栏重新开启</small>
+              <span>{{ t('disableGlobal') }}</span>
+              <small class="menu-hint">{{ t('disableGlobalHint') }}</small>
             </button>
           </div>
         </div>
 
-        <button class="btn btn-close" title="隐藏" @click.stop.prevent="handleClose">
+        <button class="btn btn-close" title="Close" @click.stop.prevent="handleClose">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
