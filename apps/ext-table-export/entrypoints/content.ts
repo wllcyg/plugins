@@ -216,9 +216,13 @@ export default defineContentScript({
       }
     }, { passive: true });
 
-    // 接收来自 Popup 的全页导出消息
+    // 接收来自 Popup 的消息（开关联动 + 全页导出）
     chrome.runtime?.onMessage?.addListener((message, _sender, sendResponse) => {
-      if (message.type === 'SCAN_TABLES') {
+      if (message.type === 'SET_HOVER_ENABLED') {
+        isHoverEnabled = !!message.enabled;
+        if (!isHoverEnabled) hideOverlay();
+        sendResponse({ success: true });
+      } else if (message.type === 'SCAN_TABLES') {
         // 扫描页面所有逻辑表格，避免 AntD 一个大表格被重复列出为多个碎片
         const rawTables = Array.from(document.querySelectorAll('table'));
         const roots = new Set<HTMLElement>();

@@ -20,6 +20,18 @@ const loading = ref(true);
 const toggleHoverDetector = async () => {
   hoverEnabled.value = !hoverEnabled.value;
   await ExtensionStorage.set(STORAGE_KEY_HOVER, hoverEnabled.value);
+  // 实时通知当前 tab 的 Content Script，无需等待 storage 事件延迟
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await chrome.tabs.sendMessage(tab.id, {
+        type: 'SET_HOVER_ENABLED',
+        enabled: hoverEnabled.value
+      });
+    }
+  } catch {
+    // tab 不支持 content script（如 chrome:// 页面）时静默忽略
+  }
 };
 
 const scanTables = async () => {
