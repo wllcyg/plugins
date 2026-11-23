@@ -58,6 +58,26 @@ export default defineContentScript({
       removeCurrentApp();
     };
 
+    // 重新计算并更新悬浮栏位置
+    const updateOverlayPosition = (table: HTMLTableElement) => {
+      if (!overlayHost) return;
+      const rect = table.getBoundingClientRect();
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+
+      const barHeight = 44;
+      const minTop = rect.top + scrollY - barHeight;
+      const stickyTop = scrollY + 12;
+      const maxTop = rect.bottom + scrollY - barHeight - 10;
+
+      const topPos = Math.min(Math.max(minTop, stickyTop), maxTop);
+      const barWidthEstimate = 310;
+      const leftPos = Math.max(8, rect.right + scrollX - barWidthEstimate);
+
+      overlayHost.style.top = `${topPos}px`;
+      overlayHost.style.left = `${leftPos}px`;
+    };
+
     const showOverlayForTable = (table: HTMLTableElement) => {
       if (currentTable === table) return;
 
@@ -80,18 +100,8 @@ export default defineContentScript({
       currentTable.style.outline = '2px dashed #10b981';
       currentTable.style.outlineOffset = '2px';
 
-      // 计算悬浮工具条坐标：靠右并位于表格顶部外侧 40px
-      const rect = table.getBoundingClientRect();
-      const scrollX = window.scrollX;
-      const scrollY = window.scrollY;
-
-      const topPos = Math.max(8, rect.top + scrollY - 44);
-      const barWidthEstimate = 310;
-      const leftPos = Math.max(8, rect.right + scrollX - barWidthEstimate);
-
       overlayHost.style.display = 'block';
-      overlayHost.style.top = `${topPos}px`;
-      overlayHost.style.left = `${leftPos}px`;
+      updateOverlayPosition(table);
 
       removeCurrentApp();
 
@@ -140,6 +150,13 @@ export default defineContentScript({
         }, 400);
       }
     });
+
+    // 页面滚动时实时更新吸顶位置
+    window.addEventListener('scroll', () => {
+      if (currentTable && overlayHost && overlayHost.style.display !== 'none') {
+        updateOverlayPosition(currentTable);
+      }
+    }, { passive: true });
 
     // 接收来自 Popup 的全页导出消息
     chrome.runtime?.onMessage?.addListener((message, _sender, sendResponse) => {
