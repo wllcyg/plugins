@@ -1,4 +1,5 @@
 import { createApp, type App } from 'vue';
+import { ExtensionStorage } from '@100free/core';
 import {
   findLogicalTableRoot,
   parseTableOrContainer,
@@ -10,10 +11,13 @@ import {
 import TableActionBar from '../src/components/TableActionBar.vue';
 import overlayStyles from '../src/styles/overlay.css?inline';
 
+const STORAGE_KEY_HOVER = 'table_hover_detector_enabled';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   main() {
+    let isHoverEnabled = true;
     let currentTableRoot: HTMLElement | null = null;
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
@@ -21,6 +25,18 @@ export default defineContentScript({
     let vueApp: App | null = null;
     let hideTimer: number | null = null;
     let cachedData: ParsedTableData | null = null;
+
+    // 初始化与监听悬停功能启用状态
+    ExtensionStorage.get<boolean>(STORAGE_KEY_HOVER, true).then((enabled) => {
+      isHoverEnabled = enabled !== false;
+    });
+
+    ExtensionStorage.watch<boolean>(STORAGE_KEY_HOVER, (enabled) => {
+      isHoverEnabled = enabled !== false;
+      if (!isHoverEnabled) {
+        hideOverlay();
+      }
+    });
 
     // 创建高亮覆盖框与操作栏挂载点
     const initOverlay = () => {
@@ -127,6 +143,10 @@ export default defineContentScript({
         },
         onClose: () => {
           hideOverlay();
+        },
+        onDisableFeature: async () => {
+          await ExtensionStorage.set(STORAGE_KEY_HOVER, false);
+          hideOverlay();
         }
       });
 
@@ -135,6 +155,8 @@ export default defineContentScript({
 
     // 监听鼠标移动，支持 SPA 动态元素智能嗅探
     document.addEventListener('mouseover', (e: MouseEvent) => {
+      if (!isHoverEnabled) return;
+
       const target = e.target as HTMLElement;
       if (!target) return;
 

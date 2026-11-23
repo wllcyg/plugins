@@ -13,9 +13,11 @@ const emit = defineEmits<{
   (e: 'export-csv'): void;
   (e: 'copy'): void;
   (e: 'close'): void;
+  (e: 'disable-feature'): void;
 }>();
 
 const copied = ref(false);
+const showMenu = ref(false);
 
 const handleCopy = () => {
   copied.value = true;
@@ -23,6 +25,11 @@ const handleCopy = () => {
   setTimeout(() => {
     copied.value = false;
   }, 1600);
+};
+
+const handleDisable = () => {
+  showMenu.value = false;
+  emit('disable-feature');
 };
 </script>
 
@@ -61,7 +68,28 @@ const handleCopy = () => {
         <span>{{ copied ? '已复制' : '复制' }}</span>
       </button>
 
-      <button class="btn btn-close" title="隐藏工具条" @click="emit('close')">
+      <!-- 更多设置与关闭菜单 -->
+      <div class="menu-container">
+        <button class="btn btn-icon-only" title="更多选项 / 关闭此功能" @click="showMenu = !showMenu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+
+        <div v-if="showMenu" class="dropdown-menu">
+          <button class="menu-item" @click="emit('close')">
+            <span>仅暂时隐藏当前浮标</span>
+          </button>
+          <button class="menu-item menu-item-danger" @click="handleDisable">
+            <span>关闭表格悬浮探测功能</span>
+            <small class="menu-hint">关闭后可在插件栏重新开启</small>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-close" title="隐藏" @click="emit('close')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
@@ -72,18 +100,17 @@ const handleCopy = () => {
 </template>
 
 <style scoped>
-/* 整个悬浮胶囊主容器 */
 .table-capsule {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #f8fafc;
   padding: 5px 6px 5px 12px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.12);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   font-size: 13px;
   line-height: 1;
@@ -103,7 +130,6 @@ const handleCopy = () => {
   }
 }
 
-/* 左侧行列标签 */
 .meta-tag {
   display: flex;
   align-items: center;
@@ -126,7 +152,6 @@ const handleCopy = () => {
   white-space: nowrap;
 }
 
-/* 按钮组 */
 .btn-group {
   display: flex;
   align-items: center;
@@ -154,7 +179,6 @@ const handleCopy = () => {
   height: 13px;
 }
 
-/* 导出 Excel - 核心高亮绿色按钮 */
 .btn-excel {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
@@ -163,13 +187,8 @@ const handleCopy = () => {
 .btn-excel:hover {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
-}
-.btn-excel:active {
-  transform: translateY(0);
 }
 
-/* 次要功能按钮 (CSV / 复制) */
 .btn-secondary {
   background: rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
@@ -177,10 +196,6 @@ const handleCopy = () => {
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
-  transform: translateY(-1px);
-}
-.btn-secondary:active {
-  transform: translateY(0);
 }
 
 .btn-copied {
@@ -192,7 +207,79 @@ const handleCopy = () => {
   color: #34d399;
 }
 
-/* 关闭微按钮 */
+.btn-icon-only {
+  padding: 6px 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+.btn-icon-only:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+.btn-icon-only svg {
+  width: 14px;
+  height: 14px;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  z-index: 100;
+  animation: fadeIn 0.12s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s;
+  width: 100%;
+}
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.menu-item-danger {
+  color: #f87171;
+}
+.menu-item-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.menu-hint {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
 .btn-close {
   padding: 6px 6px;
   background: transparent;

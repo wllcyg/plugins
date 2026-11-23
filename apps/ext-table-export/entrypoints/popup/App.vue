@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { ExtensionStorage } from '@100free/core';
 import { AppButton } from '@100free/ui';
 
 interface TableMeta {
@@ -9,8 +10,17 @@ interface TableMeta {
   colCount: number;
 }
 
+const STORAGE_KEY_HOVER = 'table_hover_detector_enabled';
+
+const hoverEnabled = ref(true);
 const tables = ref<TableMeta[]>([]);
 const loading = ref(true);
+
+// 切换悬浮探测功能开关
+const toggleHoverDetector = async () => {
+  hoverEnabled.value = !hoverEnabled.value;
+  await ExtensionStorage.set(STORAGE_KEY_HOVER, hoverEnabled.value);
+};
 
 const scanTables = async () => {
   loading.value = true;
@@ -23,7 +33,6 @@ const scanTables = async () => {
       }
     }
   } catch {
-    // 页面可能未加载或无权限注入
     tables.value = [];
   } finally {
     loading.value = false;
@@ -41,7 +50,9 @@ const handleExport = async (index: number, format: 'excel' | 'csv') => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  const enabled = await ExtensionStorage.get<boolean>(STORAGE_KEY_HOVER, true);
+  hoverEnabled.value = enabled !== false;
   scanTables();
 });
 </script>
@@ -56,6 +67,23 @@ onMounted(() => {
       <span class="badge">100-Free</span>
     </header>
 
+    <!-- 功能启停主控卡片 -->
+    <div class="setting-card">
+      <div class="setting-info">
+        <span class="setting-label">网页悬停自动探测</span>
+        <span class="setting-desc">
+          {{ hoverEnabled ? '鼠标悬停在表格上自动浮现操作条' : '已停用网页浮标，不干扰正常浏览' }}
+        </span>
+      </div>
+      <button
+        :class="['switch-btn', { 'switch-active': hoverEnabled }]"
+        title="开启/关闭网页悬停探测"
+        @click="toggleHoverDetector"
+      >
+        <span class="switch-handle" />
+      </button>
+    </div>
+
     <main class="content">
       <div v-if="loading" class="empty-state">
         正在扫描当前页面表格...
@@ -63,16 +91,16 @@ onMounted(() => {
 
       <div v-else-if="tables.length === 0" class="empty-state">
         <p>当前页面未探测到标准表格</p>
-        <span class="tip">提示：鼠标直接悬停在表格上也会自动出现导出浮标。</span>
+        <span class="tip">提示：如果页面有异步数据，可刷新重试。</span>
       </div>
 
       <div v-else class="table-list">
         <div class="list-summary">
-          共发现 <b>{{ tables.length }}</b> 个表格：
+          当前页发现 <b>{{ tables.length }}</b> 个表格（点击可直接导出）：
         </div>
         <div v-for="t in tables" :key="t.index" class="table-item">
           <div class="table-info">
-            <span class="name">{{ t.title }}</span>
+            <span class="name" :title="t.title">{{ t.title }}</span>
             <span class="meta">{{ t.rowCount }} 行 × {{ t.colCount }} 列</span>
           </div>
           <div class="table-actions">
@@ -96,7 +124,7 @@ onMounted(() => {
 <style scoped>
 .popup-box {
   width: 320px;
-  max-height: 480px;
+  max-height: 520px;
   padding: 16px;
   box-sizing: border-box;
   background-color: #ffffff;
@@ -138,10 +166,72 @@ onMounted(() => {
   border-radius: 4px;
 }
 
+/* 核心设置开关卡片 */
+.setting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.setting-desc {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* 现代高颜值 Switch 控件 */
+.switch-btn {
+  width: 38px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 2px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.switch-active {
+  background-color: #10b981;
+}
+
+.switch-handle {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch-active .switch-handle {
+  transform: translateX(16px);
+}
+
 .content {
   padding: 14px 0;
   overflow-y: auto;
-  max-height: 340px;
+  max-height: 320px;
 }
 
 .empty-state {
@@ -216,4 +306,5 @@ onMounted(() => {
   color: #94a3b8;
 }
 </style>
+
 
