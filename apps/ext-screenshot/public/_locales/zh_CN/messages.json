@@ -8,10 +8,13 @@
     "description": "扩展描述"
   },
   "captureFullPage": {
-    "message": "截取整页长图"
+    "message": "截图整个页面"
+  },
+  "captureFullPageHd": {
+    "message": "高清整页截图"
   },
   "captureVisible": {
-    "message": "截取当前可视区域"
+    "message": "截图可见部分"
   },
   "captureSelected": {
     "message": "选区 / 局部滚动截图"

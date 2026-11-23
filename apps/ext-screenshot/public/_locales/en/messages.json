@@ -10,6 +10,9 @@
   "captureFullPage": {
     "message": "Capture Entire Page"
   },
+  "captureFullPageHd": {
+    "message": "HD Full Page Screenshot"
+  },
   "captureVisible": {
     "message": "Capture Visible Part"
   },

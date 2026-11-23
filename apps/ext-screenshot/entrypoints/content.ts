@@ -15,7 +15,7 @@ export default defineContentScript({
     let scrollbarStyleEl: HTMLStyleElement | null = null;
 
     // 创建优雅的滚动进度悬浮气泡
-    const showProgress = (current: number, total: number) => {
+    const showProgress = (current: number, total: number, isHd = false) => {
       if (!indicatorEl) {
         indicatorEl = document.createElement('div');
         indicatorEl.id = '__100free_screenshot_indicator__';
@@ -43,9 +43,12 @@ export default defineContentScript({
         document.body.appendChild(indicatorEl);
       }
       indicatorEl.style.display = 'flex';
+      const label = isHd
+        ? `💎 正在进行 2x 高清整页截图: 第 ${current}/${total} 屏...`
+        : t('capturingProgress', [String(current), String(total)]);
       indicatorEl.innerHTML = `
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;animation:pulse 1s infinite;"></span>
-        <span>${t('capturingProgress', [String(current), String(total)])}</span>
+        <span>${label}</span>
       `;
     };
 
@@ -146,7 +149,13 @@ export default defineContentScript({
     };
 
     // 拼接多屏并触发下载（精确基于 clientWidth 绘制，剔除多余边距）
-    const stitchAndDownload = async (slices: ScreenShotSlice[], contentWidth: number, totalHeight: number, dpr: number) => {
+    const stitchAndDownload = async (
+      slices: ScreenShotSlice[],
+      contentWidth: number,
+      totalHeight: number,
+      dpr: number,
+      isHd = false
+    ) => {
       if (indicatorEl) {
         indicatorEl.style.display = 'flex';
         indicatorEl.innerHTML = `<span>⏳ ${t('stitching')}</span>`;
@@ -180,7 +189,7 @@ export default defineContentScript({
       }
 
       const finalUrl = canvas.toDataURL('image/png');
-      const filename = `Screenshot_${document.title.replace(/[\\/:*?"<>|]/g, '_')}_${Date.now()}.png`;
+      const filename = `Screenshot_${isHd ? 'HD_2x_' : ''}${document.title.replace(/[\\/:*?"<>|]/g, '_')}_${Date.now()}.png`;
 
       // 触发下载
       const anchor = document.createElement('a');
@@ -193,12 +202,23 @@ export default defineContentScript({
       hideProgress();
     };
 
-    // 核心自动滚动截屏引擎
-    const startFullPageCapture = async () => {
+    // 核心自动滚动截屏引擎（支持 1x 标准与 2x 矢量级高清）
+    const startFullPageCapture = async (options?: { hd?: boolean }) => {
+      const isHd = !!options?.hd;
       const originalScrollY = window.scrollY;
       const originalScrollX = window.scrollX;
+      let originalZoom: number | null = null;
 
       try {
+        // 如果开启了高清模式，临时将当前 Tab 渲染缩放提升为 2.0x 矢量超清
+        if (isHd) {
+          const zoomRes = await chrome.runtime.sendMessage({ type: 'SET_TAB_ZOOM', zoom: 2.0 });
+          if (zoomRes?.success && typeof zoomRes.originalZoom === 'number') {
+            originalZoom = zoomRes.originalZoom;
+          }
+          await new Promise((r) => setTimeout(r, 120));
+        }
+
         // 核心一：在截屏全程动态隐藏浏览器原生滚动条并等待样式生效
         await toggleScrollbars(true);
 
@@ -231,7 +251,7 @@ export default defineContentScript({
           }
 
           window.scrollTo(0, targetScrollY);
-          showProgress(i + 1, totalScreens);
+          showProgress(i + 1, totalScreens, isHd);
 
           // 等待页面滚动静止
           await new Promise((r) => setTimeout(r, 200));
@@ -254,19 +274,19 @@ export default defineContentScript({
           }
         }
 
-        // 彻底还原元素、滚动条与滚动位置
-        toggleFixedElements(false, false);
-        toggleScrollbars(false);
-        window.scrollTo(originalScrollX, originalScrollY);
-
         // 拼接下载（只裁剪有效 contentWidth，杜绝任何滚动条边缘）
-        await stitchAndDownload(slices, contentWidth, fullHeight, dpr);
+        await stitchAndDownload(slices, contentWidth, fullHeight, dpr, isHd);
       } catch (err) {
         console.error('[100Free Screenshot] 截屏异常:', err);
-        toggleFixedElements(false, false);
-        toggleScrollbars(false);
-        window.scrollTo(originalScrollX, originalScrollY);
         hideProgress();
+      } finally {
+        // 彻底还原元素、滚动条、页面缩放与滚动位置
+        toggleFixedElements(false, false);
+        await toggleScrollbars(false);
+        if (originalZoom !== null) {
+          await chrome.runtime.sendMessage({ type: 'RESTORE_TAB_ZOOM', originalZoom });
+        }
+        window.scrollTo(originalScrollX, originalScrollY);
       }
     };
 
@@ -305,7 +325,7 @@ export default defineContentScript({
 
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message.type === 'START_FULL_PAGE_CAPTURE') {
-        startFullPageCapture();
+        startFullPageCapture({ hd: !!message.hd });
         sendResponse({ success: true });
       } else if (message.type === 'CAPTURE_VISIBLE_ONLY') {
         captureVisibleOnly();
