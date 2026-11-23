@@ -19,6 +19,7 @@ export default defineContentScript({
   main() {
     let isHoverEnabled = true;
     let currentTableRoot: HTMLElement | null = null;
+    let tempMutedTableRoot: HTMLElement | null = null; // 当前被用户手动暂时隐藏的表格
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
     let mountContainer: HTMLElement | null = null;
@@ -142,6 +143,7 @@ export default defineContentScript({
           if (cachedData) copyTableToClipboard(cachedData);
         },
         onClose: () => {
+          tempMutedTableRoot = currentTableRoot;
           hideOverlay();
         },
         onDisableFeature: async () => {
@@ -160,6 +162,11 @@ export default defineContentScript({
       const target = e.target as HTMLElement;
       if (!target) return;
 
+      // 如果鼠标已经移出了先前暂时隐藏的表格，解除静默锁定
+      if (tempMutedTableRoot && !tempMutedTableRoot.contains(target)) {
+        tempMutedTableRoot = null;
+      }
+
       // 鼠标在操作栏内部时保持显示
       if (overlayHost && overlayHost.contains(target)) {
         if (hideTimer) clearTimeout(hideTimer);
@@ -168,6 +175,12 @@ export default defineContentScript({
 
       // 智能寻找逻辑实体 (单体 table 或 AntD/Element 等大容器)
       const tableRoot = findLogicalTableRoot(target);
+
+      // 如果当前表格已被用户手动点击暂时隐藏，在鼠标移出前绝不重新唤醒
+      if (tableRoot && tableRoot === tempMutedTableRoot) {
+        return;
+      }
+
       if (tableRoot && tableRoot.isConnected) {
         if (hideTimer) clearTimeout(hideTimer);
         showOverlayForTable(tableRoot);

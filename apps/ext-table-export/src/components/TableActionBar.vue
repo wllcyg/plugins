@@ -31,6 +31,11 @@ const handleDisable = () => {
   showMenu.value = false;
   emit('disable-feature');
 };
+
+const handleClose = () => {
+  showMenu.value = false;
+  emit('close');
+};
 </script>
 
 <template>
@@ -79,10 +84,11 @@ const handleDisable = () => {
         </button>
 
         <div v-if="showMenu" class="dropdown-menu">
-          <button class="menu-item" @click="emit('close')">
+          <button class="menu-item" @click.stop="handleClose">
             <span>仅暂时隐藏当前浮标</span>
+            <small class="menu-hint">鼠标移出该表格前不会再次出现</small>
           </button>
-          <button class="menu-item menu-item-danger" @click="handleDisable">
+          <button class="menu-item menu-item-danger" @click.stop="handleDisable">
             <span>关闭表格悬浮探测功能</span>
             <small class="menu-hint">关闭后可在插件栏重新开启</small>
           </button>
