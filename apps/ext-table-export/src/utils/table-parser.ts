@@ -25,9 +25,20 @@ const COMPONENT_TABLE_SELECTORS = [
 export function findLogicalTableRoot(target: HTMLElement): HTMLElement | null {
   for (const selector of COMPONENT_TABLE_SELECTORS) {
     const root = target.closest<HTMLElement>(selector);
-    if (root && (root.querySelector('table') || root.querySelector('[role="row"]'))) {
-      return root;
+    if (root) {
+      if (root.querySelector('table')) return root;
+      // 满足纯 DIV 表格特征：容器本身或内部至少包含 2 行 [role="row"]
+      const rows = root.querySelectorAll('[role="row"]');
+      if (rows.length >= 2 || (root.getAttribute('role') === 'row' && root.parentElement)) {
+        return root.matches('[role="grid"], [role="table"]') ? root : root.closest<HTMLElement>('[role="grid"], [role="table"]') || root;
+      }
     }
+  }
+
+  // 兜底直接探测 [role="grid"], [role="table"]
+  const gridContainer = target.closest<HTMLElement>('[role="grid"], [role="table"]');
+  if (gridContainer && gridContainer.querySelectorAll('[role="row"]').length > 0) {
+    return gridContainer;
   }
 
   const nativeTable = target.closest<HTMLTableElement>('table');
@@ -68,6 +79,15 @@ function detectVirtualScroll(container: HTMLElement, renderedRowsCount: number):
  * 统一解析入口：智能识别原生单体 table 还是 AntD / Element 复合拆分表格
  */
 export function parseTableOrContainer(root: HTMLElement): ParsedTableData {
+  // 如果是纯 DIV ARIA Grid 表格（无 table 标签）
+  if (root.matches('[role="grid"], [role="table"]') || (root.querySelector('[role="row"]') && !root.querySelector('table'))) {
+    const res = parseAriaGridTable(root);
+    const virtualCheck = detectVirtualScroll(root, res.rowCount);
+    res.isVirtualScroll = virtualCheck.isVirtual;
+    res.virtualHint = virtualCheck.hint;
+    return res;
+  }
+
   if (root instanceof HTMLTableElement && !root.closest('.ant-table-wrapper, .ant-table, .el-table')) {
     const res = parseSingleHtmlTable(root);
     const virtualCheck = detectVirtualScroll(root, res.rowCount);

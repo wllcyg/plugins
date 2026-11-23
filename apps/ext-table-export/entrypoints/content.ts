@@ -226,10 +226,10 @@ export default defineContentScript({
         sendResponse({ success: true });
       } else if (message.type === 'SCAN_TABLES') {
         // 扫描页面所有逻辑表格，避免 AntD 一个大表格被重复列出为多个碎片
-        const rawTables = Array.from(document.querySelectorAll('table'));
+        const rawTables = Array.from(document.querySelectorAll('table, [role="grid"], [role="table"]'));
         const roots = new Set<HTMLElement>();
         rawTables.forEach((t) => {
-          const root = findLogicalTableRoot(t);
+          const root = findLogicalTableRoot(t as HTMLElement);
           if (root) roots.add(root);
         });
 
@@ -244,8 +244,8 @@ export default defineContentScript({
         });
         sendResponse({ success: true, tables: list });
       } else if (message.type === 'EXPORT_TABLE_BY_INDEX') {
-        const rawTables = Array.from(document.querySelectorAll('table'));
-        const roots = Array.from(new Set(rawTables.map((t) => findLogicalTableRoot(t)).filter((t): t is HTMLElement => !!t)));
+        const rawTables = Array.from(document.querySelectorAll('table, [role="grid"], [role="table"]'));
+        const roots = Array.from(new Set(rawTables.map((t) => findLogicalTableRoot(t as HTMLElement)).filter((t): t is HTMLElement => !!t)));
         const targetRoot = roots[message.index];
         if (targetRoot) {
           const parsed = parseTableOrContainer(targetRoot);
