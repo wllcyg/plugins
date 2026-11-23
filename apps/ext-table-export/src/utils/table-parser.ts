@@ -20,29 +20,61 @@ const COMPONENT_TABLE_SELECTORS = [
 ];
 
 /**
+ * 判断目标容器是否属于系统导航控件或代码文件树（非业务数据表格）
+ */
+function isNavigationOrFileTree(el: HTMLElement): boolean {
+  // 1. 过滤 GitHub 等代码托管平台文件树容器
+  if (
+    el.closest('[aria-label="Files"], [aria-labelledby="files"], .js-navigation-container, .react-directory-filename-column, table.files') ||
+    el.matches('[aria-label="Files"], [aria-labelledby="files"], .js-navigation-container, .react-directory-filename-column')
+  ) {
+    return true;
+  }
+
+  // 2. 过滤各类日历选择器 (Calendar Grid) 控件
+  if (el.closest('.ant-picker-content, .el-picker-panel__content, .flatpickr-calendar, [class*="calendar-table"]')) {
+    return true;
+  }
+
+  // 3. 过滤纯页面大布局框架使用的 Layout Table
+  if (el.getAttribute('role') === 'presentation' || el.getAttribute('role') === 'none') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * 探测目标元素所属的真实逻辑表格实体
  */
 export function findLogicalTableRoot(target: HTMLElement): HTMLElement | null {
+  // 如果处于文件树或日历控件等非数据表格中，直接阻断
+  if (isNavigationOrFileTree(target)) {
+    return null;
+  }
+
   for (const selector of COMPONENT_TABLE_SELECTORS) {
     const root = target.closest<HTMLElement>(selector);
     if (root) {
+      if (isNavigationOrFileTree(root)) return null;
       if (root.querySelector('table')) return root;
       // 满足纯 DIV 表格特征：容器本身或内部至少包含 2 行 [role="row"]
       const rows = root.querySelectorAll('[role="row"]');
       if (rows.length >= 2 || (root.getAttribute('role') === 'row' && root.parentElement)) {
-        return root.matches('[role="grid"], [role="table"]') ? root : root.closest<HTMLElement>('[role="grid"], [role="table"]') || root;
+        const found = root.matches('[role="grid"], [role="table"]') ? root : root.closest<HTMLElement>('[role="grid"], [role="table"]') || root;
+        return isNavigationOrFileTree(found) ? null : found;
       }
     }
   }
 
   // 兜底直接探测 [role="grid"], [role="table"]
   const gridContainer = target.closest<HTMLElement>('[role="grid"], [role="table"]');
-  if (gridContainer && gridContainer.querySelectorAll('[role="row"]').length > 0) {
+  if (gridContainer && !isNavigationOrFileTree(gridContainer) && gridContainer.querySelectorAll('[role="row"]').length > 0) {
     return gridContainer;
   }
 
   const nativeTable = target.closest<HTMLTableElement>('table');
-  if (nativeTable) {
+  if (nativeTable && !isNavigationOrFileTree(nativeTable)) {
     return nativeTable;
   }
 

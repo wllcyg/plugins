@@ -6,11 +6,13 @@ interface Props {
   colCount: number;
   isVirtualScroll?: boolean;
   virtualHint?: string;
+  hostname?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isVirtualScroll: false,
-  virtualHint: ''
+  virtualHint: '',
+  hostname: ''
 });
 
 const emit = defineEmits<{
@@ -19,6 +21,7 @@ const emit = defineEmits<{
   (e: 'copy'): void;
   (e: 'close'): void;
   (e: 'disable-feature'): void;
+  (e: 'disable-host'): void;
 }>();
 
 const copied = ref(false);
@@ -35,6 +38,11 @@ const handleCopy = () => {
 const handleDisable = () => {
   showMenu.value = false;
   emit('disable-feature');
+};
+
+const handleDisableHost = () => {
+  showMenu.value = false;
+  emit('disable-host');
 };
 
 const handleClose = () => {
@@ -103,6 +111,10 @@ const handleClose = () => {
             <button class="menu-item" @click.stop.prevent="handleClose">
               <span>仅暂时隐藏当前浮标</span>
               <small class="menu-hint">20秒内鼠标在此表格上绝不再弹出</small>
+            </button>
+            <button v-if="hostname" class="menu-item" @click.stop.prevent="handleDisableHost">
+              <span>在此网站 ({{ hostname }}) 永久禁用</span>
+              <small class="menu-hint">不影响其他网站，可在插件面板管理</small>
             </button>
             <button class="menu-item menu-item-danger" @click.stop.prevent="handleDisable">
               <span>关闭表格悬浮探测功能</span>

@@ -12,12 +12,14 @@ import TableActionBar from '../src/components/TableActionBar.vue';
 import overlayStyles from '../src/styles/overlay.css?inline';
 
 const STORAGE_KEY_HOVER = 'table_hover_detector_enabled';
+const STORAGE_KEY_BLACKLIST = 'table_detector_disabled_hosts';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   main() {
     let isHoverEnabled = true;
+    let isHostBlacklisted = false;
     let currentTableRoot: HTMLElement | null = null;
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
@@ -26,16 +28,26 @@ export default defineContentScript({
     let hideTimer: number | null = null;
     let cachedData: ParsedTableData | null = null;
 
-    // 初始化与监听悬停功能启用状态
-    ExtensionStorage.get<boolean>(STORAGE_KEY_HOVER, true).then((enabled) => {
+    const currentHost = window.location.hostname;
+
+    // 初始化与监听悬停功能启用状态及域名黑名单
+    const updateDisabledState = async () => {
+      const enabled = await ExtensionStorage.get<boolean>(STORAGE_KEY_HOVER, true);
       isHoverEnabled = enabled !== false;
-    });
+      const blacklist = await ExtensionStorage.get<string[]>(STORAGE_KEY_BLACKLIST, []);
+      isHostBlacklisted = Array.isArray(blacklist) && blacklist.includes(currentHost);
+    };
+
+    updateDisabledState();
 
     ExtensionStorage.watch<boolean>(STORAGE_KEY_HOVER, (enabled) => {
       isHoverEnabled = enabled !== false;
-      if (!isHoverEnabled) {
-        hideOverlay();
-      }
+      if (!isHoverEnabled) hideOverlay();
+    });
+
+    ExtensionStorage.watch<string[]>(STORAGE_KEY_BLACKLIST, (blacklist) => {
+      isHostBlacklisted = Array.isArray(blacklist) && blacklist.includes(currentHost);
+      if (isHostBlacklisted) hideOverlay();
     });
 
     // 创建高亮覆盖框与操作栏挂载点
@@ -154,6 +166,7 @@ export default defineContentScript({
         colCount: cachedData.colCount,
         isVirtualScroll: cachedData.isVirtualScroll,
         virtualHint: cachedData.virtualHint,
+        hostname: currentHost,
         onExportExcel: () => {
           if (cachedData) exportToExcel(cachedData);
         },
@@ -169,6 +182,15 @@ export default defineContentScript({
           }
           hideOverlay();
         },
+        onDisableHost: async () => {
+          const list = (await ExtensionStorage.get<string[]>(STORAGE_KEY_BLACKLIST, [])) || [];
+          if (!list.includes(currentHost)) {
+            list.push(currentHost);
+            await ExtensionStorage.set(STORAGE_KEY_BLACKLIST, list);
+          }
+          isHostBlacklisted = true;
+          hideOverlay();
+        },
         onDisableFeature: async () => {
           await ExtensionStorage.set(STORAGE_KEY_HOVER, false);
           hideOverlay();
@@ -180,7 +202,7 @@ export default defineContentScript({
 
     // 监听鼠标移动，支持 SPA 动态元素智能嗅探
     document.addEventListener('mouseover', (e: MouseEvent) => {
-      if (!isHoverEnabled) return;
+      if (!isHoverEnabled || isHostBlacklisted) return;
 
       const target = e.target as HTMLElement;
       if (!target) return;
