@@ -8,9 +8,6 @@ export interface ParsedTableData {
   title?: string;
 }
 
-/**
- * 复合组件库表格选择器配置
- */
 const COMPONENT_TABLE_SELECTORS = [
   '.ant-table-wrapper',
   '.ant-table',
@@ -20,21 +17,16 @@ const COMPONENT_TABLE_SELECTORS = [
 ];
 
 /**
- * 探测目标元素所属的真实逻辑表格实体 (支持单体 table 与 AntD/Element 等复合大容器)
+ * 探测目标元素所属的真实逻辑表格实体
  */
 export function findLogicalTableRoot(target: HTMLElement): HTMLElement | null {
-  // 1. 优先探测是否处于现代 UI 组件库的大表格容器内
   for (const selector of COMPONENT_TABLE_SELECTORS) {
     const root = target.closest<HTMLElement>(selector);
-    if (root) {
-      // 必须确保容器内确实含有 table 节点
-      if (root.querySelector('table')) {
-        return root;
-      }
+    if (root && root.querySelector('table')) {
+      return root;
     }
   }
 
-  // 2. 普通单体原生表格回退
   const nativeTable = target.closest<HTMLTableElement>('table');
   if (nativeTable) {
     return nativeTable;
@@ -47,133 +39,121 @@ export function findLogicalTableRoot(target: HTMLElement): HTMLElement | null {
  * 统一解析入口：智能识别是原生单体 table 还是 AntD / Element 复合拆分表格
  */
 export function parseTableOrContainer(root: HTMLElement): ParsedTableData {
+  // 如果是纯单体 table，且完全没有任何外部 UI 框架复合容器包裹
   if (root instanceof HTMLTableElement && !root.closest('.ant-table-wrapper, .ant-table, .el-table')) {
     return parseSingleHtmlTable(root);
   }
 
-  // 检查是否是 Ant Design 复合表格
-  if (root.matches('.ant-table-wrapper, .ant-table') || root.querySelector('.ant-table-header, .ant-table-body, .ant-table-content')) {
-    return parseAntDesignTable(root);
-  }
-
-  // 检查是否是 Element Plus / Element UI 复合表格
-  if (root.matches('.el-table') || root.querySelector('.el-table__header-wrapper, .el-table__body-wrapper')) {
-    return parseElementTable(root);
-  }
-
-  // 回退机制：如果是普通容器且内含单个主 table
-  const mainTable = root instanceof HTMLTableElement ? root : root.querySelector('table');
-  if (mainTable) {
-    return parseSingleHtmlTable(mainTable);
-  }
-
-  return { rows: [], rowCount: 0, colCount: 0, title: '空表格' };
+  // 只要处于复合容器内，采用强大的“全量表头 + 数据表体聚合引擎”
+  return parseCompositeContainer(root);
 }
 
 /**
- * 深度解析 Ant Design 分离式 / 固定列表格
+ * 全量复合表格聚合解析引擎
+ * 专门攻克 Ant Design 3/4/5、Element Plus 等将一个表格拆为多个 table 的机制
  */
-function parseAntDesignTable(container: HTMLElement): ParsedTableData {
-  // 1. 寻找表头
-  // AntD 结构中，表头可能在 .ant-table-header table 或 .ant-table-thead
-  let headerCells: string[] = [];
-  const headerThead = container.querySelector('.ant-table-header thead, thead.ant-table-thead');
-  if (headerThead) {
-    const ths = Array.from(headerThead.querySelectorAll<HTMLTableCellElement>('th'));
-    headerCells = ths
-      .filter((th) => !th.classList.contains('ant-table-cell-scrollbar')) // 排除右侧滚动条占位
-      .map(cleanCellText);
+function parseCompositeContainer(container: HTMLElement): ParsedTableData {
+  const allTables = Array.from(container.querySelectorAll<HTMLTableElement>('table'));
+
+  if (allTables.length === 0) {
+    return { rows: [], rowCount: 0, colCount: 0, title: '空表格' };
   }
 
-  // 2. 寻找主数据行
-  // 优先选取主要 body table（排除纯固定左列/右列 clone）
-  const bodyRows: string[][] = [];
-  const bodyTable = container.querySelector('.ant-table-body table, .ant-table-content table') || container.querySelector('table');
-
-  if (bodyTable) {
-    const trs = Array.from(bodyTable.querySelectorAll<HTMLTableRowElement>('tbody > tr'));
-    trs.forEach((tr) => {
-      // 排除嵌套展开行或空占位行
-      if (tr.classList.contains('ant-table-placeholder') || tr.classList.contains('ant-table-expanded-row')) {
-        return;
-      }
-      const cells = Array.from(tr.querySelectorAll<HTMLTableCellElement>(':scope > td, :scope > th'));
-      if (cells.length > 0) {
-        bodyRows.push(cells.map(cleanCellText));
-      }
-    });
-  }
-
-  // 3. 缝合表头与表体
-  const allRows: string[][] = [];
-  if (headerCells.length > 0) {
-    allRows.push(headerCells);
-  }
-  allRows.push(...bodyRows);
-
-  // 4. 计算规格并规整列宽
-  const maxCols = allRows.reduce((max, r) => Math.max(max, r.length), 0);
-  allRows.forEach((row) => {
-    while (row.length < maxCols) row.push('');
+  // 1. 提取最完整的表头 (寻找所有 table 中包含 th 最多的一行表头)
+  let bestHeaderRow: string[] = [];
+  allTables.forEach((tbl) => {
+    const theadThs = Array.from(tbl.querySelectorAll<HTMLTableCellElement>('thead th, tr:first-child th'));
+    const validThs = theadThs.filter((th) => !th.classList.contains('ant-table-cell-scrollbar') && !th.classList.contains('gutter'));
+    if (validThs.length > bestHeaderRow.length) {
+      bestHeaderRow = validThs.map(cleanCellText);
+    }
   });
 
-  // 获取表格标题
-  const title = container.querySelector('.ant-table-title')?.textContent?.trim() || 'AntD表格数据';
+  // 2. 扫描所有 table 中的数据行 (tr 包含 td)
+  // 按 table 分组找出所有包含有效数据的 candidate tables
+  interface TableCandidate {
+    table: HTMLTableElement;
+    rows: string[][];
+    colCount: number;
+  }
+
+  const candidateTables: TableCandidate[] = [];
+
+  allTables.forEach((tbl) => {
+    const dataTrs = Array.from(tbl.querySelectorAll<HTMLTableRowElement>('tr')).filter((tr) => {
+      // 排除表头行、无 td 的行、空占位行
+      if (tr.querySelector('th') && !tr.querySelector('td')) return false;
+      if (tr.classList.contains('ant-table-placeholder') || tr.classList.contains('el-table__empty-block')) return false;
+      return tr.querySelectorAll('td').length > 0;
+    });
+
+    if (dataTrs.length > 0) {
+      const rows = dataTrs.map((tr) => {
+        const tds = Array.from(tr.querySelectorAll<HTMLTableCellElement>(':scope > td'));
+        return tds.map(cleanCellText);
+      });
+      const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 0);
+      candidateTables.push({ table: tbl, rows, colCount: maxCols });
+    }
+  });
+
+  let bodyRows: string[][] = [];
+
+  if (candidateTables.length === 1) {
+    // 只有一个包含数据的 table，直接采用
+    bodyRows = candidateTables[0].rows;
+  } else if (candidateTables.length > 1) {
+    // 存在多个数据 table（典型场景：Ant Design 3/4 的左侧固定列 table + 主体滚动区 table）
+    // 判断：是否存在一个“主 table”，其列数已经涵盖了大部分列甚至等于表头列数
+    candidateTables.sort((a, b) => (b.rows.length * b.colCount) - (a.rows.length * a.colCount));
+    const primary = candidateTables[0];
+
+    // 如果主 table 的列数与最佳表头列数基本一致（相差不超过固定列数），或者主 table 本身就包含了全部 34 列：
+    if (primary.colCount >= bestHeaderRow.length - 2 || candidateTables.every(c => c.colCount <= 3)) {
+      bodyRows = primary.rows;
+    } else {
+      // 极罕见情况：数据确实被物理拆分在多个等行数的 table 里，按行索引横向合并
+      const maxRowCount = Math.max(...candidateTables.map(c => c.rows.length));
+      for (let i = 0; i < maxRowCount; i++) {
+        const mergedRow: string[] = [];
+        candidateTables.forEach(c => {
+          if (c.rows[i]) {
+            mergedRow.push(...c.rows[i]);
+          }
+        });
+        bodyRows.push(mergedRow);
+      }
+    }
+  } else {
+    // 如果没有任何 table 里找到标准 td，尝试遍历 container 内所有的 tr
+    const rawTrs = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr, tr')).filter(tr => tr.querySelectorAll('td').length > 0);
+    bodyRows = rawTrs.map(tr => Array.from(tr.querySelectorAll<HTMLTableCellElement>('td')).map(cleanCellText));
+  }
+
+  // 3. 缝合最终结果
+  const resultRows: string[][] = [];
+  if (bestHeaderRow.length > 0) {
+    resultRows.push(bestHeaderRow);
+  }
+  resultRows.push(...bodyRows);
+
+  const finalColCount = resultRows.reduce((max, r) => Math.max(max, r.length), 0);
+  resultRows.forEach((r) => {
+    while (r.length < finalColCount) r.push('');
+  });
+
+  const title = container.querySelector('.ant-table-title')?.textContent?.trim() || '表格导出数据';
 
   return {
-    rows: allRows,
-    rowCount: allRows.length,
-    colCount: maxCols,
+    rows: resultRows,
+    rowCount: resultRows.length,
+    colCount: finalColCount,
     title
   };
 }
 
 /**
- * 深度解析 Element Plus / Element UI 分离式表格
- */
-function parseElementTable(container: HTMLElement): ParsedTableData {
-  // 表头在 .el-table__header-wrapper table
-  let headerCells: string[] = [];
-  const headerTable = container.querySelector('.el-table__header-wrapper table, table.el-table__header');
-  if (headerTable) {
-    const ths = Array.from(headerTable.querySelectorAll<HTMLTableCellElement>('th'));
-    headerCells = ths
-      .filter((th) => !th.classList.contains('gutter')) // 排除滚动条占位列
-      .map(cleanCellText);
-  }
-
-  // 表体在 .el-table__body-wrapper table
-  const bodyRows: string[][] = [];
-  const bodyTable = container.querySelector('.el-table__body-wrapper table, table.el-table__body');
-  if (bodyTable) {
-    const trs = Array.from(bodyTable.querySelectorAll<HTMLTableRowElement>('tbody > tr'));
-    trs.forEach((tr) => {
-      if (tr.classList.contains('el-table__row--striped') || tr.classList.contains('el-table__row') || tr.querySelectorAll('td').length > 0) {
-        const cells = Array.from(tr.querySelectorAll<HTMLTableCellElement>(':scope > td'));
-        bodyRows.push(cells.map(cleanCellText));
-      }
-    });
-  }
-
-  const allRows: string[][] = [];
-  if (headerCells.length > 0) allRows.push(headerCells);
-  allRows.push(...bodyRows);
-
-  const maxCols = allRows.reduce((max, r) => Math.max(max, r.length), 0);
-  allRows.forEach((row) => {
-    while (row.length < maxCols) row.push('');
-  });
-
-  return {
-    rows: allRows,
-    rowCount: allRows.length,
-    colCount: maxCols,
-    title: 'Element表格数据'
-  };
-}
-
-/**
- * 原生单体 HTML 表格解析（支持跨行跨列展开与矩阵规整）
+ * 原生单体 HTML 表格解析
  */
 function parseSingleHtmlTable(table: HTMLTableElement): ParsedTableData {
   const matrix: string[][] = [];
@@ -238,21 +218,19 @@ function parseSingleHtmlTable(table: HTMLTableElement): ParsedTableData {
 }
 
 /**
- * 清洗单元格文本，并精准剥离组件库噪音节点（排序箭头、筛选下拉等）
+ * 清洗单元格文本，并精准剥离组件库噪音节点
  */
 function cleanCellText(cell: HTMLTableCellElement): string {
   const clone = cell.cloneNode(true) as HTMLElement;
 
-  // 针对 Ant Design 表头的特别清理：优先提取 .ant-table-column-title
+  // 优先提取 Ant Design 列标题
   const antdTitle = clone.querySelector('.ant-table-column-title');
   if (antdTitle && antdTitle.textContent?.trim()) {
     return antdTitle.textContent.trim();
   }
 
-  // 针对 Element UI 表头的特别清理：过滤 caret 排序小图标
   clone.querySelectorAll('.caret-wrapper, .el-table__column-filter-trigger').forEach((el) => el.remove());
 
-  // 通用过滤噪音节点
   clone.querySelectorAll(`
     script, style, noscript, [hidden], [style*="display: none"],
     .ant-table-column-sorter, .ant-table-filter-trigger, .ant-table-column-sorters
@@ -266,9 +244,6 @@ function cleanCellText(cell: HTMLTableCellElement): string {
     .trim();
 }
 
-/**
- * 导出为 .xlsx 文件
- */
 export function exportToExcel(data: ParsedTableData, fileName?: string): void {
   const ws = XLSX.utils.aoa_to_sheet(data.rows);
   const wb = XLSX.utils.book_new();
@@ -278,17 +253,11 @@ export function exportToExcel(data: ParsedTableData, fileName?: string): void {
   XLSX.writeFile(wb, name.endsWith('.xlsx') ? name : `${name}.xlsx`);
 }
 
-/**
- * 导出为 .csv 文件
- */
 export function exportToCsv(data: ParsedTableData, fileName?: string): void {
   const name = fileName || `${data.title || '表格导出'}_${Date.now()}.csv`;
   exportCsv(data.rows, name);
 }
 
-/**
- * 复制为制表符分隔格式 (TSV)
- */
 export async function copyTableToClipboard(data: ParsedTableData): Promise<void> {
   const tsv = data.rows.map((row) => row.join('\t')).join('\n');
   await navigator.clipboard.writeText(tsv);
