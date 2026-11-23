@@ -1,8 +1,30 @@
 @import "tailwindcss";
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
+@theme {
+  --color-sand: #f4f0e8;
+  --color-paper: #fffcf7;
+  --color-stone: #ebe5da;
+  --color-line: #d7d0c3;
+  --color-taupe: #a69a87;
+  --color-ink: #24272d;
+  --color-muted: #595650;
+  --color-action: #2454e6;
+  --color-action-hover: #1941bf;
 }
 
+@layer base {
+  html {
+    scroll-padding-top: 6.5rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 3px;
+  }
+}
