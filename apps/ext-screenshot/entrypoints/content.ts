@@ -3,7 +3,7 @@ import { t } from '../src/utils/i18n';
 interface ScreenShotSlice {
   y: number;
   dataUrl: string;
-  sourceY: number; // 切片在当前视口中的起始 Y（处理最后一屏不满视口的重叠裁切）
+  sourceY: number;
   sourceHeight: number;
 }
 
@@ -37,12 +37,11 @@ export default defineContentScript({
           align-items: center;
           gap: 10px;
           border: 1px solid rgba(255, 255, 255, 0.15);
-          transition: opacity 0.1s ease;
           pointer-events: none;
         `;
         document.body.appendChild(indicatorEl);
       }
-      indicatorEl.style.opacity = '1';
+      indicatorEl.style.display = 'flex';
       indicatorEl.innerHTML = `
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;animation:pulse 1s infinite;"></span>
         <span>${t('capturingProgress', [String(current), String(total)])}</span>
@@ -56,21 +55,34 @@ export default defineContentScript({
       }
     };
 
-    // 拍照瞬间纯隐蔽自身进度条，杜绝把自身进度条截进画面
+    // 拍照瞬间硬核隐藏自身进度条与所有其它插件浮动元素
     const withInvisibleIndicator = async <T>(fn: () => Promise<T>): Promise<T> => {
-      if (indicatorEl) indicatorEl.style.opacity = '0';
-      // 强制微小等待确保 DOM 渲染层更新
-      await new Promise((r) => setTimeout(r, 30));
+      if (indicatorEl) {
+        indicatorEl.style.display = 'none';
+      }
+      // 临时隐藏其它插件的遮罩（例如表格插件的悬浮框）
+      const otherOverlays = document.querySelectorAll<HTMLElement>('#__100free_table_overlay__');
+      otherOverlays.forEach(el => el.style.display = 'none');
+
+      // 使用 requestAnimationFrame 强行等待浏览器合成层将 display: none 渲染到位
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          setTimeout(resolve, 60);
+        });
+      });
+
       const result = await fn();
-      if (indicatorEl) indicatorEl.style.opacity = '1';
+
+      if (indicatorEl) {
+        indicatorEl.style.display = 'flex';
+      }
       return result;
     };
 
     // 智能处理吸顶与吸底元素
-    // 规则：吸顶元素在第二屏及以后隐藏；吸底元素除了最后一屏外全程隐藏
     const toggleFixedElements = (hideTop: boolean, hideBottom: boolean) => {
       const fixedEls = Array.from(document.querySelectorAll<HTMLElement>('*')).filter((el) => {
-        if (el.id === '__100free_screenshot_indicator__') return false;
+        if (el.id === '__100free_screenshot_indicator__' || el.id === '__100free_table_overlay__') return false;
         const pos = window.getComputedStyle(el).position;
         return pos === 'fixed' || pos === 'sticky';
       });
@@ -81,17 +93,17 @@ export default defineContentScript({
 
         if (isNearBottom) {
           if (hideBottom) {
-            el.dataset.screenshotOriginalOpacity = el.style.opacity || '1';
-            el.style.opacity = '0';
+            el.dataset.screenshotOriginalVisibility = el.style.visibility || '';
+            el.style.visibility = 'hidden';
           } else {
-            el.style.opacity = el.dataset.screenshotOriginalOpacity || '';
+            el.style.visibility = el.dataset.screenshotOriginalVisibility || '';
           }
         } else {
           if (hideTop) {
-            el.dataset.screenshotOriginalOpacity = el.style.opacity || '1';
-            el.style.opacity = '0';
+            el.dataset.screenshotOriginalVisibility = el.style.visibility || '';
+            el.style.visibility = 'hidden';
           } else {
-            el.style.opacity = el.dataset.screenshotOriginalOpacity || '';
+            el.style.visibility = el.dataset.screenshotOriginalVisibility || '';
           }
         }
       });
@@ -100,6 +112,7 @@ export default defineContentScript({
     // 拼接多屏并触发下载
     const stitchAndDownload = async (slices: ScreenShotSlice[], totalWidth: number, totalHeight: number, dpr: number) => {
       if (indicatorEl) {
+        indicatorEl.style.display = 'flex';
         indicatorEl.innerHTML = `<span>⏳ ${t('stitching')}</span>`;
       }
 
@@ -113,7 +126,6 @@ export default defineContentScript({
         await new Promise<void>((resolve) => {
           const img = new Image();
           img.onload = () => {
-            // 精确像素切片绘制（支持处理重叠裁剪）
             ctx.drawImage(
               img,
               0,
@@ -171,7 +183,6 @@ export default defineContentScript({
           let sourceY = 0;
           let sourceHeight = viewportHeight;
 
-          // 处理最后一屏不够一个整视口的高度的重叠情况
           if (isLastScreen && totalScreens > 1) {
             targetScrollY = fullHeight - viewportHeight;
             const overlap = (i * viewportHeight) - targetScrollY;
@@ -182,13 +193,13 @@ export default defineContentScript({
           window.scrollTo(0, targetScrollY);
           showProgress(i + 1, totalScreens);
 
-          // 等待滚动停止与重绘
-          await new Promise((r) => setTimeout(r, 220));
+          // 等待页面滚动静止
+          await new Promise((r) => setTimeout(r, 200));
 
-          // 智能剔除：非第一屏隐藏吸顶；非最后一屏隐藏吸底
+          // 智能吸顶与吸底元素显隐
           toggleFixedElements(!isFirstScreen, !isLastScreen);
 
-          // 核心拍照瞬间：必须隐藏自身指示器
+          // 核心：强制 display: none 隐藏指示器，等待重绘后拍照
           const response = await withInvisibleIndicator(async () => {
             return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
           });
@@ -203,11 +214,11 @@ export default defineContentScript({
           }
         }
 
-        // 彻底还原页面元素与滚动位置
+        // 彻底还原
         toggleFixedElements(false, false);
         window.scrollTo(originalScrollX, originalScrollY);
 
-        // 图像无缝缝合与下载
+        // 拼接下载
         await stitchAndDownload(slices, viewportWidth, fullHeight, dpr);
       } catch (err) {
         console.error('[100Free Screenshot] 截屏异常:', err);
@@ -217,7 +228,6 @@ export default defineContentScript({
       }
     };
 
-    // 截取当前视口
     const captureVisibleOnly = async () => {
       const response = await withInvisibleIndicator(async () => {
         return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
