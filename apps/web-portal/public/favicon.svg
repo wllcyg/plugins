@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- 背景平滑渐变：翡翠绿到海蓝青 -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <!-- 微质感光影渐变 -->
+    <linearGradient id="shineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <!-- 发光尾焰渐变 -->
+    <linearGradient id="flameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+  </defs>
+
+  <!-- 外层圆角矩形质感底座 -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bgGrad)" />
+  <rect x="8" y="8" width="112" height="56" rx="28" fill="url(#shineGrad)" />
+
+  <!-- 科技光环微点缀 -->
+  <circle cx="98" cy="30" r="4" fill="#ffffff" opacity="0.6" />
+  <circle cx="28" cy="96" r="3" fill="#ffffff" opacity="0.4" />
+
+  <!-- 极客火箭核心主体 (精简矢量) -->
+  <g transform="translate(24, 24) scale(0.625)">
+    <!-- 推进火焰 -->
+    <path d="M42 98 C36 108 44 122 50 126 C56 122 64 108 58 98 Z" fill="url(#flameGrad)" />
+    <!-- 左右尾翼 -->
+    <path d="M28 72 L14 94 C26 96 38 90 40 82 Z" fill="#ffffff" opacity="0.85" />
+    <path d="M72 72 L86 94 C74 96 62 90 60 82 Z" fill="#ffffff" opacity="0.85" />
+    <!-- 火箭主舱身 -->
+    <path d="M50 10 C34 32 30 68 32 88 C44 92 56 92 68 88 C70 68 66 32 50 10 Z" fill="#ffffff" />
+    <!-- 观察舷窗 -->
+    <circle cx="50" cy="46" r="9" fill="#0d9488" />
+    <circle cx="48" cy="44" r="3" fill="#ffffff" opacity="0.9" />
+  </g>
+</svg>
