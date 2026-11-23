@@ -1,0 +1,38 @@
+{
+  "extensionName": {
+    "message": "全能网页精准长截图 - 自动滚动拼图",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "一键自动滚动截取整页长图，智能消除重复吸顶导航栏，纯本地 Canvas 拼接渲染，绝不上报隐私。",
+    "description": "扩展描述"
+  },
+  "captureFullPage": {
+    "message": "截取整页长图"
+  },
+  "captureVisible": {
+    "message": "截取当前可视区域"
+  },
+  "captureSelected": {
+    "message": "选区 / 局部滚动截图"
+  },
+  "capturingProgress": {
+    "message": "正在自动滚动截取: 第 $CURRENT$ / $TOTAL$ 屏...",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "stitching": {
+    "message": "正在无缝缝合图像..."
+  },
+  "copyToClipboard": {
+    "message": "复制图片"
+  },
+  "downloadImage": {
+    "message": "下载长图"
+  },
+  "footerSlogan": {
+    "message": "打破昂贵订阅 · 让生产力重归自由"
+  }
+}

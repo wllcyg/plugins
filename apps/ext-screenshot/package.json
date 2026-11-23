@@ -1,0 +1,27 @@
+{
+  "name": "@100free/ext-screenshot",
+  "version": "1.0.0",
+  "description": "全能网页智能长截图 - 自动滚动、防吸顶重复、纯本地生成",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt --browser firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build --browser firefox",
+    "zip": "wxt zip",
+    "compile": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@100free/core": "workspace:*",
+    "@100free/ui": "workspace:*",
+    "lucide-vue-next": "^0.460.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@wxt-dev/module-vue": "^1.0.3",
+    "typescript": "^5.7.2",
+    "vue-tsc": "^2.2.0",
+    "wxt": "^0.19.29"
+  }
+}

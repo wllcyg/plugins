@@ -10,3 +10,4 @@ export function t(key: string, substitutions?: string | string[]): string {
   // 兜底本地后备方案（如果在非扩展环境测试或读取失败时）
   return key;
 }
+

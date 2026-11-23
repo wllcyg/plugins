@@ -8,6 +8,8 @@
     "build:template": "pnpm --filter @100free/ext-template build",
     "dev:table": "pnpm --filter @100free/ext-table-export dev",
     "build:table": "pnpm --filter @100free/ext-table-export build",
+    "dev:shot": "pnpm --filter @100free/ext-screenshot dev",
+    "build:shot": "pnpm --filter @100free/ext-screenshot build",
     "dev:portal": "pnpm --filter @100free/web-portal dev",
     "build:portal": "pnpm --filter @100free/web-portal build",
     "build:all": "pnpm -r run build",

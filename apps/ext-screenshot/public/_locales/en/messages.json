@@ -1,0 +1,38 @@
+{
+  "extensionName": {
+    "message": "Smart Full Page Screenshot - Auto Scroll",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "One-click auto-scrolling full page screenshot. Smart fixed header de-duplication. 100% private local canvas stitching.",
+    "description": "Extension description"
+  },
+  "captureFullPage": {
+    "message": "Capture Entire Page"
+  },
+  "captureVisible": {
+    "message": "Capture Visible Part"
+  },
+  "captureSelected": {
+    "message": "Capture Selected Area"
+  },
+  "capturingProgress": {
+    "message": "Auto-scrolling capture: screen $CURRENT$ of $TOTAL$...",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "stitching": {
+    "message": "Stitching image segments..."
+  },
+  "copyToClipboard": {
+    "message": "Copy Image"
+  },
+  "downloadImage": {
+    "message": "Download PNG"
+  },
+  "footerSlogan": {
+    "message": "Break Expensive Subscriptions · Reclaim Productivity"
+  }
+}
