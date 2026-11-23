@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { PLUGINS_DATA } from './data/plugins';
 import { AppButton } from '@100free/ui';
+
+// 注册 GSAP 滚动触发插件
+gsap.registerPlugin(ScrollTrigger);
 
 const portalRoot = ref<HTMLElement | null>(null);
 let ctx: gsap.Context;
@@ -14,28 +18,43 @@ const filterPlugins = () => {
   return PLUGINS_DATA.filter(p => p.category === activeCategory.value);
 };
 
+const handleCategoryChange = async (cat: 'all' | 'data' | 'tool' | 'office') => {
+  activeCategory.value = cat;
+  await nextTick();
+  // 分类切换时快速平滑重播当前卡片入场
+  gsap.fromTo(
+    '.plugin-card-anim',
+    { y: 20, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out', clearProps: 'all' }
+  );
+};
+
 onMounted(() => {
-  // GSAP 规范实践：使用 gsap.context 隔离作用域，防止页面卸载时内存泄漏
-  ctx = gsap.context((self) => {
+  ctx = gsap.context(() => {
+    // 1. Hero 进场时间轴 (首屏立即触发)
     const tl = gsap.timeline({
       defaults: { duration: 0.6, ease: 'power3.out' }
     });
 
-    // 1. Hero 进场时间轴
     tl.from('.hero-badge', { y: -20, opacity: 0, ease: 'back.out(1.7)' })
       .from('.hero-title', { y: 30, opacity: 0 }, '-=0.3')
       .from('.hero-desc', { y: 20, opacity: 0 }, '-=0.3')
       .from('.hero-stats', { scale: 0.95, opacity: 0 }, '-=0.2')
       .from('.hero-cta', { y: 20, opacity: 0, ease: 'back.out(1.5)' }, '-=0.2');
 
-    // 2. 插件卡片错峰优雅浮现 (Stagger)
+    // 2. 插件卡片：绑定 ScrollTrigger 滚动进入视口时才触发错峰展现
     gsap.from('.plugin-card-anim', {
-      y: 40,
+      scrollTrigger: {
+        trigger: '#plugins',
+        start: 'top 85%',
+        once: true // 触发一次后保持显示
+      },
+      y: 35,
       opacity: 0,
-      duration: 0.7,
-      stagger: 0.1,
+      duration: 0.6,
+      stagger: 0.08,
       ease: 'power2.out',
-      delay: 0.4
+      clearProps: 'all' // 动画结束后完全清除内联 style，杜绝任何空白幽灵状态
     });
   }, portalRoot.value!);
 });
@@ -131,25 +150,25 @@ onUnmounted(() => {
           <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg text-xs font-semibold">
             <button
               :class="['px-3 py-1.5 rounded-md transition-all', activeCategory === 'all' ? 'bg-white shadow text-slate-900' : 'text-slate-600 hover:text-slate-900']"
-              @click="activeCategory = 'all'"
+              @click="handleCategoryChange('all')"
             >
               全部
             </button>
             <button
               :class="['px-3 py-1.5 rounded-md transition-all', activeCategory === 'data' ? 'bg-white shadow text-slate-900' : 'text-slate-600 hover:text-slate-900']"
-              @click="activeCategory = 'data'"
+              @click="handleCategoryChange('data')"
             >
               数据提取
             </button>
             <button
               :class="['px-3 py-1.5 rounded-md transition-all', activeCategory === 'tool' ? 'bg-white shadow text-slate-900' : 'text-slate-600 hover:text-slate-900']"
-              @click="activeCategory = 'tool'"
+              @click="handleCategoryChange('tool')"
             >
               效率工具
             </button>
             <button
               :class="['px-3 py-1.5 rounded-md transition-all', activeCategory === 'office' ? 'bg-white shadow text-slate-900' : 'text-slate-600 hover:text-slate-900']"
-              @click="activeCategory = 'office'"
+              @click="handleCategoryChange('office')"
             >
               智能办公
             </button>
@@ -246,3 +265,4 @@ onUnmounted(() => {
     </footer>
   </div>
 </template>
+

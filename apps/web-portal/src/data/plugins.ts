@@ -57,3 +57,4 @@ export const PLUGINS_DATA: PluginItem[] = [
     status: 'coming_soon'
   }
 ];
+
