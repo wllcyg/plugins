@@ -2,26 +2,28 @@ export default defineBackground(() => {
   // 监听来自 Content Script 或 Popup 的截图与缩放请求
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'CAPTURE_VISIBLE_TAB') {
-      const windowId = sender.tab?.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
-      // 工业级自动重试：带指数退避，彻底化解 Chrome 底层 MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND 限流抛错
+      const windowId = sender.tab?.windowId;
+      // 工业级自动重试：带指数退避，彻底化解 Chrome 底层速率限制与焦点晃动
       const doCapture = (retry = 0) => {
-        chrome.tabs.captureVisibleTab(
-          windowId,
-          { format: 'png' },
-          (dataUrl) => {
-            if (chrome.runtime.lastError || !dataUrl) {
-              const err = chrome.runtime.lastError?.message || 'Empty capture';
-              if (retry < 4) {
-                setTimeout(() => doCapture(retry + 1), 200 * (retry + 1));
-              } else {
-                console.error('[100Free Screenshot] captureVisibleTab 达到最大重试:', err);
-                sendResponse({ success: false, error: err });
-              }
+        const callback = (dataUrl?: string) => {
+          if (chrome.runtime.lastError || !dataUrl) {
+            const err = chrome.runtime.lastError?.message || 'Empty capture';
+            if (retry < 5) {
+              setTimeout(() => doCapture(retry + 1), 250);
             } else {
-              sendResponse({ success: true, dataUrl });
+              console.error('[100Free Screenshot] captureVisibleTab 达到最大重试:', err);
+              sendResponse({ success: false, error: err });
             }
+          } else {
+            sendResponse({ success: true, dataUrl });
           }
-        );
+        };
+
+        if (typeof windowId === 'number' && windowId >= 0) {
+          chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, callback);
+        } else {
+          chrome.tabs.captureVisibleTab({ format: 'png' }, callback);
+        }
       };
       doCapture(0);
       return true; // 保持异步消息通道

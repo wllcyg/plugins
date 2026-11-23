@@ -274,13 +274,21 @@ export default defineContentScript({
           // 吸顶与吸底控制
           toggleFixedElements(!isFirst, !isLast);
 
-          // 核心拍照
-          const response = await withInvisibleIndicator(async () => {
+          // 核心拍照（带重试保障）
+          let response = await withInvisibleIndicator(async () => {
             return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
           });
 
+          // 如果初次请求失败，额外等待 250ms 重新抓取一次
           if (!response?.success || !response.dataUrl) {
-            console.error(`[100Free Screenshot] 第 ${idx + 1} 屏捕获失败，跳过`);
+            await new Promise((r) => setTimeout(r, 250));
+            response = await withInvisibleIndicator(async () => {
+              return await chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
+            });
+          }
+
+          if (!response?.success || !response.dataUrl) {
+            console.error(`[100Free Screenshot] 第 ${idx + 1} 屏捕获失败:`, response?.error || '无图像数据');
             continue;
           }
 
