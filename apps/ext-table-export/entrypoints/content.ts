@@ -1,5 +1,12 @@
 import { createApp, type App } from 'vue';
-import { parseHtmlTable, exportToExcel, exportToCsv, copyTableToClipboard, type ParsedTableData } from '../src/utils/table-parser';
+import {
+  findLogicalTableRoot,
+  parseTableOrContainer,
+  exportToExcel,
+  exportToCsv,
+  copyTableToClipboard,
+  type ParsedTableData
+} from '../src/utils/table-parser';
 import TableActionBar from '../src/components/TableActionBar.vue';
 import overlayStyles from '../src/styles/overlay.css?inline';
 
@@ -7,7 +14,7 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   main() {
-    let currentTable: HTMLTableElement | null = null;
+    let currentTableRoot: HTMLElement | null = null;
     let overlayHost: HTMLElement | null = null;
     let shadowRoot: ShadowRoot | null = null;
     let mountContainer: HTMLElement | null = null;
@@ -28,7 +35,6 @@ export default defineContentScript({
 
       shadowRoot = overlayHost.attachShadow({ mode: 'open' });
 
-      // 将内联样式直接插入 Shadow DOM，确保绝不受宿主环境影响且 100% 渲染
       const styleEl = document.createElement('style');
       styleEl.textContent = overlayStyles;
       shadowRoot.appendChild(styleEl);
@@ -50,18 +56,18 @@ export default defineContentScript({
       if (overlayHost) {
         overlayHost.style.display = 'none';
       }
-      if (currentTable) {
-        currentTable.style.outline = '';
+      if (currentTableRoot) {
+        currentTableRoot.style.outline = '';
       }
-      currentTable = null;
+      currentTableRoot = null;
       cachedData = null;
       removeCurrentApp();
     };
 
     // 重新计算并更新悬浮栏位置
-    const updateOverlayPosition = (table: HTMLTableElement) => {
+    const updateOverlayPosition = (tableRoot: HTMLElement) => {
       if (!overlayHost) return;
-      const rect = table.getBoundingClientRect();
+      const rect = tableRoot.getBoundingClientRect();
       const scrollX = window.scrollX;
       const scrollY = window.scrollY;
 
@@ -78,30 +84,30 @@ export default defineContentScript({
       overlayHost.style.left = `${leftPos}px`;
     };
 
-    const showOverlayForTable = (table: HTMLTableElement) => {
-      if (currentTable === table) return;
+    const showOverlayForTable = (tableRoot: HTMLElement) => {
+      if (currentTableRoot === tableRoot) return;
 
-      if (currentTable) {
-        currentTable.style.outline = '';
+      if (currentTableRoot) {
+        currentTableRoot.style.outline = '';
       }
 
-      currentTable = table;
+      currentTableRoot = tableRoot;
       initOverlay();
       if (!overlayHost || !shadowRoot || !mountContainer) return;
 
-      // 解析当前表格尺寸
-      cachedData = parseHtmlTable(table);
+      // 解析表格尺寸与内容 (智能合并复合结构)
+      cachedData = parseTableOrContainer(tableRoot);
       if (cachedData.rowCount === 0 || cachedData.colCount === 0) {
         hideOverlay();
         return;
       }
 
-      // 高亮目标表格（精致的翡翠绿半透明边框与圆角）
-      currentTable.style.outline = '2px dashed #10b981';
-      currentTable.style.outlineOffset = '2px';
+      // 高亮目标表格或大容器
+      currentTableRoot.style.outline = '2px dashed #10b981';
+      currentTableRoot.style.outlineOffset = '2px';
 
       overlayHost.style.display = 'block';
-      updateOverlayPosition(table);
+      updateOverlayPosition(tableRoot);
 
       removeCurrentApp();
 
@@ -127,7 +133,7 @@ export default defineContentScript({
       vueApp.mount(mountContainer);
     };
 
-    // 监听鼠标移动，平滑探测
+    // 监听鼠标移动，支持 SPA 动态元素智能嗅探
     document.addEventListener('mouseover', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
@@ -138,11 +144,12 @@ export default defineContentScript({
         return;
       }
 
-      const table = target.closest('table');
-      if (table && table instanceof HTMLTableElement) {
+      // 智能寻找逻辑实体 (单体 table 或 AntD/Element 等大容器)
+      const tableRoot = findLogicalTableRoot(target);
+      if (tableRoot && tableRoot.isConnected) {
         if (hideTimer) clearTimeout(hideTimer);
-        showOverlayForTable(table);
-      } else if (currentTable) {
+        showOverlayForTable(tableRoot);
+      } else if (currentTableRoot) {
         // 延时隐藏，方便鼠标平滑移动到操作栏上点击
         if (hideTimer) clearTimeout(hideTimer);
         hideTimer = window.setTimeout(() => {
@@ -153,17 +160,28 @@ export default defineContentScript({
 
     // 页面滚动时实时更新吸顶位置
     window.addEventListener('scroll', () => {
-      if (currentTable && overlayHost && overlayHost.style.display !== 'none') {
-        updateOverlayPosition(currentTable);
+      if (currentTableRoot && overlayHost && overlayHost.style.display !== 'none') {
+        if (!currentTableRoot.isConnected) {
+          hideOverlay();
+          return;
+        }
+        updateOverlayPosition(currentTableRoot);
       }
     }, { passive: true });
 
     // 接收来自 Popup 的全页导出消息
     chrome.runtime?.onMessage?.addListener((message, _sender, sendResponse) => {
       if (message.type === 'SCAN_TABLES') {
-        const tables = Array.from(document.querySelectorAll('table'));
-        const list = tables.map((tbl, index) => {
-          const parsed = parseHtmlTable(tbl);
+        // 扫描页面所有逻辑表格，避免 AntD 一个大表格被重复列出为多个碎片
+        const rawTables = Array.from(document.querySelectorAll('table'));
+        const roots = new Set<HTMLElement>();
+        rawTables.forEach((t) => {
+          const root = findLogicalTableRoot(t);
+          if (root) roots.add(root);
+        });
+
+        const list = Array.from(roots).map((r, index) => {
+          const parsed = parseTableOrContainer(r);
           return {
             index,
             title: parsed.title || `表格 #${index + 1}`,
@@ -173,10 +191,11 @@ export default defineContentScript({
         });
         sendResponse({ success: true, tables: list });
       } else if (message.type === 'EXPORT_TABLE_BY_INDEX') {
-        const tables = Array.from(document.querySelectorAll('table'));
-        const tbl = tables[message.index];
-        if (tbl) {
-          const parsed = parseHtmlTable(tbl);
+        const rawTables = Array.from(document.querySelectorAll('table'));
+        const roots = Array.from(new Set(rawTables.map((t) => findLogicalTableRoot(t)).filter((t): t is HTMLElement => !!t)));
+        const targetRoot = roots[message.index];
+        if (targetRoot) {
+          const parsed = parseTableOrContainer(targetRoot);
           if (message.format === 'csv') {
             exportToCsv(parsed);
           } else {
@@ -190,6 +209,6 @@ export default defineContentScript({
       return true;
     });
 
-    console.log('[100Free Table Exporter] 页面表格嗅探器已启动');
+    console.log('[100Free Table Exporter] 页面表格嗅探器就绪 (已支持 AntD/Element 复合表格兼容)');
   }
 });

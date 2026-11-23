@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【100Free】Ant Design 固定列表格 (SPA) 仿真测试靶场</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+      color: rgba(0, 0, 0, 0.85);
+      background-color: #f0f2f5;
+    }
+
+    .panel {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .desc {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* 100% 仿真 Ant Design 3/4/5 的固定列表格结构与样式 */
+    .ant-table-wrapper {
+      zoom: 1;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .ant-table {
+      box-sizing: border-box;
+      position: relative;
+      clear: both;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    .ant-table-container {
+      position: relative;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .ant-table-header {
+      overflow: hidden;
+      background: #fafafa;
+    }
+
+    .ant-table-body {
+      overflow-x: auto;
+      overflow-y: scroll;
+      max-height: 300px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+    }
+
+    th.ant-table-cell {
+      background: #fafafa;
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 500;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    td.ant-table-cell {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ant-table-column-sorters {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ant-table-column-sorter {
+      color: #bfbfbf;
+      font-size: 11px;
+    }
+
+    .ant-table-fixed {
+      table-layout: fixed;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #e6f7ff;
+      color: #1890ff;
+      border: 1px solid #91d5ff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="panel">
+    <h1>Ant Design 固定列 / 表头吸顶复合表格 (SPA 真实 DOM 仿真)</h1>
+    <p class="desc">
+      在这个页面中，完全仿真了 Ant Design 的底层机制：<b>表头 table 与表体 table 是分开的两个独立 DOM 节点</b>，且左侧固定列带有
+      <code>class="ant-table-fixed"</code>，正是你反馈的结构。<br>
+      <b>预期效果：</b>鼠标无论是悬停在左侧固定列、吸顶表头还是主体表格，插件都能<b>自动锁定整张大表格、合并表头与数据行</b>并精准导出！
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="ant-table-wrapper" id="order-composite-table">
+      <div class="ant-table ant-table-fixed-header ant-table-scroll-position-left">
+        <div class="ant-table-container">
+
+          <!-- 1. 表头独立 table (你截出的正是这个) -->
+          <div class="ant-table-header">
+            <table class="ant-table-fixed" style="width: 100%;">
+              <colgroup>
+                <col style="width: 230px; min-width: 230px;">
+                <col style="width: 180px;">
+                <col style="width: 150px;">
+                <col style="width: 160px;">
+                <col style="width: 180px;">
+              </colgroup>
+              <thead class="ant-table-thead">
+                <tr>
+                  <th key="orderNo" class="ant-table-align-center ant-table-row-cell-break-word ant-table-cell"
+                    style="width: 230px; text-align: center;">
+                    <span class="ant-table-header-column">
+                      <div>
+                        <span class="ant-table-column-title">订单编号</span>
+                        <span class="ant-table-column-sorter">▲▼</span>
+                      </div>
+                    </span>
+                  </th>
+                  <th key="customer" class="ant-table-cell">
+                    <span class="ant-table-column-title">海外商户名称</span>
+                  </th>
+                  <th key="country" class="ant-table-cell">
+                    <span class="ant-table-column-title">目的国</span>
+                  </th>
+                  <th key="amount" class="ant-table-cell">
+                    <span class="ant-table-column-title">成交金额 (USD)</span>
+                    <span class="ant-table-column-sorter">▲▼</span>
+                  </th>
+                  <th key="status" class="ant-table-cell">
+                    <span class="ant-table-column-title">当前履约状态</span>
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+
+          <!-- 2. 表体独立 table (包含真正的数据行) -->
+          <div class="ant-table-body">
+            <table class="ant-table-fixed" style="width: 100%;">
+              <colgroup>
+                <col style="width: 230px; min-width: 230px;">
+                <col style="width: 180px;">
+                <col style="width: 150px;">
+                <col style="width: 160px;">
+                <col style="width: 180px;">
+              </colgroup>
+              <tbody class="ant-table-tbody">
+                <tr class="ant-table-row">
+                  <td class="ant-table-cell" style="text-align: center;"><b>ORD-20261123-001</b></td>
+                  <td class="ant-table-cell">Apex Global Logistics LLC</td>
+                  <td class="ant-table-cell">United States</td>
+                  <td class="ant-table-cell">$1,450.00</td>
+                  <td class="ant-table-cell"><span class="badge">已放行</span></td>
+                </tr>
+                <tr class="ant-table-row">
+                  <td class="ant-table-cell" style="text-align: center;"><b>ORD-20261123-002</b></td>
+                  <td class="ant-table-cell">Nordic Retail Group AS</td>
+                  <td class="ant-table-cell">Norway</td>
+                  <td class="ant-table-cell">$3,890.50</td>
+                  <td class="ant-table-cell"><span class="badge">已出运</span></td>
+                </tr>
+                <tr class="ant-table-row">
+                  <td class="ant-table-cell" style="text-align: center;"><b>ORD-20261123-003</b></td>
+                  <td class="ant-table-cell">Sydney Trade Partners</td>
+                  <td class="ant-table-cell">Australia</td>
+                  <td class="ant-table-cell">$820.00</td>
+                  <td class="ant-table-cell"><span class="badge">已签收</span></td>
+                </tr>
+                <tr class="ant-table-row">
+                  <td class="ant-table-cell" style="text-align: center;"><b>ORD-20261123-004</b></td>
+                  <td class="ant-table-cell">EuroStar Imports GmbH</td>
+                  <td class="ant-table-cell">Germany</td>
+                  <td class="ant-table-cell">$6,200.00</td>
+                  <td class="ant-table-cell"><span class="badge">已出运</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
