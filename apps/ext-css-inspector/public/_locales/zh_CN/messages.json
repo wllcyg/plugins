@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "CSS 样式与 Tailwind 提取器",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "鼠标悬停任意元素即刻查看完整 CSS 样式，一键转为 Tailwind CSS 代码，精准高效。",
+    "description": "扩展描述"
+  }
+}

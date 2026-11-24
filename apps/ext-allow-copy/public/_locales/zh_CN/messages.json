@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "网页超级自由复制",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "一键解除网页禁止复制、禁止划选、禁止右键限制，纯净免费、安全高效。",
+    "description": "扩展描述"
+  }
+}

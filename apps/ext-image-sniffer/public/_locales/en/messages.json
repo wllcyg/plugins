@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Web Image Sniffer & Downloader",
+    "description": "Extension Name"
+  },
+  "extensionDescription": {
+    "message": "One-click to scan all high-res images, backgrounds, and SVGs on any webpage, batch download as ZIP.",
+    "description": "Extension Description"
+  }
+}

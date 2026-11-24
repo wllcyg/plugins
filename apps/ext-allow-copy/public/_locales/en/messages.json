@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Super Free Copy",
+    "description": "Extension Name"
+  },
+  "extensionDescription": {
+    "message": "One-click to unblock copy, text selection, and right-click restrictions on any webpage.",
+    "description": "Extension Description"
+  }
+}

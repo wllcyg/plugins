@@ -1,0 +1,26 @@
+{
+  "name": "@100free/ext-video-master",
+  "version": "1.0.0",
+  "private": true,
+  "description": "100款免费生产力插件计划 - 网页全能视频伴侣 (无级倍速、后台防暂停、画中画、音量突破、帧截图)",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "compile": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@100free/core": "workspace:*",
+    "@100free/ui": "workspace:*",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.304",
+    "@wxt-dev/module-vue": "^1.0.3",
+    "typescript": "^5.7.3",
+    "vue-tsc": "^2.2.0",
+    "wxt": "^0.19.26"
+  }
+}

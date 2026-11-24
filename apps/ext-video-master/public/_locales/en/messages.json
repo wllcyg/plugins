@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Video Master & Speed Controller",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "0.1x-16x speed control, background anti-pause, picture-in-picture, 600% volume boost, and high-res frame capture.",
+    "description": "Extension description"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "CSS & Tailwind Inspector",
+    "description": "Extension Name"
+  },
+  "extensionDescription": {
+    "message": "Hover over any element to inspect CSS rules and copy as Tailwind classes instantly.",
+    "description": "Extension Description"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "网页大图批量嗅探与下载",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "一键扫描网页全部高清大图、背景图与矢量图，智能多维筛选，本地一键打包 ZIP 下载。",
+    "description": "扩展描述"
+  }
+}
