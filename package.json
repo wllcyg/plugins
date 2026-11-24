@@ -18,6 +18,8 @@
     "build:sniffer": "pnpm --filter @100free/ext-image-sniffer build",
     "dev:video": "pnpm --filter @100free/ext-video-master dev",
     "build:video": "pnpm --filter @100free/ext-video-master build",
+    "dev:qr": "pnpm --filter @100free/ext-qr-master dev",
+    "build:qr": "pnpm --filter @100free/ext-qr-master build",
     "dev:portal": "pnpm --filter @100free/web-portal dev",
     "build:portal": "pnpm --filter @100free/web-portal build",
     "build:all": "pnpm -r run build",

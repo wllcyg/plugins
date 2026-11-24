@@ -4,6 +4,7 @@ import copyIcon from '../../../ext-allow-copy/public/icons/icon-128.png?url';
 import cssIcon from '../../../ext-css-inspector/public/icons/icon-128.png?url';
 import snifferIcon from '../../../ext-image-sniffer/public/icons/icon-128.png?url';
 import videoIcon from '../../../ext-video-master/public/icons/icon-128.png?url';
+import qrIcon from '../../../ext-qr-master/public/icons/icon-128.png?url';
 
 import tablePreview from '../assets/table-export.webp';
 import editorPreview from '../assets/screenshot-editor.webp';
@@ -11,6 +12,7 @@ import copyPreview from '../assets/allow-copy.png';
 import cssPreview from '../assets/css-inspector.png';
 import snifferPreview from '../assets/image-sniffer.png';
 import videoPreview from '../assets/video-master.png';
+import qrPreview from '../assets/qr-master.png';
 
 export const plugins = [
   {
@@ -105,6 +107,24 @@ export const plugins = [
       '在任意视频或网课页面直接播放，画面左上角自动浮现极简 ⚡ 快捷控制胶囊。',
       '点击扩展图标或使用快捷键（D加速 / S减速 / R复位 / C画中画 / P截图）极速控制。',
       '内置「切后台防暂停 / 伪装前台」机制，自由切换标签页或做笔记，视频在后台绝不中断。'
+    ]
+  },
+  {
+    id: 'qr-master',
+    name: '二维码极速生成与离线识码器',
+    category: '效率与工具',
+    icon: qrIcon,
+    preview: qrPreview,
+    previewWidth: 984,
+    previewHeight: 420,
+    previewAlt: '全能艺术二维码工作台展示WiFi免密连接、名片生成与离线右键识码',
+    headline: '告别广告与收费充值，纯净 0 网络依赖的二维码神器',
+    summary: '一键将当前网址、剪贴板、WiFi或电子名片生成高颜值艺术二维码；支持网页任意图片右键离线识别、拖拽与粘贴识码，0 网络请求，纯净无广告。',
+    steps: [
+      '在网页上点击扩展图标，自动读取当前网址或一键粘贴剪贴板文字生成二维码。',
+      '自由定制圆角/圆点艺术点阵、潮流渐变配色、纠错等级，并可一键嵌入网站 Favicon 或自定义 Logo。',
+      '支持一键复制二维码图片到剪贴板，或导出高清印刷级 PNG 与无限放大 SVG 矢量图。',
+      '遇到网页中的二维码图片，直接鼠标右键点击「识别图中二维码」，或在控制台按 Ctrl+V 离线瞬间识别。'
     ]
   }
 ];
