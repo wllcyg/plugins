@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Clean Redirect & URL Tracker Stripper",
+    "description": "Extension Name"
+  },
+  "extensionDescription": {
+    "message": "Automatically bypass redirect interstitial pages (Zhihu, Jianshu, Juejin, CSDN, etc.) and strip UTM/SPM tracking parameters.",
+    "description": "Extension Description"
+  }
+}

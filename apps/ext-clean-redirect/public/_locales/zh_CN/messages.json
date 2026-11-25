@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "全网外链免拦截直达与链接追踪净化",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "自动跳过知乎、简书、掘金、CSDN等各大平台外链中转拦截页直达目标网站，智能剥离UTM/SPM等营销追踪参数，去除网页复制烦人版权尾巴。",
+    "description": "扩展描述"
+  }
+}
