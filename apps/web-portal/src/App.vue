@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import gsap from 'gsap';
 import {
@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   BookOpen,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   CircleHelp,
   Cpu,
@@ -31,12 +32,31 @@ const pageRoot = ref<HTMLElement>();
 const detailUrl = (id: string) => ({ query: { tool: id } });
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const heroShowcaseIds = ['screenshot', 'allow-copy', 'clean-redirect', 'css-inspector'];
-const heroShowcaseList = computed(() =>
-  heroShowcaseIds.map((id) => plugins.value.find((p) => p.id === id)!).filter(Boolean)
-);
-const activeShowcaseIndex = ref(0);
-const activeShowcase = computed(() => heroShowcaseList.value[activeShowcaseIndex.value] || plugins.value[0]);
+// 首屏轮播图：覆盖全部插件，支持自动播放、悬停暂停与左右切换
+const activeSlideIndex = ref(0);
+const activeSlide = computed(() => plugins.value[activeSlideIndex.value] || plugins.value[0]);
+let autoplayTimer: number | null = null;
+
+function nextSlide() {
+  activeSlideIndex.value = (activeSlideIndex.value + 1) % plugins.value.length;
+}
+
+function prevSlide() {
+  activeSlideIndex.value = (activeSlideIndex.value - 1 + plugins.value.length) % plugins.value.length;
+}
+
+function startAutoplay() {
+  stopAutoplay();
+  if (reduceMotion()) return;
+  autoplayTimer = window.setInterval(nextSlide, 4200);
+}
+
+function stopAutoplay() {
+  if (autoplayTimer !== null) {
+    clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  }
+}
 
 const ALL_CATEGORY = '__ALL__';
 const searchQuery = ref('');
@@ -111,9 +131,14 @@ onMounted(async () => {
   await router.isReady();
   await nextTick();
   moveToLocation();
+  startAutoplay();
   if (reduceMotion() || route.hash || selected.value || !pageRoot.value) return;
   const intro = pageRoot.value.querySelectorAll('.hero-copy > *, .hero-preview');
   gsap.from(intro, { opacity: 0, y: 12, duration: 0.36, stagger: 0.055, ease: 'power2.out', clearProps: 'opacity,transform' });
+});
+
+onUnmounted(() => {
+  stopAutoplay();
 });
 </script>
 
@@ -156,33 +181,62 @@ onMounted(async () => {
           </div>
         </div>
 
-        <figure class="hero-preview">
-          <div class="preview-tabs" role="tablist">
+        <figure class="hero-preview" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
+          <div class="preview-frame carousel-box">
+            <div class="carousel-viewport">
+              <Transition name="slide-fade" mode="out-in">
+                <RouterLink :key="activeSlide.id" :to="detailUrl(activeSlide.id)" class="carousel-link">
+                  <img
+                    :src="activeSlide.preview"
+                    :alt="activeSlide.previewAlt"
+                    :width="activeSlide.previewWidth"
+                    :height="activeSlide.previewHeight"
+                    fetchpriority="high"
+                  />
+                </RouterLink>
+              </Transition>
+            </div>
+
             <button
-              v-for="(item, idx) in heroShowcaseList"
-              :key="item.id"
               type="button"
-              role="tab"
-              :aria-selected="activeShowcaseIndex === idx"
-              :class="['preview-tab', { active: activeShowcaseIndex === idx }]"
-              @click="activeShowcaseIndex = idx"
+              class="carousel-nav carousel-prev"
+              :aria-label="locale === 'zh' ? '上一张' : 'Previous slide'"
+              @click="prevSlide"
             >
-              <img :src="item.icon" alt="" width="16" height="16" />
-              <span>{{ item.name }}</span>
+              <ChevronLeft :size="18" aria-hidden="true" />
             </button>
+            <button
+              type="button"
+              class="carousel-nav carousel-next"
+              :aria-label="locale === 'zh' ? '下一张' : 'Next slide'"
+              @click="nextSlide"
+            >
+              <ChevronRight :size="18" aria-hidden="true" />
+            </button>
+
+            <div class="carousel-dots" role="tablist" :aria-label="locale === 'zh' ? '轮播图切换' : 'Carousel slides'">
+              <button
+                v-for="(item, idx) in plugins"
+                :key="item.id"
+                type="button"
+                role="tab"
+                :aria-selected="activeSlideIndex === idx"
+                :aria-label="item.name"
+                :class="['dot', { active: activeSlideIndex === idx }]"
+                @click="activeSlideIndex = idx"
+              ></button>
+            </div>
           </div>
-          <div class="preview-frame">
-            <img
-              :src="activeShowcase.preview"
-              :alt="activeShowcase.previewAlt"
-              :width="activeShowcase.previewWidth"
-              :height="activeShowcase.previewHeight"
-              fetchpriority="high"
-            />
-          </div>
+
           <figcaption>
-            <span>{{ activeShowcase.name }}</span>
-            <RouterLink :to="detailUrl(activeShowcase.id)" class="text-link">{{ t.viewDetails }} <ChevronRight :size="14" aria-hidden="true" /></RouterLink>
+            <div class="caption-meta">
+              <img :src="activeSlide.icon" alt="" width="20" height="20" />
+              <span class="caption-name">{{ activeSlide.name }}</span>
+              <span class="caption-cat">{{ activeSlide.category }}</span>
+            </div>
+            <RouterLink :to="detailUrl(activeSlide.id)" class="text-link">
+              {{ t.viewDetails }} <ChevronRight :size="14" aria-hidden="true" />
+            </RouterLink>
           </figcaption>
         </figure>
       </section>
@@ -424,34 +478,100 @@ nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underl
 .secondary-link { min-height: 44px; padding: 10px 16px; border-radius: 8px; background: var(--color-paper); border: 1px solid var(--color-line); color: var(--color-ink); transition: border-color .16s ease; cursor: pointer; }
 .secondary-link:hover { border-color: var(--color-taupe); }
 
-/* Hero Preview Tabs */
+/* Hero Carousel */
 .hero-preview { margin: 0; }
-.preview-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.preview-tab {
-  display: inline-flex;
+.preview-frame {
+  position: relative;
+  padding: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: var(--color-paper);
+  box-shadow: 0 20px 50px #24272d14;
+}
+.carousel-viewport {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--color-sand);
+}
+.carousel-link { display: block; }
+.preview-frame img {
+  display: block;
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 8px;
+}
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-line) 85%, transparent);
+  background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .18s ease, background .15s ease, transform .15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.carousel-box:hover .carousel-nav,
+.carousel-nav:focus-visible { opacity: 1; }
+.carousel-nav:hover { background: var(--color-paper); transform: translateY(-50%) scale(1.06); }
+.carousel-prev { left: 16px; }
+.carousel-next { right: 16px; }
+
+.carousel-dots {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--color-line);
-  background: var(--color-paper);
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  transition: all .16s ease;
+  transition: width .22s ease, background .22s ease;
 }
-.preview-tab:hover { border-color: var(--color-taupe); color: var(--color-ink); }
-.preview-tab.active {
-  background: var(--color-ink);
-  color: var(--color-paper);
-  border-color: var(--color-ink);
+.dot:hover { background: rgba(255, 255, 255, 0.8); }
+.dot.active { width: 20px; background: #ffffff; }
+
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: opacity .24s ease, transform .24s ease;
 }
-.preview-tab img { border-radius: 4px; }
-.preview-frame { padding: 8px; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-paper); box-shadow: 0 20px 50px #24272d14; }
-.preview-frame img { display: block; width: 100%; height: auto; max-height: 360px; object-fit: cover; object-position: top; border-radius: 8px; }
+.slide-fade-enter-from { opacity: 0; transform: translateX(12px); }
+.slide-fade-leave-to { opacity: 0; transform: translateX(-12px); }
+
 figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 14px; margin-top: 12px; font-size: 13px; color: var(--color-muted); }
-figcaption span:first-child { font-weight: 700; color: var(--color-ink); }
+.caption-meta { display: inline-flex; align-items: center; gap: 8px; }
+.caption-meta img { border-radius: 5px; }
+.caption-name { font-weight: 700; color: var(--color-ink); font-size: 14px; }
+.caption-cat {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
 .text-link { font-size: 14px; color: var(--color-action); }
 
 /* Principles */
