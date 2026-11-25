@@ -10,11 +10,36 @@
   --color-muted: #595650;
   --color-action: #2454e6;
   --color-action-hover: #1941bf;
+  --color-safe: #059669;
+  --color-hero-glow: rgba(36, 84, 230, 0.06);
+  --color-card-shadow: rgba(36, 39, 45, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --color-sand: #0b1120;
+  --color-paper: #131c31;
+  --color-stone: #1e293b;
+  --color-line: #24324b;
+  --color-taupe: #475569;
+  --color-ink: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-action: #3b82f6;
+  --color-action-hover: #2563eb;
+  --color-safe: #10b981;
+  --color-hero-glow: rgba(56, 189, 248, 0.11);
+  --color-card-shadow: rgba(0, 0, 0, 0.42);
+  color-scheme: dark;
 }
 
 @layer base {
   html {
     scroll-padding-top: 6.5rem;
+  }
+
+  body {
+    background-color: var(--color-sand);
+    color: var(--color-ink);
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   @media (prefers-reduced-motion: no-preference) {

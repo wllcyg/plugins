@@ -50,7 +50,7 @@ async function copyInternalUrl(target: 'chrome' | 'edge') {
 
 <template>
   <section ref="guideRef" class="install-guide" aria-labelledby="install-guide-title">
-    <RouterLink :to="{ query: {}, hash: '#directory' }" class="text-link">
+    <RouterLink :to="{ path: '/', hash: '#directory' }" class="text-link">
       <ArrowLeft :size="16" aria-hidden="true" />{{ t.installBrowseAll }}
     </RouterLink>
 
@@ -61,7 +61,7 @@ async function copyInternalUrl(target: 'chrome' | 'edge') {
         <a :href="GITHUB_RELEASES_URL" target="_blank" rel="noopener noreferrer" class="primary-link">
           <Download :size="17" aria-hidden="true" />{{ t.viewReleases }}
         </a>
-        <RouterLink :to="{ query: {}, hash: '#directory' }" class="secondary-link">
+        <RouterLink :to="{ path: '/', hash: '#directory' }" class="secondary-link">
           {{ t.navAllPlugins }}
         </RouterLink>
       </div>
@@ -224,6 +224,15 @@ async function copyInternalUrl(target: 'chrome' | 'edge') {
   color: #78350f;
 }
 .warn-callout svg { color: #d97706; flex-shrink: 0; margin-top: 2px; }
+
+:global(:root[data-theme="dark"]) .warn-callout {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #fde68a;
+}
+:global(:root[data-theme="dark"]) .warn-callout svg {
+  color: #fbbf24;
+}
 
 .tip-callout {
   background: var(--color-sand);

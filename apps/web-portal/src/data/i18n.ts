@@ -5,6 +5,7 @@ export type Locale = 'zh' | 'en';
 const STORAGE_KEY = '100free_portal_lang';
 
 function detectInitialLocale(): Locale {
+  if (typeof window === 'undefined') return 'zh';
   try {
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
@@ -110,7 +111,9 @@ const messages = {
     footerPlatform: 'Chrome / Edge MV3 原生支持',
     siteTitleHome: '100-Free · 免费、纯净、离线优先的浏览器生产力矩阵',
     siteTitleDetail: (name: string) => `${name} · 100-Free 免费生产力插件`,
-    switchLangLabel: 'EN'
+    switchLangLabel: 'EN',
+    switchToDark: '切换至极客暗夜模式',
+    switchToLight: '切换至暖沙日间模式'
   },
   en: {
     skipToMain: 'Skip to main content',
@@ -183,7 +186,9 @@ const messages = {
     footerPlatform: 'Chrome & Edge MV3 Ready',
     siteTitleHome: '100-Free · Free, Private & Offline-First Browser Extensions',
     siteTitleDetail: (name: string) => `${name} · 100-Free Extensions`,
-    switchLangLabel: '中文'
+    switchLangLabel: '中文',
+    switchToDark: 'Switch to Dark Mode',
+    switchToLight: 'Switch to Light Mode'
   }
 } as const;
 

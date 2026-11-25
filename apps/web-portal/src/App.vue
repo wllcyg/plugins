@@ -19,25 +19,31 @@ import {
   Languages,
   LayoutGrid,
   Lock,
+  Moon,
   Search,
   ShieldCheck,
   Sparkles,
+  Sun,
   X
 } from 'lucide-vue-next';
 import { getLocalizedPlugins, GITHUB_RELEASES_URL, GITHUB_REPO_URL } from './data/plugins';
 import { locale, t, toggleLocale } from './data/i18n';
+import { theme, toggleTheme } from './data/theme';
 import InstallGuide from './components/InstallGuide.vue';
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
-const isInstallGuide = computed(() => route.query.page === 'install');
-const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === route.query.tool)));
+const isInstallGuide = computed(() => route.path === '/install' || route.query.page === 'install');
+const activeToolId = computed(() => (route.params.toolId as string | undefined) || (route.query.tool as string | undefined));
+const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === activeToolId.value)));
 const pageRoot = ref<HTMLElement>();
 let homeGsapCtx: gsap.Context | null = null;
-const detailUrl = (id: string) => ({ query: { tool: id } });
+const detailUrl = (id: string) => `/tools/${id}`;
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // 首屏轮播图：覆盖全部插件，支持自动播放、悬停暂停与左右切换
@@ -111,6 +117,7 @@ function setLinkHref(selector: string, href: string) {
 }
 
 watch([selected, isInstallGuide, locale], ([plugin, installPage]) => {
+  if (typeof document === 'undefined') return;
   const title = installPage
     ? t.value.siteTitleInstall
     : plugin
@@ -122,23 +129,26 @@ watch([selected, isInstallGuide, locale], ([plugin, installPage]) => {
       ? `${plugin.headline}：${plugin.summary}`
       : t.value.heroDesc(plugins.value.length);
   const canonicalUrl = installPage
-    ? `${SITE_ORIGIN}/?page=install`
+    ? `${SITE_ORIGIN}/install`
     : plugin
-      ? `${SITE_ORIGIN}/?tool=${plugin.id}`
+      ? `${SITE_ORIGIN}/tools/${plugin.id}`
       : `${SITE_ORIGIN}/`;
-  const enUrl = installPage
-    ? `${SITE_ORIGIN}/?page=install&lang=en`
-    : plugin
-      ? `${SITE_ORIGIN}/?tool=${plugin.id}&lang=en`
-      : `${SITE_ORIGIN}/?lang=en`;
+  const enUrl = `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=en`;
+  const ogImage = plugin?.preview?.startsWith('http')
+    ? plugin.preview
+    : plugin?.preview
+      ? `${SITE_ORIGIN}${plugin.preview.startsWith('/') ? '' : '/'}${plugin.preview}`
+      : `${SITE_ORIGIN}/og-cover.png`;
 
   document.title = title;
   setMetaContent('meta[name="description"]', description);
   setMetaContent('meta[property="og:title"]', title);
   setMetaContent('meta[property="og:description"]', description);
   setMetaContent('meta[property="og:url"]', canonicalUrl);
+  setMetaContent('meta[property="og:image"]', ogImage);
   setMetaContent('meta[name="twitter:title"]', title);
   setMetaContent('meta[name="twitter:description"]', description);
+  setMetaContent('meta[name="twitter:image"]', ogImage);
   setLinkHref('link[rel="canonical"]', locale.value === 'en' ? enUrl : canonicalUrl);
   setLinkHref('link[rel="alternate"][hreflang="zh-CN"]', canonicalUrl);
   setLinkHref('link[rel="alternate"][hreflang="en"]', enUrl);
@@ -231,6 +241,12 @@ function skipToMain(event: MouseEvent) {
 
 onMounted(async () => {
   await router.isReady();
+  // 兼容旧版 query 参数链接，平滑升级为语义化路径
+  if (route.query.page === 'install') {
+    await router.replace({ path: '/install', hash: route.hash });
+  } else if (typeof route.query.tool === 'string' && route.query.tool) {
+    await router.replace({ path: `/tools/${route.query.tool}`, hash: route.hash });
+  }
   await nextTick();
   moveToLocation();
   startAutoplay();
@@ -249,19 +265,29 @@ onUnmounted(() => {
 
   <header class="site-header">
     <div class="shell topbar">
-      <RouterLink class="brand" :to="{ query: {}, hash: '' }" translate="no">
+      <RouterLink class="brand" :to="{ path: '/', hash: '' }" translate="no">
         <img :src="logoUrl" alt="" width="34" height="34" />
         <span>100<span class="brand-hyphen">-</span>Free</span>
         <span class="brand-badge">{{ t.brandBadge(plugins.length) }}</span>
       </RouterLink>
       <nav :aria-label="t.navAriaLabel">
-        <RouterLink :to="{ query: {}, hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
-        <RouterLink :to="{ query: { page: 'install' }, hash: '' }"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
-        <RouterLink :to="{ query: {}, hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
+        <RouterLink :to="{ path: '/', hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
+        <RouterLink to="/install"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
+        <RouterLink :to="{ path: '/', hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
         <button type="button" class="lang-btn" :aria-label="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
           <Languages :size="14" aria-hidden="true" />
           <span>{{ t.switchLangLabel }}</span>
+        </button>
+        <button
+          type="button"
+          class="theme-btn"
+          :aria-label="theme === 'light' ? t.switchToDark : t.switchToLight"
+          :title="theme === 'light' ? t.switchToDark : t.switchToLight"
+          @click="toggleTheme"
+        >
+          <Moon v-if="theme === 'light'" :size="15" aria-hidden="true" />
+          <Sun v-else :size="15" aria-hidden="true" />
         </button>
       </nav>
     </div>
@@ -444,7 +470,7 @@ onUnmounted(() => {
     </main>
 
     <main v-else id="main" :key="selected.id" ref="pageRoot" class="shell detail" tabindex="-1">
-      <RouterLink :to="{ query: {}, hash: '#directory' }" class="text-link">
+      <RouterLink :to="{ path: '/', hash: '#directory' }" class="text-link">
         <ArrowLeft :size="16" aria-hidden="true" />{{ t.backToDirectory(plugins.length) }}
       </RouterLink>
 
@@ -481,7 +507,7 @@ onUnmounted(() => {
         <div class="install-tip">
           <strong>{{ t.installTipTitle }}</strong>
           <span>{{ t.installTipDesc }}</span>
-          <RouterLink :to="{ query: { page: 'install' }, hash: '' }" class="text-link guide-inline-link">
+          <RouterLink to="/install" class="text-link guide-inline-link">
             {{ t.viewFullInstallGuide }} <ChevronRight :size="14" aria-hidden="true" />
           </RouterLink>
         </div>
@@ -568,7 +594,8 @@ onUnmounted(() => {
 nav { display: flex; align-items: center; gap: clamp(10px, 2.5vw, 24px); font-size: 14px; color: var(--color-muted); font-weight: 550; }
 nav a, .section-title, .detail-availability { display: flex; align-items: center; gap: 6px; }
 .section-title { gap: 10px; }
-.section-title svg, .detail-availability svg { flex-shrink: 0; color: var(--color-action); }
+.section-title svg { flex-shrink: 0; color: var(--color-action); }
+.detail-availability svg { flex-shrink: 0; color: var(--color-safe); }
 nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underline; text-underline-offset: 4px; }
 .lang-btn {
   display: inline-flex;
@@ -585,18 +612,40 @@ nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underl
   transition: border-color .15s ease, background .15s ease;
 }
 .lang-btn:hover { border-color: var(--color-taupe); background: var(--color-stone); }
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.theme-btn:hover { border-color: var(--color-taupe); background: var(--color-stone); transform: rotate(12deg); }
 
 /* Hero */
-.hero { display: grid; align-items: center; grid-template-columns: .92fr 1.08fr; gap: clamp(24px, 4.5vw, 64px); padding-block: clamp(44px, 7vw, 88px); }
+.hero { position: relative; display: grid; align-items: center; grid-template-columns: .92fr 1.08fr; gap: clamp(24px, 4.5vw, 64px); padding-block: clamp(44px, 7vw, 88px); }
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -40px -120px;
+  background: radial-gradient(ellipse 60% 55% at 72% 45%, var(--color-hero-glow), transparent 72%);
+  pointer-events: none;
+  z-index: -1;
+}
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--color-action);
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
+  color: var(--color-safe);
+  background: color-mix(in srgb, var(--color-safe) 10%, var(--color-paper));
+  border: 1px solid color-mix(in srgb, var(--color-safe) 28%, var(--color-line));
   padding: 5px 12px;
   border-radius: 999px;
   margin-bottom: 18px;
@@ -618,12 +667,13 @@ nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underl
   border: 1px solid var(--color-line);
   border-radius: 14px;
   background: var(--color-paper);
-  box-shadow: 0 20px 50px #24272d14;
+  box-shadow: 0 20px 50px var(--color-card-shadow);
 }
 .carousel-viewport {
   overflow: hidden;
   border-radius: 8px;
-  background: var(--color-sand);
+  background: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
 }
 .carousel-link { display: block; }
 .preview-frame img {
@@ -797,7 +847,7 @@ h2 { margin: 0; font-size: clamp(23px, 2.8vw, 32px); font-weight: 800; letter-sp
 .plugin-card:hover {
   border-color: var(--color-taupe);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px #24272d0d;
+  box-shadow: 0 12px 28px var(--color-card-shadow);
 }
 .card-top { display: flex; align-items: center; gap: 12px; }
 .card-top img { border-radius: 10px; flex-shrink: 0; }

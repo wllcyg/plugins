@@ -1,18 +1,34 @@
-import { createApp, h } from 'vue';
-import { createRouter, createWebHistory, RouterView } from 'vue-router';
+import { createSSRApp, h } from 'vue';
+import { createMemoryHistory, createRouter, createWebHistory, RouterView, type RouteRecordRaw } from 'vue-router';
 import './style.css';
 import App from './App.vue';
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [{ path: '/', component: App }],
-  scrollBehavior(to, from) {
-    if (to.query.tool !== from.query.tool || !to.hash) return false;
-    return { el: to.hash };
-  }
-});
+export const routes: RouteRecordRaw[] = [
+  { path: '/', component: App },
+  { path: '/install', component: App },
+  { path: '/tools/:toolId', component: App },
+  { path: '/:pathMatch(.*)*', redirect: '/' }
+];
 
-const app = createApp({ render: () => h(RouterView) });
-app.use(router);
-void router.isReady().then(() => app.mount('#app'));
+export function createAppRouter(isServer = false) {
+  return createRouter({
+    history: isServer ? createMemoryHistory(import.meta.env.BASE_URL) : createWebHistory(import.meta.env.BASE_URL),
+    routes,
+    scrollBehavior(to, from) {
+      if (to.path !== from.path || !to.hash) return false;
+      return { el: to.hash };
+    }
+  });
+}
 
+export function createPortalApp(isServer = false) {
+  const router = createAppRouter(isServer);
+  const app = createSSRApp({ render: () => h(RouterView) });
+  app.use(router);
+  return { app, router };
+}
+
+if (!import.meta.env.SSR) {
+  const { app, router } = createPortalApp(false);
+  void router.isReady().then(() => app.mount('#app'));
+}
