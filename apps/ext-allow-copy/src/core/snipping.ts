@@ -125,6 +125,7 @@ export class SnippingExtractor {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp, { once: true });
     window.addEventListener('keydown', onKeyDown, { once: true });
+    window.addEventListener('blur', () => this.cleanup(), { once: true });
   }
 
   private extractTextInRect(rect: { left: number; top: number; right: number; bottom: number }) {

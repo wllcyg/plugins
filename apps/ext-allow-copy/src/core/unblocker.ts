@@ -28,11 +28,10 @@ const CSS_CONTENT = `
   opacity: 1 !important;
 }
 
-/* 攻破空透明遮罩层防划选 (针对无内容的绝对定位透明遮罩自动穿透) */
+/* 攻破空透明遮罩层防划选 (针对无内容的绝对定位透明遮罩，设为 none 以实现鼠标手势真正穿透到底层) */
 div[style*="position: absolute"][style*="opacity: 0"]:empty,
-div[style*="position: fixed"][style*="opacity: 0"]:empty,
-div[style*="pointer-events: none"] {
-  pointer-events: auto !important;
+div[style*="position: fixed"][style*="opacity: 0"]:empty {
+  pointer-events: none !important;
 }
 `;
 
@@ -123,6 +122,14 @@ export class DomUnblocker {
           // @ts-ignore
           if (el[attr] !== null) el[attr] = null;
         });
+
+        // 智能解除部分防复制脚本恶意追加的 overflow: hidden 导致滚动条锁死
+        if (el.style.overflow === 'hidden') {
+          el.style.overflow = '';
+        }
+        if (el.style.overflowY === 'hidden') {
+          el.style.overflowY = '';
+        }
       });
     };
 
