@@ -6,6 +6,9 @@ const STORAGE_KEY = '100free_portal_lang';
 
 function detectInitialLocale(): Locale {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    if (urlLang === 'zh' || urlLang === 'en') return urlLang;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'zh' || saved === 'en') return saved;
     return navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';

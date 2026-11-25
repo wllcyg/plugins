@@ -95,15 +95,30 @@ function setMetaContent(selector: string, content: string) {
   if (el) el.content = content;
 }
 
+const SITE_ORIGIN = 'https://plugins.cheatppf.xyz';
+
+function setLinkHref(selector: string, href: string) {
+  const el = document.querySelector<HTMLLinkElement>(selector);
+  if (el) el.href = href;
+}
+
 watch([selected, locale], ([plugin]) => {
   const title = plugin ? t.value.siteTitleDetail(plugin.name) : t.value.siteTitleHome;
   const description = plugin ? `${plugin.headline}：${plugin.summary}` : t.value.heroDesc(plugins.value.length);
+  const canonicalUrl = plugin ? `${SITE_ORIGIN}/?tool=${plugin.id}` : `${SITE_ORIGIN}/`;
+  const enUrl = plugin ? `${SITE_ORIGIN}/?tool=${plugin.id}&lang=en` : `${SITE_ORIGIN}/?lang=en`;
+
   document.title = title;
   setMetaContent('meta[name="description"]', description);
   setMetaContent('meta[property="og:title"]', title);
   setMetaContent('meta[property="og:description"]', description);
+  setMetaContent('meta[property="og:url"]', canonicalUrl);
   setMetaContent('meta[name="twitter:title"]', title);
   setMetaContent('meta[name="twitter:description"]', description);
+  setLinkHref('link[rel="canonical"]', locale.value === 'en' ? enUrl : canonicalUrl);
+  setLinkHref('link[rel="alternate"][hreflang="zh-CN"]', canonicalUrl);
+  setLinkHref('link[rel="alternate"][hreflang="en"]', enUrl);
+  setLinkHref('link[rel="alternate"][hreflang="x-default"]', canonicalUrl);
 }, { immediate: true });
 
 function moveToLocation(focusTarget?: HTMLElement) {
