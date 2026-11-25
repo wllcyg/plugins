@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#022c22" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)" />
+  <rect x="4" y="4" width="120" height="120" rx="24" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2" />
+  
+  <g filter="url(#shadow)">
+    <!-- Link Left Loop -->
+    <path d="M48 72 L36 84 A15 15 0 0 1 14 62 L26 50 A15 15 0 0 1 48 50" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Link Right Loop -->
+    <path d="M80 56 L92 44 A15 15 0 0 1 114 66 L102 78 A15 15 0 0 1 80 78" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Direct Lightning Bolt through Center -->
+    <polygon points="72,28 46,65 62,65 52,100 86,59 68,59" fill="url(#boltGrad)" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+  </g>
+</svg>

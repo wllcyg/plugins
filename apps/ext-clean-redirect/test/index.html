@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>外链免拦截直达与链接追踪净化 - 全场景综合测试套件</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="flex items-center space-x-4 border-b border-slate-800 pb-6">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-teal-500/20">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">外链免拦截直达与链接追踪净化 · 场景测试套件</h1>
+        <p class="text-sm text-slate-400 mt-1">用于检验：中转页秒级跳过、DOM 预替换为真实直链、UTM/SPM 追踪剔除、版权复制尾巴剥离</p>
+      </div>
+    </header>
+
+    <!-- 1. 模拟中转外链 (预替换与点击直达测试) -->
+    <section class="bg-slate-800/80 rounded-2xl p-6 border border-slate-700 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-emerald-400">场景 1：各大主流平台包装中转链接 (DOM 预替换测试)</h2>
+        <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-700">检验目标：鼠标悬停链接即为真实目标，点击无需跳转中转页</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+          <div class="text-slate-400 font-sans font-bold">知乎外链 (link.zhihu.com)</div>
+          <a
+            href="https://link.zhihu.com/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fcore"
+            target="_blank"
+            class="text-sky-400 hover:underline block break-all"
+          >
+            知乎中转至 Vue 官方仓库: https://link.zhihu.com/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fcore
+          </a>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+          <div class="text-slate-400 font-sans font-bold">掘金外链 (link.juejin.cn)</div>
+          <a
+            href="https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org"
+            target="_blank"
+            class="text-sky-400 hover:underline block break-all"
+          >
+            掘金中转至 MDN 文档: https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org
+          </a>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+          <div class="text-slate-400 font-sans font-bold">简书外链 (jianshu.com/go-wild)</div>
+          <a
+            href="https://www.jianshu.com/go-wild?url=https%3A%2F%2Fvitejs.dev"
+            target="_blank"
+            class="text-sky-400 hover:underline block break-all"
+          >
+            简书中转至 Vite 官网: https://www.jianshu.com/go-wild?url=https%3A%2F%2Fvitejs.dev
+          </a>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+          <div class="text-slate-400 font-sans font-bold">CSDN 外链 (link.csdn.net)</div>
+          <a
+            href="https://link.csdn.net/?target=https%3A%2F%2Ftailwindcss.com"
+            target="_blank"
+            class="text-sky-400 hover:underline block break-all"
+          >
+            CSDN 中转至 Tailwind 官网: https://link.csdn.net/?target=https%3A%2F%2Ftailwindcss.com
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 营销追踪参数剥离测试 -->
+    <section class="bg-slate-800/80 rounded-2xl p-6 border border-slate-700 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-amber-400">场景 2：营销与广告追踪参数自动剥离 (UTM, SPM, bd_vid)</h2>
+        <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-700">检验目标：预清理或点击后，URL 后的垃圾追踪尾巴全被剔除</span>
+      </div>
+
+      <div class="space-y-3 text-xs font-mono">
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700">
+          <div class="text-slate-400 font-sans font-bold mb-1">带有超长 UTM 追踪参数的产品页:</div>
+          <a
+            href="https://example.com/item/1001?utm_source=newsletter&utm_medium=email&utm_campaign=winter_sale&utm_term=developer&utm_content=promo_banner"
+            class="text-amber-400 hover:underline break-all"
+          >
+            https://example.com/item/1001?utm_source=newsletter&utm_medium=email&utm_campaign=winter_sale&utm_term=developer&utm_content=promo_banner
+          </a>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-700">
+          <div class="text-slate-400 font-sans font-bold mb-1">带有 B站分享与追踪参数的视频链接:</div>
+          <a
+            href="https://www.bilibili.com/video/BV1xx411c7mD?p=1&vd_source=abc123456789&spm_id_from=333.788.0.0&from_spmid=666.25"
+            class="text-amber-400 hover:underline break-all"
+          >
+            https://www.bilibili.com/video/BV1xx411c7mD?p=1&vd_source=abc123456789&spm_id_from=333.788.0.0&from_spmid=666.25
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 复制版权小尾巴剔除测试 -->
+    <section class="bg-slate-800/80 rounded-2xl p-6 border border-slate-700 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-sky-400">场景 3：网页划词复制 · 自动去除强制版权尾巴</h2>
+        <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-700">检验目标：选中并复制下方文本，粘贴时自动清除版权声明小尾巴</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 text-sm leading-relaxed text-slate-300">
+        <p>100-Free Productivity Initiative 致力于打破昂贵订阅制，为全球开发者与知识工作者打造 100 款高品质、完全免费、零隐私上报的生产力浏览器插件。纯本地离线 Canvas 与 JavaScript 运算，绝对不上报任何用户隐私数据。</p>
+        <div class="text-xs text-slate-500 mt-4 border-t border-slate-800 pt-2">
+          提示：可以在插件 Popup 中开启「剔除复制版权小尾巴」，直接选中上方文字并按 Ctrl+C，粘贴到任意文本框检验效果。
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
