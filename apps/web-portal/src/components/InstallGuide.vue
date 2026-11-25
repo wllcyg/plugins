@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+import gsap from 'gsap';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -15,7 +16,23 @@ import {
 import { t } from '../data/i18n';
 import { GITHUB_RELEASES_URL } from '../data/plugins';
 
+const guideRef = ref<HTMLElement | null>(null);
 const copiedTarget = ref<'chrome' | 'edge' | null>(null);
+let ctx: gsap.Context | null = null;
+
+onMounted(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !guideRef.value) return;
+  ctx = gsap.context(() => {
+    const tl = gsap.timeline({ defaults: { duration: 0.45, ease: 'power2.out', clearProps: 'opacity,transform' } });
+    tl.from('.guide-header', { y: 16, opacity: 0 })
+      .from('.step-card', { y: 24, opacity: 0, stagger: 0.08 }, '-=0.22')
+      .from('.faq-item', { y: 18, opacity: 0, stagger: 0.06 }, '-=0.2');
+  }, guideRef.value);
+});
+
+onUnmounted(() => {
+  ctx?.revert();
+});
 
 async function copyInternalUrl(target: 'chrome' | 'edge') {
   const url = target === 'chrome' ? 'chrome://extensions' : 'edge://extensions';
@@ -32,7 +49,7 @@ async function copyInternalUrl(target: 'chrome' | 'edge') {
 </script>
 
 <template>
-  <section class="install-guide" aria-labelledby="install-guide-title">
+  <section ref="guideRef" class="install-guide" aria-labelledby="install-guide-title">
     <RouterLink :to="{ query: {}, hash: '#directory' }" class="text-link">
       <ArrowLeft :size="16" aria-hidden="true" />{{ t.installBrowseAll }}
     </RouterLink>

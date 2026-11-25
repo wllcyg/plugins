@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowDown,
   ArrowLeft,
@@ -28,12 +29,14 @@ import { locale, t, toggleLocale } from './data/i18n';
 import InstallGuide from './components/InstallGuide.vue';
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
+gsap.registerPlugin(ScrollTrigger);
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
 const isInstallGuide = computed(() => route.query.page === 'install');
 const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === route.query.tool)));
 const pageRoot = ref<HTMLElement>();
+let homeGsapCtx: gsap.Context | null = null;
 const detailUrl = (id: string) => ({ query: { tool: id } });
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -150,15 +153,66 @@ function moveToLocation(focusTarget?: HTMLElement) {
   if (!target) focusTarget?.focus({ preventScroll: true });
 }
 
+function initHomeAnimations() {
+  homeGsapCtx?.revert();
+  homeGsapCtx = null;
+  if (reduceMotion() || selected.value || isInstallGuide.value || !pageRoot.value) return;
+
+  homeGsapCtx = gsap.context(() => {
+    if (!route.hash) {
+      const tl = gsap.timeline({ defaults: { duration: 0.45, ease: 'power3.out', clearProps: 'opacity,transform' } });
+      tl.from('.hero-eyebrow', { y: 12, opacity: 0, scale: 0.96 })
+        .from('#hero-title', { y: 20, opacity: 0 }, '-=0.28')
+        .from('.hero-copy > p', { y: 14, opacity: 0 }, '-=0.3')
+        .from('.hero-actions', { y: 12, opacity: 0 }, '-=0.28')
+        .from('.hero-preview', { y: 18, opacity: 0, duration: 0.52 }, '-=0.35');
+    }
+
+    gsap.from('.principle-card', {
+      y: 24,
+      opacity: 0,
+      duration: 0.5,
+      stagger: 0.08,
+      ease: 'power2.out',
+      clearProps: 'opacity,transform',
+      scrollTrigger: {
+        trigger: '.principles-grid',
+        start: 'top 86%',
+        once: true
+      }
+    });
+
+    gsap.from('.plugin-card', {
+      y: 26,
+      opacity: 0,
+      duration: 0.46,
+      stagger: { each: 0.055, from: 'start' },
+      ease: 'power2.out',
+      clearProps: 'opacity,transform',
+      scrollTrigger: {
+        trigger: '.plugin-grid',
+        start: 'top 86%',
+        once: true
+      }
+    });
+  }, pageRoot.value);
+}
+
 function enterPage(element: Element, done: () => void) {
   if (element instanceof HTMLElement) moveToLocation(element);
   if (reduceMotion()) { done(); return; }
   gsap.fromTo(element, { opacity: 0, y: 11 }, {
-    opacity: 1, y: 0, duration: 0.28, ease: 'power2.out', clearProps: 'opacity,transform', onComplete: done
+    opacity: 1, y: 0, duration: 0.28, ease: 'power2.out', clearProps: 'opacity,transform',
+    onComplete: () => {
+      initHomeAnimations();
+      done();
+    }
   });
 }
 
 function leavePage(element: Element, done: () => void) {
+  homeGsapCtx?.revert();
+  homeGsapCtx = null;
   gsap.killTweensOf(element);
   if (reduceMotion()) { done(); return; }
   gsap.to(element, { opacity: 0, duration: 0.12, ease: 'power1.in', onComplete: done });
@@ -180,13 +234,13 @@ onMounted(async () => {
   await nextTick();
   moveToLocation();
   startAutoplay();
-  if (reduceMotion() || route.hash || selected.value || isInstallGuide.value || !pageRoot.value) return;
-  const intro = pageRoot.value.querySelectorAll('.hero-copy > *, .hero-preview');
-  gsap.from(intro, { opacity: 0, y: 12, duration: 0.36, stagger: 0.055, ease: 'power2.out', clearProps: 'opacity,transform' });
+  initHomeAnimations();
 });
 
 onUnmounted(() => {
   stopAutoplay();
+  homeGsapCtx?.revert();
+  homeGsapCtx = null;
 });
 </script>
 
