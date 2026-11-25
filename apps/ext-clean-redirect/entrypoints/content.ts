@@ -1,3 +1,4 @@
+import { defineContentScript } from 'wxt/sandbox';
 import { extractTargetUrl } from '../src/rules/redirect-rules';
 import { cleanTrackingParams } from '../src/rules/tracking-rules';
 import { stripCopyrightNotice } from '../src/rules/copyright-rules';
