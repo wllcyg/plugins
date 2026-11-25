@@ -13,6 +13,7 @@ import {
   Cpu,
   Download,
   ExternalLink,
+  FileArchive,
   Grid2X2,
   Languages,
   LayoutGrid,
@@ -24,12 +25,14 @@ import {
 } from 'lucide-vue-next';
 import { getLocalizedPlugins, GITHUB_RELEASES_URL, GITHUB_REPO_URL } from './data/plugins';
 import { locale, t, toggleLocale } from './data/i18n';
+import InstallGuide from './components/InstallGuide.vue';
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
-const selected = computed(() => plugins.value.find((plugin) => plugin.id === route.query.tool));
+const isInstallGuide = computed(() => route.query.page === 'install');
+const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === route.query.tool)));
 const pageRoot = ref<HTMLElement>();
 const detailUrl = (id: string) => ({ query: { tool: id } });
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,11 +107,27 @@ function setLinkHref(selector: string, href: string) {
   if (el) el.href = href;
 }
 
-watch([selected, locale], ([plugin]) => {
-  const title = plugin ? t.value.siteTitleDetail(plugin.name) : t.value.siteTitleHome;
-  const description = plugin ? `${plugin.headline}：${plugin.summary}` : t.value.heroDesc(plugins.value.length);
-  const canonicalUrl = plugin ? `${SITE_ORIGIN}/?tool=${plugin.id}` : `${SITE_ORIGIN}/`;
-  const enUrl = plugin ? `${SITE_ORIGIN}/?tool=${plugin.id}&lang=en` : `${SITE_ORIGIN}/?lang=en`;
+watch([selected, isInstallGuide, locale], ([plugin, installPage]) => {
+  const title = installPage
+    ? t.value.siteTitleInstall
+    : plugin
+      ? t.value.siteTitleDetail(plugin.name)
+      : t.value.siteTitleHome;
+  const description = installPage
+    ? t.value.installPageSubtitle
+    : plugin
+      ? `${plugin.headline}：${plugin.summary}`
+      : t.value.heroDesc(plugins.value.length);
+  const canonicalUrl = installPage
+    ? `${SITE_ORIGIN}/?page=install`
+    : plugin
+      ? `${SITE_ORIGIN}/?tool=${plugin.id}`
+      : `${SITE_ORIGIN}/`;
+  const enUrl = installPage
+    ? `${SITE_ORIGIN}/?page=install&lang=en`
+    : plugin
+      ? `${SITE_ORIGIN}/?tool=${plugin.id}&lang=en`
+      : `${SITE_ORIGIN}/?lang=en`;
 
   document.title = title;
   setMetaContent('meta[name="description"]', description);
@@ -161,7 +180,7 @@ onMounted(async () => {
   await nextTick();
   moveToLocation();
   startAutoplay();
-  if (reduceMotion() || route.hash || selected.value || !pageRoot.value) return;
+  if (reduceMotion() || route.hash || selected.value || isInstallGuide.value || !pageRoot.value) return;
   const intro = pageRoot.value.querySelectorAll('.hero-copy > *, .hero-preview');
   gsap.from(intro, { opacity: 0, y: 12, duration: 0.36, stagger: 0.055, ease: 'power2.out', clearProps: 'opacity,transform' });
 });
@@ -183,6 +202,7 @@ onUnmounted(() => {
       </RouterLink>
       <nav :aria-label="t.navAriaLabel">
         <RouterLink :to="{ query: {}, hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
+        <RouterLink :to="{ query: { page: 'install' }, hash: '' }"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
         <RouterLink :to="{ query: {}, hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
         <button type="button" class="lang-btn" :aria-label="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
@@ -195,7 +215,11 @@ onUnmounted(() => {
 
   <Transition mode="out-in" :css="false" @enter="enterPage" @leave="leavePage"
     @enter-cancelled="clearTransition" @leave-cancelled="clearTransition">
-    <main v-if="!selected" id="main" key="home" ref="pageRoot" tabindex="-1">
+    <main v-if="isInstallGuide" id="main" key="install-guide" ref="pageRoot" class="shell" tabindex="-1">
+      <InstallGuide />
+    </main>
+
+    <main v-else-if="!selected" id="main" key="home" ref="pageRoot" tabindex="-1">
       <section class="shell hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <div class="hero-eyebrow">
@@ -403,6 +427,9 @@ onUnmounted(() => {
         <div class="install-tip">
           <strong>{{ t.installTipTitle }}</strong>
           <span>{{ t.installTipDesc }}</span>
+          <RouterLink :to="{ query: { page: 'install' }, hash: '' }" class="text-link guide-inline-link">
+            {{ t.viewFullInstallGuide }} <ChevronRight :size="14" aria-hidden="true" />
+          </RouterLink>
         </div>
       </div>
 
@@ -788,6 +815,7 @@ h2 { margin: 0; font-size: clamp(23px, 2.8vw, 32px); font-weight: 800; letter-sp
   color: var(--color-muted);
 }
 .install-tip strong { display: block; color: var(--color-ink); margin-bottom: 2px; }
+.guide-inline-link { margin-top: 6px; }
 .detail-preview-wrap {
   margin-top: 24px;
   padding: 10px;
