@@ -11,6 +11,8 @@ import {
   ChevronRight,
   CircleHelp,
   Cpu,
+  Download,
+  ExternalLink,
   Grid2X2,
   Languages,
   LayoutGrid,
@@ -20,7 +22,7 @@ import {
   Sparkles,
   X
 } from 'lucide-vue-next';
-import { getLocalizedPlugins } from './data/plugins';
+import { getLocalizedPlugins, GITHUB_RELEASES_URL, GITHUB_REPO_URL } from './data/plugins';
 import { locale, t, toggleLocale } from './data/i18n';
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
@@ -389,6 +391,21 @@ onUnmounted(() => {
         <ShieldCheck :size="16" aria-hidden="true" />{{ t.detailAvailability }}
       </p>
 
+      <div class="detail-download-box">
+        <div class="detail-download-actions">
+          <a :href="selected.downloadUrl" class="primary-link" target="_blank" rel="noopener noreferrer">
+            <Download :size="17" aria-hidden="true" />{{ t.downloadZip }}
+          </a>
+          <a :href="GITHUB_RELEASES_URL" class="secondary-link" target="_blank" rel="noopener noreferrer">
+            <ExternalLink :size="16" aria-hidden="true" />{{ t.viewReleases }}
+          </a>
+        </div>
+        <div class="install-tip">
+          <strong>{{ t.installTipTitle }}</strong>
+          <span>{{ t.installTipDesc }}</span>
+        </div>
+      </div>
+
       <div class="detail-preview-wrap">
         <img
           class="detail-preview"
@@ -429,6 +446,8 @@ onUnmounted(() => {
         <p>{{ t.footerDesc }}</p>
       </div>
       <div class="footer-meta">
+        <a :href="GITHUB_REPO_URL" target="_blank" rel="noopener noreferrer" class="text-link">GitHub</a>
+        <span>·</span>
         <span>{{ t.footerProgress(plugins.length) }}</span>
         <span>·</span>
         <span>{{ t.footerPlatform }}</span>
@@ -751,6 +770,24 @@ h2 { margin: 0; font-size: clamp(23px, 2.8vw, 32px); font-weight: 800; letter-sp
 }
 .highlight-pill svg { color: var(--color-action); }
 .availability { color: var(--color-muted); font-size: 13.5px; margin: 0; }
+.detail-download-box {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  max-width: 900px;
+}
+.detail-download-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.install-tip {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-line);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-muted);
+}
+.install-tip strong { display: block; color: var(--color-ink); margin-bottom: 2px; }
 .detail-preview-wrap {
   margin-top: 24px;
   padding: 10px;

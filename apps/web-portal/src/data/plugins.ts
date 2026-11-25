@@ -43,7 +43,11 @@ export interface PluginItem extends LocalizedContent {
   preview: string;
   previewWidth: number;
   previewHeight: number;
+  downloadUrl: string;
 }
+
+export const GITHUB_REPO_URL = 'https://github.com/wllcyg/plugins';
+export const GITHUB_RELEASES_URL = `${GITHUB_REPO_URL}/releases`;
 
 const rawPlugins: PluginRawItem[] = [
   {
@@ -313,6 +317,7 @@ export function getLocalizedPlugins(lang: Locale): PluginItem[] {
     preview: item.preview,
     previewWidth: item.previewWidth,
     previewHeight: item.previewHeight,
+    downloadUrl: `${GITHUB_RELEASES_URL}/latest/download/100free-ext-${item.id}-chrome.zip`,
     ...item[lang]
   }));
 }

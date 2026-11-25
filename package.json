@@ -20,9 +20,13 @@
     "build:video": "pnpm --filter @100free/ext-video-master build",
     "dev:qr": "pnpm --filter @100free/ext-qr-master dev",
     "build:qr": "pnpm --filter @100free/ext-qr-master build",
+    "dev:redirect": "pnpm --filter @100free/ext-clean-redirect dev",
+    "build:redirect": "pnpm --filter @100free/ext-clean-redirect build",
     "dev:portal": "pnpm --filter @100free/web-portal dev",
     "build:portal": "pnpm --filter @100free/web-portal build",
     "build:all": "pnpm -r run build",
+    "zip:all": "pnpm --filter \"./apps/ext-*\" --filter \"!@100free/ext-template\" run zip",
+    "compile:all": "pnpm -r --if-present compile",
     "type-check": "pnpm -r run type-check"
   },
   "devDependencies": {
