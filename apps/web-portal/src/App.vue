@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowDown,
   ArrowLeft,
@@ -29,12 +27,10 @@ import {
 import { getLocalizedPlugins, GITHUB_RELEASES_URL, GITHUB_REPO_URL } from './data/plugins';
 import { locale, t, toggleLocale } from './data/i18n';
 import { theme, toggleTheme } from './data/theme';
-import InstallGuide from './components/InstallGuide.vue';
+
+const InstallGuide = defineAsyncComponent(() => import('./components/InstallGuide.vue'));
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
@@ -42,7 +38,7 @@ const isInstallGuide = computed(() => route.path === '/install' || route.query.p
 const activeToolId = computed(() => (route.params.toolId as string | undefined) || (route.query.tool as string | undefined));
 const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === activeToolId.value)));
 const pageRoot = ref<HTMLElement>();
-let homeGsapCtx: gsap.Context | null = null;
+let homeGsapCtx: { revert: () => void } | null = null;
 const detailUrl = (id: string) => `/tools/${id}`;
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -163,45 +159,43 @@ function moveToLocation(focusTarget?: HTMLElement) {
   if (!target) focusTarget?.focus({ preventScroll: true });
 }
 
-function initHomeAnimations() {
+async function initHomeAnimations() {
   homeGsapCtx?.revert();
   homeGsapCtx = null;
-  if (reduceMotion() || selected.value || isInstallGuide.value || !pageRoot.value) return;
+  if (typeof window === 'undefined' || reduceMotion() || selected.value || isInstallGuide.value || !pageRoot.value) return;
+
+  const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
+    import('gsap'),
+    import('gsap/ScrollTrigger')
+  ]);
+  gsap.registerPlugin(ScrollTrigger);
+  if (selected.value || isInstallGuide.value || !pageRoot.value) return;
 
   homeGsapCtx = gsap.context(() => {
-    if (!route.hash) {
-      const tl = gsap.timeline({ defaults: { duration: 0.45, ease: 'power3.out', clearProps: 'opacity,transform' } });
-      tl.from('.hero-eyebrow', { y: 12, opacity: 0, scale: 0.96 })
-        .from('#hero-title', { y: 20, opacity: 0 }, '-=0.28')
-        .from('.hero-copy > p', { y: 14, opacity: 0 }, '-=0.3')
-        .from('.hero-actions', { y: 12, opacity: 0 }, '-=0.28')
-        .from('.hero-preview', { y: 18, opacity: 0, duration: 0.52 }, '-=0.35');
-    }
-
     gsap.from('.principle-card', {
-      y: 24,
+      y: 20,
       opacity: 0,
-      duration: 0.5,
-      stagger: 0.08,
+      duration: 0.45,
+      stagger: 0.07,
       ease: 'power2.out',
       clearProps: 'opacity,transform',
       scrollTrigger: {
         trigger: '.principles-grid',
-        start: 'top 86%',
+        start: 'top 88%',
         once: true
       }
     });
 
     gsap.from('.plugin-card', {
-      y: 26,
+      y: 22,
       opacity: 0,
-      duration: 0.46,
-      stagger: { each: 0.055, from: 'start' },
+      duration: 0.42,
+      stagger: { each: 0.05, from: 'start' },
       ease: 'power2.out',
       clearProps: 'opacity,transform',
       scrollTrigger: {
         trigger: '.plugin-grid',
-        start: 'top 86%',
+        start: 'top 88%',
         once: true
       }
     });
@@ -211,26 +205,18 @@ function initHomeAnimations() {
 function enterPage(element: Element, done: () => void) {
   if (element instanceof HTMLElement) moveToLocation(element);
   if (reduceMotion()) { done(); return; }
-  gsap.fromTo(element, { opacity: 0, y: 11 }, {
-    opacity: 1, y: 0, duration: 0.28, ease: 'power2.out', clearProps: 'opacity,transform',
-    onComplete: () => {
-      initHomeAnimations();
-      done();
-    }
-  });
+  void initHomeAnimations();
+  done();
 }
 
-function leavePage(element: Element, done: () => void) {
+function leavePage(_element: Element, done: () => void) {
   homeGsapCtx?.revert();
   homeGsapCtx = null;
-  gsap.killTweensOf(element);
-  if (reduceMotion()) { done(); return; }
-  gsap.to(element, { opacity: 0, duration: 0.12, ease: 'power1.in', onComplete: done });
+  done();
 }
 
-function clearTransition(element: Element) {
-  gsap.killTweensOf(element);
-  gsap.set(element, { clearProps: 'opacity,transform' });
+function clearTransition() {
+  // no-op
 }
 
 function skipToMain(event: MouseEvent) {
@@ -275,7 +261,7 @@ onUnmounted(() => {
         <RouterLink to="/install"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
         <RouterLink :to="{ path: '/', hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
-        <button type="button" class="lang-btn" :aria-label="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
+        <button type="button" class="lang-btn" :title="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
           <Languages :size="14" aria-hidden="true" />
           <span>{{ t.switchLangLabel }}</span>
         </button>
@@ -711,29 +697,40 @@ nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underl
 
 .carousel-dots {
   position: absolute;
-  bottom: 18px;
+  bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 0;
+  padding: 2px 6px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(8px);
 }
 .dot {
-  width: 7px;
-  height: 7px;
+  position: relative;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dot::after {
+  content: "";
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
   transition: width .22s ease, background .22s ease;
 }
-.dot:hover { background: rgba(255, 255, 255, 0.8); }
-.dot.active { width: 20px; background: #ffffff; }
+.dot:hover::after { background: rgba(255, 255, 255, 0.8); }
+.dot.active { width: 30px; }
+.dot.active::after { width: 20px; background: #ffffff; }
 
 .slide-fade-enter-active, .slide-fade-leave-active {
   transition: opacity .24s ease, transform .24s ease;

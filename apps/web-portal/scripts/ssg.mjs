@@ -40,8 +40,23 @@ function replaceMeta(template, seo) {
   return out;
 }
 
+function inlineStylesheet(template) {
+  return template.replace(
+    /<link\s+rel="stylesheet"[^>]*href="([^"]+\.css)"[^>]*>/gi,
+    (match, href) => {
+      const cssPath = path.join(distDir, href.replace(/^\//, ''));
+      if (fs.existsSync(cssPath)) {
+        const css = fs.readFileSync(cssPath, 'utf-8');
+        return `<style>${css}</style>`;
+      }
+      return match;
+    }
+  );
+}
+
 async function main() {
-  const template = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8');
+  const rawTemplate = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8');
+  const template = inlineStylesheet(rawTemplate);
   const serverEntry = pathToFileURL(path.join(ssrDir, 'entry-server.js')).href;
   const { render, getStaticRoutes } = await import(serverEntry);
   const routes = getStaticRoutes();

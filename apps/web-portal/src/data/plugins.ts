@@ -9,12 +9,12 @@ import redirectIcon from '../../../ext-clean-redirect/public/icons/icon-128.png?
 
 import tablePreview from '../assets/table-export.webp';
 import editorPreview from '../assets/screenshot-editor.webp';
-import copyPreview from '../assets/allow-copy.png';
-import cssPreview from '../assets/css-inspector.png';
-import snifferPreview from '../assets/image-sniffer.png';
-import videoPreview from '../assets/video-master.png';
-import qrPreview from '../assets/qr-master.png';
-import redirectPreview from '../assets/clean-redirect.png';
+import copyPreview from '../assets/allow-copy.webp';
+import cssPreview from '../assets/css-inspector.webp';
+import snifferPreview from '../assets/image-sniffer.webp';
+import videoPreview from '../assets/video-master.webp';
+import qrPreview from '../assets/qr-master.webp';
+import redirectPreview from '../assets/clean-redirect.webp';
 import type { Locale } from './i18n';
 
 export interface LocalizedContent {
