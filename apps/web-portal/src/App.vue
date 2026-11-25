@@ -11,6 +11,7 @@ import {
   CircleHelp,
   Cpu,
   Grid2X2,
+  Languages,
   LayoutGrid,
   Lock,
   Search,
@@ -18,33 +19,42 @@ import {
   Sparkles,
   X
 } from 'lucide-vue-next';
-import { plugins } from './data/plugins';
+import { getLocalizedPlugins } from './data/plugins';
+import { locale, t, toggleLocale } from './data/i18n';
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
 const route = useRoute();
 const router = useRouter();
-const selected = computed(() => plugins.find((plugin) => plugin.id === route.query.tool));
+const plugins = computed(() => getLocalizedPlugins(locale.value));
+const selected = computed(() => plugins.value.find((plugin) => plugin.id === route.query.tool));
 const pageRoot = ref<HTMLElement>();
 const detailUrl = (id: string) => ({ query: { tool: id } });
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// 首页 Hero 轮播展示的代表插件（长截图、自由复制、外链直达、CSS 提取）
 const heroShowcaseIds = ['screenshot', 'allow-copy', 'clean-redirect', 'css-inspector'];
 const heroShowcaseList = computed(() =>
-  heroShowcaseIds.map((id) => plugins.find((p) => p.id === id)!).filter(Boolean)
+  heroShowcaseIds.map((id) => plugins.value.find((p) => p.id === id)!).filter(Boolean)
 );
 const activeShowcaseIndex = ref(0);
-const activeShowcase = computed(() => heroShowcaseList.value[activeShowcaseIndex.value] || plugins[0]);
+const activeShowcase = computed(() => heroShowcaseList.value[activeShowcaseIndex.value] || plugins.value[0]);
 
-// 目录检索与分类筛选
+const ALL_CATEGORY = '__ALL__';
 const searchQuery = ref('');
-const selectedCategory = ref('全部');
-const categories = computed(() => ['全部', ...Array.from(new Set(plugins.map((p) => p.category)))]);
+const selectedCategory = ref(ALL_CATEGORY);
+const categories = computed(() => [
+  ALL_CATEGORY,
+  ...Array.from(new Set(plugins.value.map((p) => p.category)))
+]);
+
+// 语言切换时重置分类筛选，避免旧语言分类名失效
+watch(locale, () => {
+  selectedCategory.value = ALL_CATEGORY;
+});
 
 const filteredPlugins = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
-  return plugins.filter((p) => {
-    const matchCategory = selectedCategory.value === '全部' || p.category === selectedCategory.value;
+  return plugins.value.filter((p) => {
+    const matchCategory = selectedCategory.value === ALL_CATEGORY || p.category === selectedCategory.value;
     if (!matchCategory) return false;
     if (!q) return true;
     return (
@@ -56,13 +66,12 @@ const filteredPlugins = computed(() => {
   });
 });
 
-// 详情页推荐其他插件
 const relatedPlugins = computed(() =>
-  plugins.filter((p) => p.id !== selected.value?.id).slice(0, 3)
+  plugins.value.filter((p) => p.id !== selected.value?.id).slice(0, 3)
 );
 
-watch(selected, (plugin) => {
-  document.title = plugin ? `${plugin.name} · 100-Free 免费生产力插件` : '100-Free · 免费、纯净、离线优先的浏览器生产力矩阵';
+watch([selected, locale], ([plugin]) => {
+  document.title = plugin ? t.value.siteTitleDetail(plugin.name) : t.value.siteTitleHome;
 }, { immediate: true });
 
 function moveToLocation(focusTarget?: HTMLElement) {
@@ -109,19 +118,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <a class="skip-link" href="#main" @click="skipToMain">跳到主要内容</a>
+  <a class="skip-link" href="#main" @click="skipToMain">{{ t.skipToMain }}</a>
 
   <header class="site-header">
     <div class="shell topbar">
       <RouterLink class="brand" :to="{ query: {}, hash: '' }" translate="no">
         <img :src="logoUrl" alt="" width="34" height="34" />
         <span>100<span class="brand-hyphen">-</span>Free</span>
-        <span class="brand-badge">已上线 {{ plugins.length }} 款</span>
+        <span class="brand-badge">{{ t.brandBadge(plugins.length) }}</span>
       </RouterLink>
-      <nav aria-label="主导航">
-        <RouterLink :to="{ query: {}, hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />全部插件</RouterLink>
-        <RouterLink :to="{ query: {}, hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />核心原则</RouterLink>
-        <a href="#about"><CircleHelp :size="15" aria-hidden="true" />关于计划</a>
+      <nav aria-label="Main navigation">
+        <RouterLink :to="{ query: {}, hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
+        <RouterLink :to="{ query: {}, hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
+        <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
+        <button type="button" class="lang-btn" :aria-label="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
+          <Languages :size="14" aria-hidden="true" />
+          <span>{{ t.switchLangLabel }}</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -129,25 +142,22 @@ onMounted(async () => {
   <Transition mode="out-in" :css="false" @enter="enterPage" @leave="leavePage"
     @enter-cancelled="clearTransition" @leave-cancelled="clearTransition">
     <main v-if="!selected" id="main" key="home" ref="pageRoot" tabindex="-1">
-      <!-- Hero 首屏 -->
       <section class="shell hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <div class="hero-eyebrow">
             <Sparkles :size="14" aria-hidden="true" />
-            <span>打破昂贵订阅 · 纯本地离线运转</span>
+            <span>{{ t.heroEyebrow }}</span>
           </div>
-          <h1 id="hero-title">网页生产力，<br>随手带走<span>。</span></h1>
-          <p>
-            已上线 <strong>{{ plugins.length }} 款</strong> 高频免费浏览器扩展：覆盖长截图标注、表格转 Excel、自由复制、外链免拦截直达、CSS 提取、大图嗅探、网课倍速与离线二维码。
-          </p>
+          <h1 id="hero-title">{{ t.heroTitleLine1 }}<br>{{ t.heroTitleLine2 }}<span>.</span></h1>
+          <p>{{ t.heroDesc(plugins.length) }}</p>
           <div class="hero-actions">
-            <a href="#directory" class="primary-link">探索全部 {{ plugins.length }} 款插件 <ArrowDown :size="17" aria-hidden="true" /></a>
-            <a href="#principles" class="secondary-link">了解开源承诺</a>
+            <a href="#directory" class="primary-link">{{ t.heroCtaPrimary(plugins.length) }} <ArrowDown :size="17" aria-hidden="true" /></a>
+            <a href="#principles" class="secondary-link">{{ t.heroCtaSecondary }}</a>
           </div>
         </div>
 
         <figure class="hero-preview">
-          <div class="preview-tabs" role="tablist" aria-label="精选插件预览切换">
+          <div class="preview-tabs" role="tablist">
             <button
               v-for="(item, idx) in heroShowcaseList"
               :key="item.id"
@@ -172,60 +182,58 @@ onMounted(async () => {
           </div>
           <figcaption>
             <span>{{ activeShowcase.name }}</span>
-            <RouterLink :to="detailUrl(activeShowcase.id)" class="text-link">查看详情 <ChevronRight :size="14" aria-hidden="true" /></RouterLink>
+            <RouterLink :to="detailUrl(activeShowcase.id)" class="text-link">{{ t.viewDetails }} <ChevronRight :size="14" aria-hidden="true" /></RouterLink>
           </figcaption>
         </figure>
       </section>
 
-      <!-- 核心承诺：为什么选择 100-Free -->
       <section id="principles" class="principles" aria-labelledby="principles-title">
         <div class="shell">
           <div class="section-head">
-            <h2 id="principles-title">为什么选择 100-Free</h2>
-            <p class="section-sub">拒绝臃肿广告与高价 Pro 订阅，让每一款实用小工具回归纯粹。</p>
+            <h2 id="principles-title">{{ t.principlesTitle }}</h2>
+            <p class="section-sub">{{ t.principlesSub }}</p>
           </div>
           <div class="principles-grid">
             <article class="principle-card">
               <div class="principle-icon"><Lock :size="20" aria-hidden="true" /></div>
-              <h3>100% 本地离线处理</h3>
-              <p>所有截图拼接、表格解析、二维码识码与链接清洗均在浏览器本地完成，绝不向第三方服务器上传您的页面数据。</p>
+              <h3>{{ t.principle1Title }}</h3>
+              <p>{{ t.principle1Desc }}</p>
             </article>
             <article class="principle-card">
               <div class="principle-icon"><Sparkles :size="20" aria-hidden="true" /></div>
-              <h3>永久免费 · 零付费墙</h3>
-              <p>对标市面上动辄 $19~$69 的商业付费扩展，所有高阶特性（2x 高清长图、Tailwind 提取、ZIP 打包）完全免费开放。</p>
+              <h3>{{ t.principle2Title }}</h3>
+              <p>{{ t.principle2Desc }}</p>
             </article>
             <article class="principle-card">
               <div class="principle-icon"><Cpu :size="20" aria-hidden="true" /></div>
-              <h3>MV3 原生轻量架构</h3>
-              <p>基于 Chrome Manifest V3 标准与 Vue 3 构建，按需激活不常驻耗电，拒绝后台偷跑脚本与弹窗打扰。</p>
+              <h3>{{ t.principle3Title }}</h3>
+              <p>{{ t.principle3Desc }}</p>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- 插件矩阵目录 -->
       <section id="directory" class="shell directory" aria-labelledby="directory-title">
         <div class="directory-header">
           <div>
-            <h2 id="directory-title" class="section-title"><Grid2X2 :size="23" aria-hidden="true" />全部插件矩阵</h2>
-            <p class="section-sub">点击任意卡片查看功能介绍、运行效果与上手指南。</p>
+            <h2 id="directory-title" class="section-title"><Grid2X2 :size="23" aria-hidden="true" />{{ t.directoryTitle }}</h2>
+            <p class="section-sub">{{ t.directorySub }}</p>
           </div>
           <div class="search-box">
             <Search :size="16" class="search-icon" aria-hidden="true" />
             <input
               v-model="searchQuery"
               type="search"
-              placeholder="搜索插件名称、功能或场景..."
-              aria-label="搜索插件"
+              :placeholder="t.searchPlaceholder"
+              :aria-label="t.searchAria"
             />
-            <button v-if="searchQuery" type="button" class="clear-search" aria-label="清除搜索" @click="searchQuery = ''">
+            <button v-if="searchQuery" type="button" class="clear-search" :aria-label="t.clearSearchAria" @click="searchQuery = ''">
               <X :size="14" />
             </button>
           </div>
         </div>
 
-        <div class="category-pills" role="tablist" aria-label="按分类筛选">
+        <div class="category-pills" role="tablist">
           <button
             v-for="cat in categories"
             :key="cat"
@@ -235,16 +243,16 @@ onMounted(async () => {
             :class="['pill', { active: selectedCategory === cat }]"
             @click="selectedCategory = cat"
           >
-            {{ cat }}
+            {{ cat === ALL_CATEGORY ? t.allCategory : cat }}
             <span class="pill-count">
-              {{ cat === '全部' ? plugins.length : plugins.filter((p) => p.category === cat).length }}
+              {{ cat === ALL_CATEGORY ? plugins.length : plugins.filter((p) => p.category === cat).length }}
             </span>
           </button>
         </div>
 
         <div v-if="filteredPlugins.length === 0" class="empty-state">
-          <p>没有找到匹配「{{ searchQuery }}」的插件，试试清除关键词或切换分类。</p>
-          <button type="button" class="secondary-link" @click="searchQuery = ''; selectedCategory = '全部'">重置筛选</button>
+          <p>{{ t.emptyResult(searchQuery) }}</p>
+          <button type="button" class="secondary-link" @click="searchQuery = ''; selectedCategory = ALL_CATEGORY">{{ t.resetFilter }}</button>
         </div>
 
         <ul v-else class="plugin-grid">
@@ -269,10 +277,9 @@ onMounted(async () => {
       </section>
     </main>
 
-    <!-- 插件详情页 -->
     <main v-else id="main" :key="selected.id" ref="pageRoot" class="shell detail" tabindex="-1">
       <RouterLink :to="{ query: {}, hash: '#directory' }" class="text-link">
-        <ArrowLeft :size="16" aria-hidden="true" />返回全部插件 ({{ plugins.length }})
+        <ArrowLeft :size="16" aria-hidden="true" />{{ t.backToDirectory(plugins.length) }}
       </RouterLink>
 
       <div class="detail-heading">
@@ -293,7 +300,7 @@ onMounted(async () => {
       </div>
 
       <p class="availability detail-availability">
-        <ShieldCheck :size="16" aria-hidden="true" />已完成 Chrome / Edge MV3 本地构建测试，纯本地计算零隐私上报。
+        <ShieldCheck :size="16" aria-hidden="true" />{{ t.detailAvailability }}
       </p>
 
       <div class="detail-preview-wrap">
@@ -307,14 +314,14 @@ onMounted(async () => {
       </div>
 
       <section class="instructions" aria-labelledby="instructions-title">
-        <h2 id="instructions-title" class="section-title"><BookOpen :size="22" aria-hidden="true" />快速上手步骤</h2>
+        <h2 id="instructions-title" class="section-title"><BookOpen :size="22" aria-hidden="true" />{{ t.stepsTitle }}</h2>
         <ol>
           <li v-for="step in selected.steps" :key="step">{{ step }}</li>
         </ol>
       </section>
 
       <section class="related-section" aria-labelledby="related-title">
-        <h2 id="related-title">继续探索其他免费插件</h2>
+        <h2 id="related-title">{{ t.relatedTitle }}</h2>
         <div class="related-grid">
           <RouterLink v-for="item in relatedPlugins" :key="item.id" :to="detailUrl(item.id)" class="related-card">
             <img :src="item.icon" alt="" width="36" height="36" />
@@ -332,13 +339,13 @@ onMounted(async () => {
   <footer id="about">
     <div class="shell footer-content">
       <div>
-        <h2>关于 100-Free Productivity Initiative</h2>
-        <p>我们计划打造 100 款高品质、完全免费、零隐私上报的浏览器生产力工具，让效率工具重归自由。</p>
+        <h2>{{ t.footerTitle }}</h2>
+        <p>{{ t.footerDesc }}</p>
       </div>
       <div class="footer-meta">
-        <span>当前进度：{{ plugins.length }} / 100</span>
+        <span>{{ t.footerProgress(plugins.length) }}</span>
         <span>·</span>
-        <span>Chrome / Edge MV3 原生支持</span>
+        <span>{{ t.footerPlatform }}</span>
       </div>
     </div>
   </footer>
@@ -372,11 +379,26 @@ onMounted(async () => {
   background: color-mix(in srgb, var(--color-action) 12%, transparent);
   color: var(--color-action);
 }
-nav { display: flex; gap: clamp(12px, 3vw, 28px); font-size: 14px; color: var(--color-muted); font-weight: 550; }
+nav { display: flex; align-items: center; gap: clamp(10px, 2.5vw, 24px); font-size: 14px; color: var(--color-muted); font-weight: 550; }
 nav a, .section-title, .detail-availability { display: flex; align-items: center; gap: 6px; }
 .section-title { gap: 10px; }
 .section-title svg, .detail-availability svg { flex-shrink: 0; color: var(--color-action); }
 nav a:hover, .text-link:hover { color: var(--color-ink); text-decoration: underline; text-underline-offset: 4px; }
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.lang-btn:hover { border-color: var(--color-taupe); background: var(--color-stone); }
 
 /* Hero */
 .hero { display: grid; align-items: center; grid-template-columns: .92fr 1.08fr; gap: clamp(24px, 4.5vw, 64px); padding-block: clamp(44px, 7vw, 88px); }
