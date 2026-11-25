@@ -11,16 +11,18 @@ import {
 export default defineBackground(() => {
   // 1. 初始化右键菜单
   chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-      id: 'clean_copy_link',
-      title: '⚡ 复制净化后的干净链接',
-      contexts: ['link']
-    });
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: 'clean_copy_link',
+        title: '⚡ 复制净化后的干净链接',
+        contexts: ['link']
+      });
 
-    chrome.contextMenus.create({
-      id: 'clean_copy_page_url',
-      title: '⚡ 复制当前页面纯净链接',
-      contexts: ['page']
+      chrome.contextMenus.create({
+        id: 'clean_copy_page_url',
+        title: '⚡ 复制当前页面纯净链接',
+        contexts: ['page']
+      });
     });
   });
 

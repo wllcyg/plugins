@@ -47,9 +47,34 @@ export function decodeImageData(imageData: ImageData): DecodedResult | null {
 }
 
 /**
+ * Service Worker / 无 DOM 环境专用：通过 createImageBitmap + OffscreenCanvas 解码
+ */
+async function decodeBlobOffscreen(blob: Blob): Promise<DecodedResult | null> {
+  if (typeof createImageBitmap === 'undefined' || typeof OffscreenCanvas === 'undefined') {
+    return null;
+  }
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    return decodeImageData(imageData);
+  } finally {
+    bitmap.close();
+  }
+}
+
+/**
  * 从 Image URL 或 Data URL 离线解码
  */
 export async function decodeImageUrl(url: string): Promise<DecodedResult | null> {
+  // Service Worker 环境下没有 Image / document，直接走 fetch + OffscreenCanvas
+  if (typeof Image === 'undefined' || typeof document === 'undefined') {
+    return fetchImageBlobAndDecode(url);
+  }
+
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -102,6 +127,14 @@ async function fetchImageBlobAndDecode(url: string): Promise<DecodedResult | nul
  * 从图片 Blob / File 进行离线识码
  */
 export async function decodeImageBlob(blob: Blob): Promise<DecodedResult | null> {
+  if (typeof Image === 'undefined' || typeof document === 'undefined') {
+    try {
+      return await decodeBlobOffscreen(blob);
+    } catch {
+      return null;
+    }
+  }
+
   const objectUrl = URL.createObjectURL(blob);
   try {
     return await new Promise((resolve) => {

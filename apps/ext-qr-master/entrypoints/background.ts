@@ -4,10 +4,12 @@ import { decodeImageUrl } from '../src/core/decoder';
 export default defineBackground(() => {
   // 安装时注册右键菜单
   chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-      id: 'qr-master-decode-image',
-      title: '🔍 识别图中二维码 (QR Master)',
-      contexts: ['image']
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: 'qr-master-decode-image',
+        title: '🔍 识别图中二维码 (QR Master)',
+        contexts: ['image']
+      });
     });
   });
 

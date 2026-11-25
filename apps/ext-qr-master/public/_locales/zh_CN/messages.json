@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "二维码极速生成与右键离线识码器",
+    "description": "扩展名称"
+  },
+  "extensionDescription": {
+    "message": "一键将当前网址、剪贴板、WiFi或名片生成高颜值艺术二维码，支持右键网页任意图片离线瞬间识别，0网络依赖，安全无广告。",
+    "description": "扩展描述"
+  }
+}

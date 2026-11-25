@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "QR Master - Generator & Offline Decoder",
+    "description": "Extension Name"
+  },
+  "extensionDescription": {
+    "message": "Generate artistic QR codes for URLs, WiFi, or vCards, and decode any image offline via right-click menu with zero network requests.",
+    "description": "Extension Description"
+  }
+}
