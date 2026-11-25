@@ -22,6 +22,8 @@
     "build:qr": "pnpm --filter @100free/ext-qr-master build",
     "dev:redirect": "pnpm --filter @100free/ext-clean-redirect dev",
     "build:redirect": "pnpm --filter @100free/ext-clean-redirect build",
+    "dev:highlighter": "pnpm --filter @100free/ext-highlighter dev",
+    "build:highlighter": "pnpm --filter @100free/ext-highlighter build",
     "dev:portal": "pnpm --filter @100free/web-portal dev",
     "build:portal": "pnpm --filter @100free/web-portal build",
     "build:all": "pnpm -r run build",

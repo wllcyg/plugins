@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="pen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)" />
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="none" stroke="#FBBF24" stroke-opacity="0.35" stroke-width="2.5" />
+  <!-- 书页线条与荧光高亮条 -->
+  <rect x="26" y="34" width="54" height="8" rx="4" fill="#475569" />
+  <rect x="26" y="54" width="68" height="14" rx="4" fill="#FDE047" opacity="0.92" />
+  <rect x="30" y="59" width="52" height="4" rx="2" fill="#78350F" opacity="0.55" />
+  <rect x="26" y="78" width="46" height="8" rx="4" fill="#475569" />
+  <rect x="26" y="94" width="60" height="8" rx="4" fill="#34D399" opacity="0.7" />
+  <!-- 右上荧光笔笔头 -->
+  <g transform="translate(86, 26) rotate(35)">
+    <rect x="-8" y="0" width="16" height="44" rx="4" fill="url(#pen)" />
+    <path d="M-6 44 L6 44 L3 56 L-3 56 Z" fill="#FEF08A" />
+    <rect x="-8" y="8" width="16" height="6" fill="#0F172A" opacity="0.25" />
+  </g>
+</svg>

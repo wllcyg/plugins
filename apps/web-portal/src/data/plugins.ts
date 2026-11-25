@@ -6,6 +6,7 @@ import snifferIcon from '../../../ext-image-sniffer/public/icons/icon-128.png?ur
 import videoIcon from '../../../ext-video-master/public/icons/icon-128.png?url';
 import qrIcon from '../../../ext-qr-master/public/icons/icon-128.png?url';
 import redirectIcon from '../../../ext-clean-redirect/public/icons/icon-128.png?url';
+import highlighterIcon from '../../../ext-highlighter/public/icons/icon-128.png?url';
 
 import tablePreview from '../assets/table-export.webp';
 import editorPreview from '../assets/screenshot-editor.webp';
@@ -15,6 +16,7 @@ import snifferPreview from '../assets/image-sniffer.webp';
 import videoPreview from '../assets/video-master.webp';
 import qrPreview from '../assets/qr-master.webp';
 import redirectPreview from '../assets/clean-redirect.webp';
+import highlighterPreview from '../assets/highlighter.webp';
 import type { Locale } from './i18n';
 
 export interface LocalizedContent {
@@ -305,6 +307,41 @@ const rawPlugins: PluginRawItem[] = [
         'Customize dot shapes, gradients, error correction, and embed site favicons or custom logos.',
         'Copy the QR image directly or export print-ready PNG and crisp SVG files.',
         'Right-click any QR image on a page and select "Decode QR" or press Ctrl+V inside the popup.'
+      ]
+    }
+  },
+  {
+    id: 'highlighter',
+    icon: highlighterIcon,
+    preview: highlighterPreview,
+    previewWidth: 984,
+    previewHeight: 420,
+    zh: {
+      name: '网页荧光笔与本地笔记本',
+      category: '阅读与笔记',
+      previewAlt: '网页划词悬浮 6 色荧光笔工具条与本地笔记本工作台',
+      headline: '免费平替 Weava 与 LINER，网页划词高亮与批注神器',
+      summary: '0 账号纯本地存储，开放 6 色荧光填充与下划线；支持随手批注、重开网页自动精准还原，自带全屏笔记本工作台并免费导出纯净 Markdown。',
+      highlights: ['无限多色高亮', '重开自动还原', '免费导出 MD'],
+      steps: [
+        '在任意文章或文档网页上用鼠标划选文字，光标上方自动浮现 6 色荧光笔工具条。',
+        '点击任意颜色即可秒级高亮，点击「📝 批注」可随时写下思考与标签（也可点击已高亮文字修改）。',
+        '刷新或下次重开网页时，之前画的所有重点与批注会自动精准恢复。',
+        '点击扩展图标打开「全局笔记本工作台」，支持全文检索、点击定位原文，并一键导出为 Markdown 笔记。'
+      ]
+    },
+    en: {
+      name: 'Web Highlighter & Notebook',
+      category: 'Reading & Notes',
+      previewAlt: 'Floating 6-color web highlighter toolbar and local notebook workbench',
+      headline: 'Free alternative to Weava & LINER — zero login, unlimited highlights',
+      summary: 'Highlight any web page with 6 colors or underlines, add inline notes, auto-restore across page reloads, and export clean Markdown locally without any paywall.',
+      highlights: ['6 Colors + Notes', 'Auto-Restore', 'Free MD Export'],
+      steps: [
+        'Select text on any article or documentation page to reveal the 6-color highlighter pill.',
+        'Pick a color to highlight instantly, or click "Note" to attach thoughts and tags.',
+        'Reopen the page anytime—your highlights and notes are automatically restored in place.',
+        'Open the Full-Screen Notebook to search, jump back to original paragraphs, or export Markdown.'
       ]
     }
   }
