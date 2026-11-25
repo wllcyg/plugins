@@ -90,8 +90,20 @@ const relatedPlugins = computed(() =>
   plugins.value.filter((p) => p.id !== selected.value?.id).slice(0, 3)
 );
 
+function setMetaContent(selector: string, content: string) {
+  const el = document.querySelector<HTMLMetaElement>(selector);
+  if (el) el.content = content;
+}
+
 watch([selected, locale], ([plugin]) => {
-  document.title = plugin ? t.value.siteTitleDetail(plugin.name) : t.value.siteTitleHome;
+  const title = plugin ? t.value.siteTitleDetail(plugin.name) : t.value.siteTitleHome;
+  const description = plugin ? `${plugin.headline}：${plugin.summary}` : t.value.heroDesc(plugins.value.length);
+  document.title = title;
+  setMetaContent('meta[name="description"]', description);
+  setMetaContent('meta[property="og:title"]', title);
+  setMetaContent('meta[property="og:description"]', description);
+  setMetaContent('meta[name="twitter:title"]', title);
+  setMetaContent('meta[name="twitter:description"]', description);
 }, { immediate: true });
 
 function moveToLocation(focusTarget?: HTMLElement) {
@@ -152,7 +164,7 @@ onUnmounted(() => {
         <span>100<span class="brand-hyphen">-</span>Free</span>
         <span class="brand-badge">{{ t.brandBadge(plugins.length) }}</span>
       </RouterLink>
-      <nav aria-label="Main navigation">
+      <nav :aria-label="t.navAriaLabel">
         <RouterLink :to="{ query: {}, hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
         <RouterLink :to="{ query: {}, hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
@@ -181,7 +193,13 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <figure class="hero-preview" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
+        <figure
+          class="hero-preview"
+          aria-roledescription="carousel"
+          :aria-label="t.carouselAriaLabel"
+          @mouseenter="stopAutoplay"
+          @mouseleave="startAutoplay"
+        >
           <div class="preview-frame carousel-box">
             <div class="carousel-viewport">
               <Transition name="slide-fade" mode="out-in">
@@ -287,13 +305,12 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="category-pills" role="tablist">
+        <div class="category-pills" role="group" :aria-label="t.categoryAriaLabel">
           <button
             v-for="cat in categories"
             :key="cat"
             type="button"
-            role="tab"
-            :aria-selected="selectedCategory === cat"
+            :aria-pressed="selectedCategory === cat"
             :class="['pill', { active: selectedCategory === cat }]"
             @click="selectedCategory = cat"
           >
