@@ -6,6 +6,7 @@ import App from './App.vue';
 export const routes: RouteRecordRaw[] = [
   { path: '/', component: App },
   { path: '/install', component: App },
+  { path: '/feedback', component: App },
   { path: '/tools/:toolId', component: App },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];

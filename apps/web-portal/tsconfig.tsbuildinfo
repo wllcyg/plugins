@@ -1,1 +1,1 @@
-{"root":["./src/entry-server.ts","./src/main.ts","./src/data/i18n.ts","./src/data/plugins.ts","./src/data/theme.ts","./src/app.vue","./src/components/installguide.vue"],"version":"5.9.3"}
+{"root":["./src/entry-server.ts","./src/main.ts","./src/data/i18n.ts","./src/data/plugins.ts","./src/data/theme.ts","./src/app.vue","./src/components/feedbackpage.vue","./src/components/installguide.vue"],"version":"5.9.3"}

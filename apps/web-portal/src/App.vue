@@ -17,6 +17,7 @@ import {
   Languages,
   LayoutGrid,
   Lock,
+  MessageSquare,
   Moon,
   Search,
   ShieldCheck,
@@ -29,14 +30,20 @@ import { locale, t, toggleLocale } from './data/i18n';
 import { theme, toggleTheme } from './data/theme';
 
 const InstallGuide = defineAsyncComponent(() => import('./components/InstallGuide.vue'));
+const FeedbackPage = defineAsyncComponent(() => import('./components/FeedbackPage.vue'));
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
 const isInstallGuide = computed(() => route.path === '/install' || route.query.page === 'install');
+const isFeedbackPage = computed(() => route.path === '/feedback');
 const activeToolId = computed(() => (route.params.toolId as string | undefined) || (route.query.tool as string | undefined));
-const selected = computed(() => (isInstallGuide.value ? undefined : plugins.value.find((plugin) => plugin.id === activeToolId.value)));
+const selected = computed(() =>
+  isInstallGuide.value || isFeedbackPage.value
+    ? undefined
+    : plugins.value.find((plugin) => plugin.id === activeToolId.value)
+);
 const pageRoot = ref<HTMLElement>();
 let homeGsapCtx: { revert: () => void } | null = null;
 const detailUrl = (id: string) => `/tools/${id}`;
@@ -112,23 +119,29 @@ function setLinkHref(selector: string, href: string) {
   if (el) el.href = href;
 }
 
-watch([selected, isInstallGuide, locale], ([plugin, installPage]) => {
+watch([selected, isInstallGuide, isFeedbackPage, locale], ([plugin, installPage, feedbackPage]) => {
   if (typeof document === 'undefined') return;
   const title = installPage
     ? t.value.siteTitleInstall
-    : plugin
-      ? t.value.siteTitleDetail(plugin.name)
-      : t.value.siteTitleHome;
+    : feedbackPage
+      ? t.value.siteTitleFeedback
+      : plugin
+        ? t.value.siteTitleDetail(plugin.name)
+        : t.value.siteTitleHome;
   const description = installPage
     ? t.value.installPageSubtitle
-    : plugin
-      ? `${plugin.headline}：${plugin.summary}`
-      : t.value.heroDesc(plugins.value.length);
+    : feedbackPage
+      ? t.value.feedbackPageSubtitle
+      : plugin
+        ? `${plugin.headline}：${plugin.summary}`
+        : t.value.heroDesc(plugins.value.length);
   const canonicalUrl = installPage
     ? `${SITE_ORIGIN}/install`
-    : plugin
-      ? `${SITE_ORIGIN}/tools/${plugin.id}`
-      : `${SITE_ORIGIN}/`;
+    : feedbackPage
+      ? `${SITE_ORIGIN}/feedback`
+      : plugin
+        ? `${SITE_ORIGIN}/tools/${plugin.id}`
+        : `${SITE_ORIGIN}/`;
   const enUrl = `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=en`;
   const ogImage = plugin?.preview?.startsWith('http')
     ? plugin.preview
@@ -162,14 +175,14 @@ function moveToLocation(focusTarget?: HTMLElement) {
 async function initHomeAnimations() {
   homeGsapCtx?.revert();
   homeGsapCtx = null;
-  if (typeof window === 'undefined' || reduceMotion() || selected.value || isInstallGuide.value || !pageRoot.value) return;
+  if (typeof window === 'undefined' || reduceMotion() || selected.value || isInstallGuide.value || isFeedbackPage.value || !pageRoot.value) return;
 
   const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
     import('gsap'),
     import('gsap/ScrollTrigger')
   ]);
   gsap.registerPlugin(ScrollTrigger);
-  if (selected.value || isInstallGuide.value || !pageRoot.value) return;
+  if (selected.value || isInstallGuide.value || isFeedbackPage.value || !pageRoot.value) return;
 
   homeGsapCtx = gsap.context(() => {
     gsap.from('.principle-card', {
@@ -259,6 +272,7 @@ onUnmounted(() => {
       <nav :aria-label="t.navAriaLabel">
         <RouterLink :to="{ path: '/', hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
         <RouterLink to="/install"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
+        <RouterLink to="/feedback"><MessageSquare :size="15" aria-hidden="true" />{{ t.navFeedback }}</RouterLink>
         <RouterLink :to="{ path: '/', hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
         <button type="button" class="lang-btn" :title="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
@@ -283,6 +297,10 @@ onUnmounted(() => {
     @enter-cancelled="clearTransition" @leave-cancelled="clearTransition">
     <main v-if="isInstallGuide" id="main" key="install-guide" ref="pageRoot" class="shell" tabindex="-1">
       <InstallGuide />
+    </main>
+
+    <main v-else-if="isFeedbackPage" id="main" key="feedback-page" ref="pageRoot" class="shell" tabindex="-1">
+      <FeedbackPage />
     </main>
 
     <main v-else-if="!selected" id="main" key="home" ref="pageRoot" tabindex="-1">
@@ -539,6 +557,8 @@ onUnmounted(() => {
         <p>{{ t.footerDesc }}</p>
       </div>
       <div class="footer-meta">
+        <RouterLink to="/feedback" class="text-link">{{ t.navFeedback }}</RouterLink>
+        <span>·</span>
         <a :href="GITHUB_REPO_URL" target="_blank" rel="noopener noreferrer" class="text-link">GitHub</a>
         <span>·</span>
         <span>{{ t.footerProgress(plugins.length) }}</span>

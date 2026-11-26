@@ -16,32 +16,39 @@ export interface PageSeoMeta {
 
 export function getStaticRoutes(): string[] {
   const plugins = getLocalizedPlugins('zh');
-  return ['/', '/install', ...plugins.map((p) => `/tools/${p.id}`)];
+  return ['/', '/install', '/feedback', ...plugins.map((p) => `/tools/${p.id}`)];
 }
 
 function getSeoMetaForUrl(url: string): PageSeoMeta {
   const plugins = getLocalizedPlugins('zh');
   const isInstall = url === '/install';
+  const isFeedback = url === '/feedback';
   const toolId = url.startsWith('/tools/') ? url.replace('/tools/', '') : undefined;
   const plugin = toolId ? plugins.find((p) => p.id === toolId) : undefined;
 
   const title = isInstall
     ? t.value.siteTitleInstall
-    : plugin
-      ? t.value.siteTitleDetail(plugin.name)
-      : t.value.siteTitleHome;
+    : isFeedback
+      ? t.value.siteTitleFeedback
+      : plugin
+        ? t.value.siteTitleDetail(plugin.name)
+        : t.value.siteTitleHome;
 
   const description = isInstall
     ? t.value.installPageSubtitle
-    : plugin
-      ? `${plugin.headline}：${plugin.summary}`
-      : t.value.heroDesc(plugins.length);
+    : isFeedback
+      ? t.value.feedbackPageSubtitle
+      : plugin
+        ? `${plugin.headline}：${plugin.summary}`
+        : t.value.heroDesc(plugins.length);
 
   const canonical = isInstall
     ? `${SITE_ORIGIN}/install`
-    : plugin
-      ? `${SITE_ORIGIN}/tools/${plugin.id}`
-      : `${SITE_ORIGIN}/`;
+    : isFeedback
+      ? `${SITE_ORIGIN}/feedback`
+      : plugin
+        ? `${SITE_ORIGIN}/tools/${plugin.id}`
+        : `${SITE_ORIGIN}/`;
 
   const enUrl = `${canonical}?lang=en`;
   const ogImage = plugin?.preview

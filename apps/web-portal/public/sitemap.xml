@@ -8,9 +8,15 @@
   </url>
   <url>
     <loc>https://plugins.cheatppf.xyz/install</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://plugins.cheatppf.xyz/feedback</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://plugins.cheatppf.xyz/tools/table-export</loc>
@@ -63,6 +69,12 @@
   <url>
     <loc>https://plugins.cheatppf.xyz/tools/highlighter</loc>
     <lastmod>2026-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://plugins.cheatppf.xyz/tools/screen-studio</loc>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

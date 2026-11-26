@@ -7,6 +7,7 @@ import videoIcon from '../../../ext-video-master/public/icons/icon-128.png?url';
 import qrIcon from '../../../ext-qr-master/public/icons/icon-128.png?url';
 import redirectIcon from '../../../ext-clean-redirect/public/icons/icon-128.png?url';
 import highlighterIcon from '../../../ext-highlighter/public/icons/icon-128.png?url';
+import screenStudioIcon from '../../../ext-screen-studio/public/icons/icon-128.png?url';
 
 import tablePreview from '../assets/table-export.webp';
 import editorPreview from '../assets/screenshot-editor.webp';
@@ -17,6 +18,7 @@ import videoPreview from '../assets/video-master.webp';
 import qrPreview from '../assets/qr-master.webp';
 import redirectPreview from '../assets/clean-redirect.webp';
 import highlighterPreview from '../assets/highlighter.webp';
+import screenStudioPreview from '../assets/screen-studio.webp';
 import type { Locale } from './i18n';
 
 export interface LocalizedContent {
@@ -342,6 +344,41 @@ const rawPlugins: PluginRawItem[] = [
         'Pick a color to highlight instantly, or click "Note" to attach thoughts and tags.',
         'Reopen the page anytime—your highlights and notes are automatically restored in place.',
         'Open the Full-Screen Notebook to search, jump back to original paragraphs, or export Markdown.'
+      ]
+    }
+  },
+  {
+    id: 'screen-studio',
+    icon: screenStudioIcon,
+    preview: screenStudioPreview,
+    previewWidth: 984,
+    previewHeight: 420,
+    zh: {
+      name: '屏幕录制',
+      category: '视频与演示',
+      previewAlt: '跟焦录屏工作台展示自动放大焦点、摄像头画中画与紫色缩放时间轴',
+      headline: '免费平替 Screen Studio 与 Loom，自动跟焦平滑缩放录屏',
+      summary: '纯本地无限时长无水印录屏！自动捕获鼠标点击与轨迹生成平滑缩放镜头，支持首尾裁剪、1x~2x 演示倍速、16:9/9:16 电影级渐变背景、点击波纹与 60FPS 高清导出。',
+      highlights: ['自动跟焦缩放', '首尾裁剪与倍速', '60FPS 无水印导出'],
+      steps: [
+        '点击扩展图标，按需开启麦克风与摄像头画中画，点击「开始录制屏幕 / 标签页」。',
+        '正常点击和演示目标网页，扩展会在后台自动采集鼠标轨迹与每次点击焦点。',
+        '停止录制后自动进入 Studio 剪辑台，时间轴已自动生成跟焦缩放片段，支持微调倍率与背景壁纸。',
+        '点击「导出高清视频」，纯本地渲染合成带跟焦动画的 MP4/WebM 视频直接下载。'
+      ]
+    },
+    en: {
+      name: 'Screen Recorder',
+      category: 'Video & Demos',
+      previewAlt: 'Screen studio editor showing auto-zoom focus framing, camera PiP, and zoom timeline',
+      headline: 'Free alternative to Screen Studio & Loom with auto-zoom cursor tracking',
+      summary: 'Unlimited watermark-free local screen recording. Automatically turns mouse clicks into smooth zoom keyframes with studio gradients, click ripples, camera PiP, and timeline editing.',
+      highlights: ['Auto-Zoom Focus', 'Studio Backdrops', 'Unlimited & Local'],
+      steps: [
+        'Click the extension icon, toggle microphone or camera PiP, and start recording a tab, window, or screen.',
+        'Interact naturally with your webpage while cursor movement and click focus events are captured.',
+        'Stop recording to launch the Studio Editor with auto-generated zoom segments, custom gradients, and aspect ratios.',
+        'Export crisp MP4/WebM video locally with zero watermarks or duration limits.'
       ]
     }
   }
