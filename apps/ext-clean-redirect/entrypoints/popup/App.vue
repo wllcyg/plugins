@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import type { CleanRedirectSettings, RedirectStats } from '../../src/types';
 import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../../src/utils/storage';
 import { extractTargetUrl, KNOWN_PLATFORM_RULES } from '../../src/rules/redirect-rules';
@@ -331,6 +332,7 @@ const showToast = (msg: string) => {
     <transition name="fade">
       <div v-if="toastText" class="toast">{{ toastText }}</div>
     </transition>
+    <AppFooterLink plugin-id="clean-redirect" />
   </div>
 </template>
 

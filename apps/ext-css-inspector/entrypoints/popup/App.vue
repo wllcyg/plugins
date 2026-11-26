@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ExtensionStorage } from '@100free/core';
+import { AppFooterLink } from '@100free/ui';
 import { InspectorSettings, DEFAULT_SETTINGS, STORAGE_KEY } from '../../src/types';
 
 const settings = ref<InspectorSettings>({ ...DEFAULT_SETTINGS });
@@ -43,7 +44,7 @@ onMounted(() => {
         </div>
         <div class="title-meta">
           <h3 class="title">CSS & Tailwind 提取器</h3>
-          <p class="subtitle">对标 $69 CSS Scan · 纯净免费</p>
+          <p class="subtitle">一键嗅探样式 · 极速转 Tailwind</p>
         </div>
       </div>
       <span class="badge">PRO</span>
@@ -103,6 +104,7 @@ onMounted(() => {
     <footer class="footer">
       <span>100-Free 开源生产力计划 · 无广告 · 零网络请求</span>
     </footer>
+    <AppFooterLink plugin-id="css-inspector" />
   </div>
 </template>
 

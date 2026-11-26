@@ -1,7 +1,7 @@
 {
   "name": "@100free/ext-screen-studio",
   "version": "1.0.0",
-  "description": "电影级自动跟焦平滑录屏大师 - 免费平替 Screen Studio & Loom，自动放大点击焦点、背景美化、纯本地导出",
+  "description": "自动跟焦平滑屏幕录制与本地剪辑工具 - 自动放大点击焦点、背景美化、纯本地无水印导出",
   "private": true,
   "type": "module",
   "scripts": {

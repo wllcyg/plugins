@@ -59,6 +59,7 @@ const localProject = reactive<RecordingProject>({
 });
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const canvasAspect = ref('16 / 9');
 const activeTab = ref<'zoom' | 'style' | 'blur' | 'camera'>('zoom');
 const isDrawingBlur = ref(false);
 const blurDragStart = ref<{ x: number; y: number } | null>(null);
@@ -141,6 +142,7 @@ const drawCurrentFrame = () => {
     canvas.width = width;
     canvas.height = height;
   }
+  canvasAspect.value = `${width} / ${height}`;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -581,7 +583,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
     <div class="workspace-body">
       <main class="stage-column">
         <div class="canvas-stage">
-          <div class="canvas-box">
+          <div class="canvas-box" :style="{ aspectRatio: canvasAspect }">
             <canvas
               ref="canvasRef"
               class="preview-canvas"
@@ -1149,14 +1151,19 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
 
 .canvas-box {
   position: relative;
-  display: inline-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   max-width: 100%;
   max-height: 100%;
+  width: auto;
+  height: auto;
 }
 
 .preview-canvas {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   border-radius: 10px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
   cursor: crosshair;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import {
   QRMode,
   QRStylingConfig,
@@ -663,6 +664,7 @@ onMounted(async () => {
         {{ toastMsg }}
       </div>
     </transition>
+    <AppFooterLink plugin-id="qr-master" />
   </div>
 </template>
 

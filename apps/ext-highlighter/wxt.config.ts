@@ -4,7 +4,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
   manifest: {
     name: '网页荧光笔与本地笔记本',
-    description: '免费平替 Weava 与 LINER：支持网页无限多色划词高亮、随手批注、重开网页自动还原，自带全屏笔记本工作台与纯净 Markdown 导出。',
+    description: '支持网页无限多色划词高亮、随手批注、重开网页自动还原，自带全屏笔记本工作台与纯净 Markdown 导出。',
     default_locale: 'zh_CN',
     version: '1.0.0',
     permissions: ['activeTab', 'storage', 'unlimitedStorage', 'tabs', 'contextMenus'],

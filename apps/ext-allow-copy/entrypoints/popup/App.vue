@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { ExtensionStorage } from '@100free/core';
+import { AppFooterLink } from '@100free/ui';
 import { CopySettings, DEFAULT_SETTINGS, STORAGE_KEY } from '../../src/types';
 
 const settings = ref<CopySettings>({ ...DEFAULT_SETTINGS });
@@ -192,6 +193,7 @@ onMounted(() => {
     <footer class="footer">
       <span>100-Free 开源生产力计划 · 纯净无后台 · 100% 本地运算</span>
     </footer>
+    <AppFooterLink plugin-id="allow-copy" />
   </div>
 </template>
 

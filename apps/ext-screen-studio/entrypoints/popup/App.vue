@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { Video, Mic, Camera, FolderOpen, Disc, Clock } from 'lucide-vue-next';
+import { AppFooterLink } from '@100free/ui';
 import { listProjects } from '../../src/utils/project-store';
 import { loadUserPreferences, saveUserPreferences } from '../../src/utils/user-prefs';
 import type { RecordingProject } from '../../src/types/recording';
@@ -117,15 +118,7 @@ const formatDuration = (ms: number) => {
         <FolderOpen :size="15" />
         <span>打开 Studio 剪辑工作台</span>
       </button>
-      <div class="origin-bar">
-        <a href="https://plugins.cheatppf.xyz" target="_blank" rel="noreferrer">
-          100Free 开源免费 · plugins.cheatppf.xyz
-        </a>
-        <span>·</span>
-        <a href="https://github.com/wllcyg/plugins" target="_blank" rel="noreferrer">
-          GitHub
-        </a>
-      </div>
+      <AppFooterLink plugin-id="screen-studio" theme="dark" />
     </footer>
   </div>
 </template>

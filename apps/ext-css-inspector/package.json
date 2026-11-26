@@ -2,7 +2,7 @@
   "name": "@100free/ext-css-inspector",
   "version": "1.0.0",
   "private": true,
-  "description": "100款免费生产力插件计划 - CSS 样式嗅探与 Tailwind 转换器 (对标 $69 CSS Scan)",
+  "description": "100款免费生产力插件计划 - CSS 样式嗅探与 Tailwind 转换器",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",

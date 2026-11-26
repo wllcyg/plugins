@@ -188,7 +188,7 @@ const rawPlugins: PluginRawItem[] = [
       name: 'CSS 样式与 Tailwind 提取器',
       category: '前端与开发',
       previewAlt: '鼠标悬停元素即刻显示样式高亮与浮动检查卡片',
-      headline: '对标 $69 CSS Scan，一键偷师任意网页组件',
+      headline: '鼠标悬停即可嗅探样式，一键提取任意网页组件',
       summary: '鼠标悬停即刻嗅探任意元素的字体、色彩、内外边距与阴影。支持一键复制纯 CSS 或直接转为 Tailwind CSS 类名。',
       highlights: ['秒转 Tailwind CSS', '空格锁定检查', '尺寸间距标尺'],
       steps: [
@@ -201,7 +201,7 @@ const rawPlugins: PluginRawItem[] = [
       name: 'CSS & Tailwind Inspector',
       category: 'DevTools',
       previewAlt: 'Hovering over UI elements reveals spacing guides and floating CSS/Tailwind card',
-      headline: 'A free $69 CSS Scan alternative for any web component',
+      headline: 'Inspect and extract styles from any web component on hover',
       summary: 'Inspect typography, colors, spacing, and shadows on hover. Copy clean CSS or convert styles directly into Tailwind utility classes.',
       highlights: ['CSS to Tailwind', 'Spacebar Freeze', 'Box-Model Ruler'],
       steps: [
@@ -322,7 +322,7 @@ const rawPlugins: PluginRawItem[] = [
       name: '网页荧光笔与本地笔记本',
       category: '阅读与笔记',
       previewAlt: '网页划词悬浮 6 色荧光笔工具条与本地笔记本工作台',
-      headline: '免费平替 Weava 与 LINER，网页划词高亮与批注神器',
+      headline: '纯本地无限多色高亮，网页划词重点与批注神器',
       summary: '0 账号纯本地存储，开放 6 色荧光填充与下划线；支持随手批注、重开网页自动精准还原，自带全屏笔记本工作台并免费导出纯净 Markdown。',
       highlights: ['无限多色高亮', '重开自动还原', '免费导出 MD'],
       steps: [
@@ -336,7 +336,7 @@ const rawPlugins: PluginRawItem[] = [
       name: 'Web Highlighter & Notebook',
       category: 'Reading & Notes',
       previewAlt: 'Floating 6-color web highlighter toolbar and local notebook workbench',
-      headline: 'Free alternative to Weava & LINER — zero login, unlimited highlights',
+      headline: 'Zero login, unlimited multi-color highlights & local notebook',
       summary: 'Highlight any web page with 6 colors or underlines, add inline notes, auto-restore across page reloads, and export clean Markdown locally without any paywall.',
       highlights: ['6 Colors + Notes', 'Auto-Restore', 'Free MD Export'],
       steps: [
@@ -357,7 +357,7 @@ const rawPlugins: PluginRawItem[] = [
       name: '屏幕录制',
       category: '视频与演示',
       previewAlt: '跟焦录屏工作台展示自动放大焦点、摄像头画中画与紫色缩放时间轴',
-      headline: '免费平替 Screen Studio 与 Loom，自动跟焦平滑缩放录屏',
+      headline: '自动跟焦平滑缩放录屏，支持局部打码与高清 GIF/MP4 导出',
       summary: '纯本地无限时长无水印录屏！自动捕获鼠标点击与轨迹生成平滑缩放镜头，支持首尾裁剪、1x~2x 演示倍速、16:9/9:16 电影级渐变背景、点击波纹与 60FPS 高清导出。',
       highlights: ['自动跟焦缩放', '首尾裁剪与倍速', '60FPS 无水印导出'],
       steps: [
@@ -370,8 +370,8 @@ const rawPlugins: PluginRawItem[] = [
     en: {
       name: 'Screen Recorder',
       category: 'Video & Demos',
-      previewAlt: 'Screen studio editor showing auto-zoom focus framing, camera PiP, and zoom timeline',
-      headline: 'Free alternative to Screen Studio & Loom with auto-zoom cursor tracking',
+      previewAlt: 'Screen recorder editor showing auto-zoom focus framing, camera PiP, and zoom timeline',
+      headline: 'Auto-zoom smooth screen recording with blur redaction & local export',
       summary: 'Unlimited watermark-free local screen recording. Automatically turns mouse clicks into smooth zoom keyframes with studio gradients, click ripples, camera PiP, and timeline editing.',
       highlights: ['Auto-Zoom Focus', 'Studio Backdrops', 'Unlimited & Local'],
       steps: [

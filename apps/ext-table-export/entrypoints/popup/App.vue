@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ExtensionStorage } from '@100free/core';
-import { AppButton } from '@100free/ui';
+import { AppButton, AppFooterLink } from '@100free/ui';
 import { t } from '../../src/utils/i18n';
 
 interface TableMeta {
@@ -131,6 +131,7 @@ onMounted(async () => {
     <footer class="footer">
       <span>{{ t('footerSlogan') }}</span>
     </footer>
+    <AppFooterLink plugin-id="table-export" />
   </div>
 </template>
 

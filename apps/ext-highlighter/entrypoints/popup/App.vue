@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import { HIGHLIGHT_COLORS, HighlightColorId, HighlightItem, HighlightStyle } from '../../src/types';
 import {
   deleteHighlightById,
@@ -318,6 +319,7 @@ onMounted(async () => {
     </footer>
 
     <div v-if="toastMsg" class="toast">{{ toastMsg }}</div>
+    <AppFooterLink plugin-id="highlighter" />
   </div>
 </template>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import { SniffedImage } from '../../src/types';
 import { downloadImagesAsZip, triggerFileDownload, fetchImageBlob } from '../../src/core/downloader';
 
@@ -302,6 +303,7 @@ onMounted(() => {
         <span>{{ isDownloading ? downloadProgress : `打包下载 ZIP (${selectedImages.length} 张)` }}</span>
       </button>
     </footer>
+    <AppFooterLink plugin-id="image-sniffer" />
   </div>
 </template>
 

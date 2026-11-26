@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import { VideoSettings, DEFAULT_SETTINGS } from '../../src/types';
 
 const settings = ref<VideoSettings>({ ...DEFAULT_SETTINGS });
@@ -233,6 +234,7 @@ onMounted(async () => {
     <footer class="panel-footer">
       <span>100-Free 开源生产力计划 · 无广告 · 零网络请求</span>
     </footer>
+    <AppFooterLink plugin-id="video-master" />
   </div>
 </template>
 

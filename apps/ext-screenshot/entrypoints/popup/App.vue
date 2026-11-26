@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { AppFooterLink } from '@100free/ui';
 import { Camera, Image as ImageIcon, Monitor, Globe, Scan, ArrowDownCircle, Crop } from 'lucide-vue-next';
 import { t } from '../../src/utils/i18n';
 
@@ -137,6 +138,7 @@ const openPortal = () => {
         </div>
       </button>
     </div>
+    <AppFooterLink plugin-id="screenshot" />
   </div>
 </template>
 

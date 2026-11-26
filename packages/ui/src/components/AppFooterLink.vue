@@ -1,0 +1,76 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+
+interface Props {
+  pluginId?: string;
+  theme?: 'light' | 'dark';
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  pluginId: '',
+  theme: 'light'
+});
+
+const SITE_ORIGIN = 'https://plugins.cheatppf.xyz';
+
+const guideUrl = computed(() =>
+  props.pluginId ? `${SITE_ORIGIN}/tools/${props.pluginId}` : `${SITE_ORIGIN}/install`
+);
+</script>
+
+<template>
+  <footer class="app-portal-footer" :class="`theme-${theme}`">
+    <a :href="SITE_ORIGIN" target="_blank" rel="noopener noreferrer">更多免费插件</a>
+    <span class="sep">·</span>
+    <a :href="guideUrl" target="_blank" rel="noopener noreferrer">使用指南</a>
+    <span class="sep">·</span>
+    <a :href="`${SITE_ORIGIN}/feedback`" target="_blank" rel="noopener noreferrer">问题反馈</a>
+  </footer>
+</template>
+
+<style scoped>
+.app-portal-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.app-portal-footer.theme-light {
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.app-portal-footer.theme-light a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-portal-footer.theme-light a:hover {
+  color: #2563eb;
+}
+
+.app-portal-footer.theme-dark {
+  border-top: 1px solid #27272a;
+  color: #71717a;
+}
+
+.app-portal-footer.theme-dark a {
+  color: #71717a;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-portal-footer.theme-dark a:hover {
+  color: #e4e4e7;
+}
+
+.sep {
+  opacity: 0.55;
+}
+</style>

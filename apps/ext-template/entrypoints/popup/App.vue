@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ExtensionStorage } from '@100free/core';
-import { AppButton } from '@100free/ui';
+import { AppButton, AppFooterLink } from '@100free/ui';
 
 const count = ref(0);
 const STORAGE_KEY = 'demo_counter';
@@ -46,6 +46,7 @@ const handleReset = async () => {
     <footer class="footer">
       <span>打破昂贵订阅 · 让生产力重归自由</span>
     </footer>
+    <AppFooterLink />
   </div>
 </template>
 
