@@ -5,6 +5,7 @@ import type { CleanRedirectSettings, RedirectStats } from '../../src/types';
 import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../../src/utils/storage';
 import { extractTargetUrl, KNOWN_PLATFORM_RULES } from '../../src/rules/redirect-rules';
 import { cleanTrackingParams } from '../../src/rules/tracking-rules';
+import { m } from '../../src/locales';
 
 const settings = reactive<CleanRedirectSettings>({ ...DEFAULT_SETTINGS });
 const stats = reactive<RedirectStats>({ ...DEFAULT_STATS });
@@ -27,7 +28,7 @@ const testResult = computed(() => {
   if (redirectMatch && redirectMatch.targetUrl) {
     target = redirectMatch.targetUrl;
     isRedirect = true;
-    platformName = redirectMatch.platformName || '通用中转';
+    platformName = redirectMatch.platformName || m.platforms.heuristic;
   }
 
   const { cleanedUrl, removedCount } = cleanTrackingParams(target);
@@ -43,6 +44,7 @@ const testResult = computed(() => {
 
 // 加载设置与统计数据
 onMounted(async () => {
+  document.title = m.docTitle;
   try {
     const resSettings = await chrome.runtime.sendMessage({ type: 'GET_SETTINGS' });
     if (resSettings?.settings) {
@@ -77,7 +79,7 @@ const updateSetting = async (key: keyof CleanRedirectSettings, val: boolean) => 
       type: 'SAVE_SETTINGS',
       settings: { [key]: val }
     });
-    showToast('设置已即时生效');
+    showToast(m.toastSettingsSaved);
   } catch (e) {
     console.error('Failed to save setting', e);
   }
@@ -89,7 +91,7 @@ const copyCleanedUrl = async () => {
   try {
     await navigator.clipboard.writeText(testResult.value.cleanedUrl);
     copied.value = true;
-    showToast('✨ 纯净链接已复制到剪贴板！');
+    showToast(m.toastCopiedUrl);
     setTimeout(() => {
       copied.value = false;
     }, 2000);
@@ -104,10 +106,10 @@ const pasteFromClipboard = async () => {
     const text = await navigator.clipboard.readText();
     if (text) {
       testInput.value = text.trim();
-      showToast('已载入剪贴板链接');
+      showToast(m.toastPastedUrl);
     }
   } catch {
-    showToast('无法读取剪贴板，请手动粘贴');
+    showToast(m.toastPasteFailed);
   }
 };
 
@@ -116,7 +118,7 @@ const resetStats = async () => {
   stats.bypassedCount = 0;
   stats.cleanedParamsCount = 0;
   await chrome.storage.local.set({ clean_redirect_stats: { bypassedCount: 0, cleanedParamsCount: 0 } });
-  showToast('统计数据已归零');
+  showToast(m.toastStatsReset);
 };
 
 const showToast = (msg: string) => {
@@ -149,15 +151,15 @@ const showToast = (msg: string) => {
         </div>
         <div>
           <div class="title-row">
-            <h1 class="main-title">外链直达与链接净化</h1>
+            <h1 class="main-title">{{ m.extTitle }}</h1>
             <span class="version-tag">v1.0.0</span>
           </div>
-          <p class="sub-title">100-Free 免拦截直跳 · 去追踪小尾巴</p>
+          <p class="sub-title">{{ m.extSub }}</p>
         </div>
       </div>
       <div class="status-indicator">
         <span class="status-dot"></span>
-        <span>运行中</span>
+        <span>{{ m.statusActive }}</span>
       </div>
     </header>
 
@@ -167,26 +169,26 @@ const showToast = (msg: string) => {
         <div class="stat-icon">⚡</div>
         <div class="stat-info">
           <div class="stat-num">{{ stats.bypassedCount }}</div>
-          <div class="stat-label">已跳过中转页</div>
+          <div class="stat-label">{{ m.statBypassed }}</div>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon">🛡️</div>
         <div class="stat-info">
           <div class="stat-num">{{ stats.cleanedParamsCount }}</div>
-          <div class="stat-label">已剥离追踪参数</div>
+          <div class="stat-label">{{ m.statCleaned }}</div>
         </div>
       </div>
     </div>
 
     <!-- Feature Switches Matrix -->
     <section class="section-card">
-      <div class="section-title">核心防护引擎</div>
+      <div class="section-title">{{ m.engineTitle }}</div>
       <div class="switches-list">
         <div class="switch-item">
           <div class="switch-info">
-            <div class="switch-title">中转页秒级跳过</div>
-            <div class="switch-desc">跳过知乎/简书/掘金/CSDN等拦截直达目标</div>
+            <div class="switch-title">{{ m.swAutoRedirectTitle }}</div>
+            <div class="switch-desc">{{ m.swAutoRedirectDesc }}</div>
           </div>
           <label class="toggle-btn">
             <input
@@ -200,8 +202,8 @@ const showToast = (msg: string) => {
 
         <div class="switch-item">
           <div class="switch-info">
-            <div class="switch-title">页面内链接预还原</div>
-            <div class="switch-desc">页面中转包装链接就地还原为纯净直链</div>
+            <div class="switch-title">{{ m.swPreCleanTitle }}</div>
+            <div class="switch-desc">{{ m.swPreCleanDesc }}</div>
           </div>
           <label class="toggle-btn">
             <input
@@ -215,8 +217,8 @@ const showToast = (msg: string) => {
 
         <div class="switch-item">
           <div class="switch-info">
-            <div class="switch-title">剥离营销与追踪参数</div>
-            <div class="switch-desc">清除 UTM、SPM、bd_vid 等广告追踪尾巴</div>
+            <div class="switch-title">{{ m.swCleanTrackingTitle }}</div>
+            <div class="switch-desc">{{ m.swCleanTrackingDesc }}</div>
           </div>
           <label class="toggle-btn">
             <input
@@ -230,8 +232,8 @@ const showToast = (msg: string) => {
 
         <div class="switch-item">
           <div class="switch-info">
-            <div class="switch-title">剔除复制版权小尾巴</div>
-            <div class="switch-desc">复制文本时去除“作者：xxx 来源：xxx”声明</div>
+            <div class="switch-title">{{ m.swStripCopyTitle }}</div>
+            <div class="switch-desc">{{ m.swStripCopyDesc }}</div>
           </div>
           <label class="toggle-btn">
             <input
@@ -245,8 +247,8 @@ const showToast = (msg: string) => {
 
         <div class="switch-item">
           <div class="switch-info">
-            <div class="switch-title">通用启发式中转探测</div>
-            <div class="switch-desc">自动嗅探各类小众论坛第三方外链跳转</div>
+            <div class="switch-title">{{ m.swHeuristicTitle }}</div>
+            <div class="switch-desc">{{ m.swHeuristicDesc }}</div>
           </div>
           <label class="toggle-btn">
             <input
@@ -263,16 +265,16 @@ const showToast = (msg: string) => {
     <!-- Interactive URL Purification Sandbox -->
     <section class="section-card">
       <div class="section-header-flex">
-        <div class="section-title">链接现场净化实验室</div>
+        <div class="section-title">{{ m.sandboxTitle }}</div>
         <button class="paste-btn" @click="pasteFromClipboard">
-          📋 粘贴剪贴板
+          {{ m.pasteBtn }}
         </button>
       </div>
 
       <div class="input-wrap">
         <textarea
           v-model="testInput"
-          placeholder="粘贴任何包含中转或带有长串追踪参数的网址..."
+          :placeholder="m.sandboxPlaceholder"
           rows="2"
           class="test-textarea"
         ></textarea>
@@ -283,20 +285,20 @@ const showToast = (msg: string) => {
       <div v-if="testResult" class="result-box">
         <div class="result-badges">
           <span v-if="testResult.isRedirect" class="badge badge-redirect">
-            🚀 识别到【{{ testResult.platformName }}】中转
+            {{ m.badgeRedirect(testResult.platformName) }}
           </span>
           <span v-if="testResult.removedCount > 0" class="badge badge-tracking">
-            🧹 剔除 {{ testResult.removedCount }} 个追踪参数
+            {{ m.badgeTracking(testResult.removedCount) }}
           </span>
           <span v-if="!testResult.isChanged" class="badge badge-clean">
-            ✨ 原生纯净直链（无需精简）
+            {{ m.badgeClean }}
           </span>
         </div>
 
         <div class="clean-url-display">
           <div class="url-text">{{ testResult.cleanedUrl }}</div>
           <button class="copy-url-btn" :class="{ success: copied }" @click="copyCleanedUrl">
-            {{ copied ? '✓ 已复制' : '复制直链' }}
+            {{ copied ? m.copiedBtn : m.copyUrlBtn }}
           </button>
         </div>
       </div>
@@ -305,7 +307,7 @@ const showToast = (msg: string) => {
     <!-- Supported Platforms Drawer -->
     <section class="section-card">
       <div class="platforms-header" @click="showPlatformList = !showPlatformList">
-        <div class="section-title" style="margin: 0;">支持平台矩阵 ({{ KNOWN_PLATFORM_RULES.length }}+)</div>
+        <div class="section-title" style="margin: 0;">{{ m.platformsTitle(KNOWN_PLATFORM_RULES.length) }}</div>
         <div class="toggle-arrow" :class="{ expanded: showPlatformList }">▾</div>
       </div>
 
@@ -316,16 +318,16 @@ const showToast = (msg: string) => {
         </div>
         <div class="platform-chip platform-chip-any">
           <span class="platform-dot"></span>
-          <span>全网启发式探测</span>
+          <span>{{ m.platformHeuristic }}</span>
         </div>
       </div>
     </section>
 
     <!-- Footer Actions -->
     <footer class="footer">
-      <button class="text-btn" @click="resetStats">清空计数</button>
+      <button class="text-btn" @click="resetStats">{{ m.resetStatsBtn }}</button>
       <span class="footer-divider">·</span>
-      <span class="footer-slogan">100-Free · 纯本地运算 · 零隐私上报</span>
+      <span class="footer-slogan">{{ m.footerSlogan }}</span>
     </footer>
 
     <!-- Toast Notification -->

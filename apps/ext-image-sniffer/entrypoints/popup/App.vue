@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { AppFooterLink } from '@100free/ui';
+import { m } from '../../src/locales';
 import { SniffedImage } from '../../src/types';
 import { downloadImagesAsZip, triggerFileDownload, fetchImageBlob } from '../../src/core/downloader';
 
@@ -62,13 +63,13 @@ const scanImages = async () => {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      errorMsg.value = '无法获取当前网页';
+      errorMsg.value = m.errNoTab;
       loading.value = false;
       return;
     }
 
     if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('edge://')) {
-      errorMsg.value = '系统页面不支持提取图片，请在普通网页上使用';
+      errorMsg.value = m.errSystemPage;
       loading.value = false;
       return;
     }
@@ -76,12 +77,12 @@ const scanImages = async () => {
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'SCAN_PAGE_IMAGES' });
     if (response?.images) {
       images.value = response.images;
-      pageTitle.value = response.pageTitle || '页面图片';
+      pageTitle.value = response.pageTitle || m.defaultPageTitle;
     } else {
       images.value = [];
     }
   } catch (err) {
-    errorMsg.value = '未能嗅探到图片，请刷新当前网页后重试';
+    errorMsg.value = m.errScanFailed;
   } finally {
     loading.value = false;
   }
@@ -96,7 +97,7 @@ const openFullscreenGallery = async () => {
     const rawImages = JSON.parse(JSON.stringify(images.value));
     await chrome.storage.local.set({
       sniffer_gallery_images: rawImages,
-      sniffer_gallery_title: pageTitle.value || '网页大图'
+      sniffer_gallery_title: pageTitle.value || m.defaultGalleryTitle
     });
 
     // 打开全屏画廊
@@ -126,13 +127,13 @@ const handleBatchDownload = async () => {
   if (selectedImages.value.length === 0 || isDownloading.value) return;
 
   isDownloading.value = true;
-  downloadProgress.value = `准备中 (0/${selectedImages.value.length})...`;
+  downloadProgress.value = m.progressPreparing(selectedImages.value.length);
 
   try {
     const zipBlob = await downloadImagesAsZip(
       selectedImages.value,
       (curr, total) => {
-        downloadProgress.value = `打包中 (${curr}/${total})...`;
+        downloadProgress.value = m.progressPacking(curr, total);
       },
       convertToJpg.value
     );
@@ -166,8 +167,8 @@ onMounted(() => {
           </svg>
         </div>
         <div class="title-meta">
-          <h3 class="title">网页大图批量嗅探器</h3>
-          <p class="subtitle">{{ loading ? '正在扫描网页图片...' : `共嗅探到 ${images.length} 张高清原图` }}</p>
+          <h3 class="title">{{ m.extTitle }}</h3>
+          <p class="subtitle">{{ loading ? m.scanningSubtitle : m.foundImagesSubtitle(images.length) }}</p>
         </div>
       </div>
 
@@ -176,16 +177,16 @@ onMounted(() => {
         <button
           v-if="images.length > 0"
           class="workbench-btn"
-          title="在独立大标签页全屏查看画廊"
+          :title="m.openGalleryTooltip"
           @click="openFullscreenGallery"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
           </svg>
-          <span>大屏浏览</span>
+          <span>{{ m.openGalleryBtn }}</span>
         </button>
 
-        <button class="refresh-btn" title="重新扫描" @click="scanImages">
+        <button class="refresh-btn" :title="m.rescanTooltip" @click="scanImages">
           <svg class="refresh-icon" :class="{ 'spin': loading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
           </svg>
@@ -211,7 +212,7 @@ onMounted(() => {
       <!-- 尺寸过滤与全选 -->
       <div class="sub-filter">
         <div class="size-filter">
-          <span class="filter-label">宽度 &ge; {{ minWidth }}px</span>
+          <span class="filter-label">{{ m.minWidthLabel(minWidth) }}</span>
           <input
             v-model.number="minWidth"
             type="range"
@@ -223,7 +224,7 @@ onMounted(() => {
         </div>
 
         <button class="select-all-btn" @click="toggleSelectAll">
-          {{ isAllSelected ? '取消全选' : '全选过滤图' }}
+          {{ isAllSelected ? m.deselectAll : m.selectAllFiltered }}
         </button>
       </div>
     </div>
@@ -231,16 +232,16 @@ onMounted(() => {
     <!-- 错误与空状态 -->
     <div v-if="errorMsg" class="state-box error-box">
       <p>{{ errorMsg }}</p>
-      <button class="retry-btn" @click="scanImages">刷新重试</button>
+      <button class="retry-btn" @click="scanImages">{{ m.retryBtn }}</button>
     </div>
 
     <div v-else-if="loading" class="state-box loading-box">
       <div class="loading-spinner" />
-      <p>正在深度嗅探网页图片与超清大图...</p>
+      <p>{{ m.scanningBody }}</p>
     </div>
 
     <div v-else-if="filteredImages.length === 0" class="state-box empty-box">
-      <p>没有符合当前尺寸或格式条件的图片</p>
+      <p>{{ m.emptyFiltered }}</p>
     </div>
 
     <!-- 瀑布网格画廊 -->
@@ -268,7 +269,7 @@ onMounted(() => {
           </div>
 
           <!-- 单张下载图标 -->
-          <button class="download-btn" title="单独下载此图" @click="(e) => downloadSingle(e, img)">
+          <button class="download-btn" :title="m.downloadSingleTooltip" @click="(e) => downloadSingle(e, img)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
             </svg>
@@ -277,7 +278,7 @@ onMounted(() => {
 
         <div class="img-meta">
           <span class="meta-format">{{ (img.format || 'IMG').toUpperCase() }}</span>
-          <span class="meta-dim">{{ img.width ? `${img.width}×${img.height}` : '原图' }}</span>
+          <span class="meta-dim">{{ img.width ? `${img.width}×${img.height}` : m.originalTag }}</span>
         </div>
       </div>
     </main>
@@ -285,11 +286,11 @@ onMounted(() => {
     <!-- 底部主操作区 -->
     <footer v-if="!loading && !errorMsg" class="footer">
       <div class="footer-left">
-        <label class="convert-box" title="勾选后自动将 WebP/AVIF 转为通用 JPG，方便 PS 打开">
+        <label class="convert-box" :title="m.convertJpgTooltip">
           <input v-model="convertToJpg" type="checkbox" />
-          <span>转为 JPG</span>
+          <span>{{ m.convertJpgShort }}</span>
         </label>
-        <span class="stats-label">已选 <strong>{{ selectedImages.length }}</strong>/{{ filteredImages.length }}</span>
+        <span class="stats-label">{{ m.selectedPrefix }} <strong>{{ selectedImages.length }}</strong>/{{ filteredImages.length }}</span>
       </div>
 
       <button
@@ -300,7 +301,7 @@ onMounted(() => {
         <svg v-if="!isDownloading" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
         </svg>
-        <span>{{ isDownloading ? downloadProgress : `打包下载 ZIP (${selectedImages.length} 张)` }}</span>
+        <span>{{ isDownloading ? downloadProgress : m.downloadZipCountBtn(selectedImages.length) }}</span>
       </button>
     </footer>
     <AppFooterLink plugin-id="image-sniffer" />

@@ -1,3 +1,5 @@
+import { m } from '../locales';
+
 /**
  * 选中文本悬浮快捷复制条（使用 Shadow DOM 样式完全隔离）
  */
@@ -89,7 +91,7 @@ export class FloatingCopyButton {
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
       </svg>
-      <span class="label">复制</span>
+      <span class="label">${m.floatCopy}</span>
     `;
 
     this.button.addEventListener('click', (e) => {
@@ -125,7 +127,7 @@ export class FloatingCopyButton {
 
     if (this.button) {
       this.button.className = 'copy-btn';
-      this.button.querySelector('.label')!.textContent = '复制';
+      this.button.querySelector('.label')!.textContent = m.floatCopy;
     }
   }
 
@@ -138,7 +140,7 @@ export class FloatingCopyButton {
       await navigator.clipboard.writeText(text);
       if (this.button) {
         this.button.classList.add('copied');
-        this.button.querySelector('.label')!.textContent = '已复制!';
+        this.button.querySelector('.label')!.textContent = m.floatCopied;
         setTimeout(() => this.hide(), 1000);
       }
     } catch {
@@ -154,7 +156,7 @@ export class FloatingCopyButton {
 
       if (this.button) {
         this.button.classList.add('copied');
-        this.button.querySelector('.label')!.textContent = '已复制!';
+        this.button.querySelector('.label')!.textContent = m.floatCopied;
         setTimeout(() => this.hide(), 1000);
       }
     }

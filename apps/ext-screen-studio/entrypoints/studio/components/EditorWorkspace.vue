@@ -18,6 +18,7 @@ import {
   FileImage,
   X
 } from 'lucide-vue-next';
+import { m } from '../../../src/locales';
 import {
   BACKDROP_PRESETS,
   type AspectRatioPreset,
@@ -469,7 +470,7 @@ const handleExport = async () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (err) {
-    if (err instanceof Error && err.message !== '已取消导出') {
+    if (err instanceof Error && err.message !== m.errExportCancelled) {
       alert(err.message);
     }
   } finally {
@@ -505,7 +506,7 @@ const handleExportGif = async () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (err) {
-    if (err instanceof Error && err.message !== '已取消导出') {
+    if (err instanceof Error && err.message !== m.errExportCancelled) {
       alert(err.message);
     }
   } finally {
@@ -522,24 +523,24 @@ const formatTime = (ms: number) => {
 };
 
 const ratios: Array<{ label: string; value: AspectRatioPreset }> = [
-  { label: '16:9 横屏', value: '16:9' },
-  { label: '9:16 竖屏', value: '9:16' },
-  { label: '1:1 方形', value: '1:1' },
-  { label: '4:3 经典', value: '4:3' },
-  { label: '原始比例', value: 'auto' }
+  { label: m.ratio169, value: '16:9' },
+  { label: m.ratio916, value: '9:16' },
+  { label: m.ratio11, value: '1:1' },
+  { label: m.ratio43, value: '4:3' },
+  { label: m.ratioAuto, value: 'auto' }
 ];
 
 const corners: Array<{ label: string; value: CameraCorner }> = [
-  { label: '右下', value: 'bottom-right' },
-  { label: '左下', value: 'bottom-left' },
-  { label: '右上', value: 'top-right' },
-  { label: '左上', value: 'top-left' }
+  { label: m.cornerBR, value: 'bottom-right' },
+  { label: m.cornerBL, value: 'bottom-left' },
+  { label: m.cornerTR, value: 'top-right' },
+  { label: m.cornerTL, value: 'top-left' }
 ];
 
 const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
-  { label: '无边框', value: 'none' },
-  { label: 'macOS 深色', value: 'macos-dark' },
-  { label: 'macOS 浅色', value: 'macos-light' }
+  { label: m.frameNone, value: 'none' },
+  { label: m.frameMacDark, value: 'macos-dark' },
+  { label: m.frameMacLight, value: 'macos-light' }
 ];
 </script>
 
@@ -549,33 +550,33 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
       <div class="topbar-left">
         <button class="icon-btn" @click="emit('back')">
           <ArrowLeft :size="16" />
-          <span>工程库</span>
+          <span>{{ m.backToLibrary }}</span>
         </button>
         <input v-model="localProject.title" class="title-input" />
       </div>
 
       <div class="topbar-right">
-        <select v-model.number="localProject.playbackSpeed" class="top-select" title="视频播放与导出倍速">
-          <option :value="1">1.0x 原速</option>
-          <option :value="1.25">1.25x 轻快</option>
-          <option :value="1.5">1.5x 演示</option>
-          <option :value="2">2.0x 极速</option>
+        <select v-model.number="localProject.playbackSpeed" class="top-select" :title="m.speedTooltip">
+          <option :value="1">{{ m.speed1 }}</option>
+          <option :value="1.25">{{ m.speed125 }}</option>
+          <option :value="1.5">{{ m.speed15 }}</option>
+          <option :value="2">{{ m.speed2 }}</option>
         </select>
-        <select v-model.number="exportFps" class="top-select" title="导出帧率">
+        <select v-model.number="exportFps" class="top-select" :title="m.fpsTooltip">
           <option :value="30">30 FPS</option>
           <option :value="60">60 FPS</option>
         </select>
         <button class="secondary-btn" @click="resetAutoZoom">
           <Wand2 :size="15" />
-          <span>智能重算跟焦</span>
+          <span>{{ m.recalcAutoZoom }}</span>
         </button>
         <button class="secondary-btn" :disabled="isExporting" @click="handleExportGif">
           <FileImage :size="15" />
-          <span>导出 GIF</span>
+          <span>{{ m.exportGifBtn }}</span>
         </button>
         <button class="export-btn" :disabled="isExporting" @click="handleExport">
           <Download :size="16" />
-          <span>导出 MP4</span>
+          <span>{{ m.exportMp4Btn }}</span>
         </button>
       </div>
     </header>
@@ -588,7 +589,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               ref="canvasRef"
               class="preview-canvas"
               :class="{ 'blur-cursor': isDrawingBlur }"
-              :title="isDrawingBlur ? '拖拽框选需要模糊打码的隐私区域' : '点击画面可手动定位当前缩放焦点'"
+              :title="isDrawingBlur ? m.canvasTitleBlur : m.canvasTitleFocus"
               @mousedown="handleCanvasPointerDown"
               @mousemove="handleCanvasPointerMove"
               @mouseup="handleCanvasPointerUp"
@@ -616,35 +617,35 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </span>
             <button class="add-zoom-btn" @click="addZoomAtCurrent">
               <Plus :size="14" />
-              <span>在此处添加跟焦放大</span>
+              <span>{{ m.addZoomBtn }}</span>
             </button>
-            <button class="trim-btn" title="将当前播放头设为裁剪起点" @click="setTrimStart">
+            <button class="trim-btn" :title="m.trimStartTooltip" @click="setTrimStart">
               <Scissors :size="13" />
-              <span>设为入点</span>
+              <span>{{ m.trimStartBtn }}</span>
             </button>
-            <button class="trim-btn" title="将当前播放头设为裁剪终点" @click="setTrimEnd">
+            <button class="trim-btn" :title="m.trimEndTooltip" @click="setTrimEnd">
               <Scissors :size="13" />
-              <span>设为出点</span>
+              <span>{{ m.trimEndBtn }}</span>
             </button>
             <button
               v-if="(localProject.trimStartMs ?? 0) > 0 || (localProject.trimEndMs ?? durationMs) < durationMs"
               class="trim-btn"
-              title="恢复完整时长"
+              :title="m.resetTrimTooltip"
               @click="resetTrim"
             >
               <RotateCcw :size="13" />
-              <span>重置裁剪</span>
+              <span>{{ m.resetTrimBtn }}</span>
             </button>
             <button
               class="trim-btn"
               :class="{ active: pendingCutStartMs !== null }"
-              title="先点一次定起点，移到终点再点一次即可删掉中间废片段"
+              :title="m.cutTooltip"
               @click="handleMarkCut"
             >
               <Scissors :size="13" />
-              <span>{{ pendingCutStartMs === null ? '删中间段' : '点此确认删除' }}</span>
+              <span>{{ pendingCutStartMs === null ? m.cutStartBtn : m.cutConfirmBtn }}</span>
             </button>
-            <span class="hint">点击蓝色片段调倍率 / 点击红色片段撤销删除</span>
+            <span class="hint">{{ m.timelineHint }}</span>
           </div>
 
           <div class="timeline-track" @click="handleTimelineClick">
@@ -662,7 +663,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               v-for="cut in localProject.cutSegments ?? []"
               :key="cut.id"
               class="cut-segment"
-              title="已删除片段（点击恢复）"
+              :title="m.cutSegmentTooltip"
               :style="{
                 left: `${(cut.startMs / Math.max(1, durationMs)) * 100}%`,
                 width: `${Math.max(1, ((cut.endMs - cut.startMs) / Math.max(1, durationMs)) * 100)}%`
@@ -679,7 +680,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               :key="i"
               class="click-dot"
               :style="{ left: `${(click.t / Math.max(1, durationMs)) * 100}%` }"
-              title="鼠标点击事件"
+              :title="m.clickDotTooltip"
             />
 
             <div
@@ -709,38 +710,38 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             @click="activeTab = 'zoom'"
           >
             <Sliders :size="14" />
-            <span>跟焦</span>
+            <span>{{ m.tabZoom }}</span>
           </button>
           <button
             :class="{ active: activeTab === 'style' }"
             @click="activeTab = 'style'"
           >
             <Palette :size="14" />
-            <span>画布</span>
+            <span>{{ m.tabStyle }}</span>
           </button>
           <button
             :class="{ active: activeTab === 'blur' }"
             @click="activeTab = 'blur'"
           >
             <EyeOff :size="14" />
-            <span>打码</span>
+            <span>{{ m.tabBlur }}</span>
           </button>
           <button
             :class="{ active: activeTab === 'camera' }"
             @click="activeTab = 'camera'"
           >
             <Camera :size="14" />
-            <span>人像</span>
+            <span>{{ m.tabCamera }}</span>
           </button>
         </div>
 
         <div v-if="activeTab === 'zoom'" class="panel-content">
           <div v-if="selectedSegment" class="card">
             <div class="card-head">
-              <span>当前放大片段</span>
+              <span>{{ m.currentZoomCard }}</span>
               <button
                 class="danger-icon"
-                title="删除此放大片段"
+                :title="m.deleteZoomTooltip"
                 @click="removeSegment(selectedSegment.id)"
               >
                 <Trash2 :size="14" />
@@ -748,7 +749,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </div>
 
             <label class="field">
-              <span>缩放倍率：{{ selectedSegment.scale.toFixed(2) }}x</span>
+              <span>{{ m.zoomScaleLabel(selectedSegment.scale.toFixed(2)) }}</span>
               <input
                 v-model.number="selectedSegment.scale"
                 type="range"
@@ -759,7 +760,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </label>
 
             <label class="field">
-              <span>开始时间 (秒)：{{ (selectedSegment.startMs / 1000).toFixed(1) }}s</span>
+              <span>{{ m.zoomStartLabel((selectedSegment.startMs / 1000).toFixed(1)) }}</span>
               <input
                 v-model.number="selectedSegment.startMs"
                 type="range"
@@ -770,7 +771,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </label>
 
             <label class="field">
-              <span>结束时间 (秒)：{{ (selectedSegment.endMs / 1000).toFixed(1) }}s</span>
+              <span>{{ m.zoomEndLabel((selectedSegment.endMs / 1000).toFixed(1)) }}</span>
               <input
                 v-model.number="selectedSegment.endMs"
                 type="range"
@@ -781,22 +782,22 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </label>
 
             <label class="switch-row">
-              <span>平滑跟随鼠标移动</span>
+              <span>{{ m.followCursorLabel }}</span>
               <input v-model="selectedSegment.followCursor" type="checkbox" />
             </label>
           </div>
 
           <div v-else class="empty-card">
-            点击时间轴上的紫色片段进行编辑，或点击「添加跟焦放大」。
+            {{ m.emptyZoomHint }}
           </div>
 
           <div class="card">
             <div class="card-head">
-              <span>全局光标与动画</span>
+              <span>{{ m.globalCursorCard }}</span>
             </div>
 
             <label class="field">
-              <span>缩放过渡平滑度：{{ localProject.style.transitionMs }} ms</span>
+              <span>{{ m.transitionMsLabel(localProject.style.transitionMs) }}</span>
               <input
                 v-model.number="localProject.style.transitionMs"
                 type="range"
@@ -807,12 +808,12 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </label>
 
             <label class="switch-row">
-              <span>渲染高清矢量指针</span>
+              <span>{{ m.showCursorLabel }}</span>
               <input v-model="localProject.style.showCursor" type="checkbox" />
             </label>
 
             <label v-if="localProject.style.showCursor" class="field">
-              <span>指针大小：{{ localProject.style.cursorSize.toFixed(2) }}x</span>
+              <span>{{ m.cursorSizeLabel(localProject.style.cursorSize.toFixed(2)) }}</span>
               <input
                 v-model.number="localProject.style.cursorSize"
                 type="range"
@@ -823,17 +824,17 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             </label>
 
             <label class="switch-row">
-              <span>鼠标点击波纹动效</span>
+              <span>{{ m.showClickRippleLabel }}</span>
               <input v-model="localProject.style.showClickRipple" type="checkbox" />
             </label>
 
             <label v-if="localProject.style.showClickRipple" class="switch-row">
-              <span>波纹颜色</span>
+              <span>{{ m.rippleColorLabel }}</span>
               <input v-model="localProject.style.rippleColor" type="color" />
             </label>
 
             <label class="switch-row">
-              <span>显示键盘快捷键提示</span>
+              <span>{{ m.showKeystrokesLabel }}</span>
               <input v-model="localProject.style.showKeystrokes" type="checkbox" />
             </label>
           </div>
@@ -841,7 +842,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
 
         <div v-else-if="activeTab === 'style'" class="panel-content">
           <div class="card">
-            <div class="card-head"><span>输出画布比例</span></div>
+            <div class="card-head"><span>{{ m.aspectRatioCard }}</span></div>
             <div class="chip-grid">
               <button
                 v-for="r in ratios"
@@ -856,7 +857,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
           </div>
 
           <div class="card">
-            <div class="card-head"><span>电影级背景壁纸</span></div>
+            <div class="card-head"><span>{{ m.backdropCard }}</span></div>
             <div class="backdrop-grid">
               <button
                 v-for="bg in BACKDROP_PRESETS"
@@ -873,20 +874,20 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
 
             <div v-if="localProject.style.backdropId === 'custom'" class="custom-colors">
               <label class="switch-row">
-                <span>起始色</span>
+                <span>{{ m.customStartColor }}</span>
                 <input v-model="localProject.style.customGradientStart" type="color" />
               </label>
               <label class="switch-row">
-                <span>结束色</span>
+                <span>{{ m.customEndColor }}</span>
                 <input v-model="localProject.style.customGradientEnd" type="color" />
               </label>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-head"><span>窗口质感</span></div>
+            <div class="card-head"><span>{{ m.windowStyleCard }}</span></div>
             <label class="field">
-              <span>画布边距：{{ localProject.style.padding }} px</span>
+              <span>{{ m.paddingLabel(localProject.style.padding) }}</span>
               <input
                 v-model.number="localProject.style.padding"
                 type="range"
@@ -896,7 +897,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               />
             </label>
             <label class="field">
-              <span>窗口圆角：{{ localProject.style.borderRadius }} px</span>
+              <span>{{ m.radiusLabel(localProject.style.borderRadius) }}</span>
               <input
                 v-model.number="localProject.style.borderRadius"
                 type="range"
@@ -906,7 +907,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               />
             </label>
             <label class="field">
-              <span>投影深度：{{ Math.round(localProject.style.shadowIntensity * 100) }}%</span>
+              <span>{{ m.shadowLabel(Math.round(localProject.style.shadowIntensity * 100)) }}</span>
               <input
                 v-model.number="localProject.style.shadowIntensity"
                 type="range"
@@ -918,7 +919,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
           </div>
 
           <div class="card">
-            <div class="card-head"><span>拟物窗口外框与署名</span></div>
+            <div class="card-head"><span>{{ m.frameAndWatermarkCard }}</span></div>
             <div class="chip-grid">
               <button
                 v-for="fm in frameModes"
@@ -931,11 +932,11 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               </button>
             </div>
             <label class="field">
-              <span>防盗署名角标（如 @你的ID）</span>
+              <span>{{ m.watermarkLabel }}</span>
               <input
                 v-model="localProject.style.watermarkText"
                 class="text-input"
-                placeholder="留空则不显示水印"
+                :placeholder="m.watermarkPlaceholder"
                 maxlength="32"
               />
             </label>
@@ -945,17 +946,17 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
         <div v-else-if="activeTab === 'blur'" class="panel-content">
           <div class="card">
             <div class="card-head">
-              <span>局部隐私模糊打码</span>
+              <span>{{ m.blurCard }}</span>
               <button
                 class="chip"
                 :class="{ active: isDrawingBlur }"
                 @click="isDrawingBlur = !isDrawingBlur"
               >
-                {{ isDrawingBlur ? '正在框选...' : '+ 框选区域' }}
+                {{ isDrawingBlur ? m.drawingBlurBtn : m.addBlurBtn }}
               </button>
             </div>
             <p class="muted-tip">
-              点击「+ 框选区域」后，直接在左侧画面拖拽框选敏感信息（如手机号、Token、余额），放大跟焦时打码会自动跟随移动。
+              {{ m.blurTip }}
             </p>
           </div>
 
@@ -965,13 +966,13 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
             class="card"
           >
             <div class="card-head">
-              <span>打码区域 #{{ idx + 1 }}</span>
+              <span>{{ m.blurRegionTitle(idx + 1) }}</span>
               <button class="danger-icon" @click="removeBlurRegion(region.id)">
                 <Trash2 :size="14" />
               </button>
             </div>
             <label class="field">
-              <span>模糊强度：{{ region.strength }} px</span>
+              <span>{{ m.blurStrengthLabel(region.strength) }}</span>
               <input v-model.number="region.strength" type="range" min="6" max="36" step="2" />
             </label>
           </div>
@@ -979,18 +980,18 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
 
         <div v-else class="panel-content">
           <div class="card">
-            <div class="card-head"><span>摄像头画中画设置</span></div>
+            <div class="card-head"><span>{{ m.cameraCard }}</span></div>
             <p v-if="!localProject.cameraBlob" class="muted-tip">
-              本次录制未开启摄像头。如需人像画中画，请在下次录制前开启「摄像头画中画」。
+              {{ m.noCameraTip }}
             </p>
             <template v-else>
               <label class="switch-row">
-                <span>显示摄像头画中画</span>
+                <span>{{ m.showCameraLabel }}</span>
                 <input v-model="localProject.style.showCamera" type="checkbox" />
               </label>
 
               <div class="field">
-                <span>停靠角落</span>
+                <span>{{ m.cameraCornerLabel }}</span>
                 <div class="chip-grid">
                   <button
                     v-for="c in corners"
@@ -1005,7 +1006,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               </div>
 
               <label class="field">
-                <span>画中画大小：{{ localProject.style.cameraSize }}%</span>
+                <span>{{ m.cameraSizeLabel(localProject.style.cameraSize) }}</span>
                 <input
                   v-model.number="localProject.style.cameraSize"
                   type="range"
@@ -1016,7 +1017,7 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
               </label>
 
               <label class="field">
-                <span>圆角程度：{{ localProject.style.cameraRoundness }}%</span>
+                <span>{{ m.cameraRoundnessLabel(localProject.style.cameraRoundness) }}</span>
                 <input
                   v-model.number="localProject.style.cameraRoundness"
                   type="range"
@@ -1034,14 +1035,14 @@ const frameModes: Array<{ label: string; value: WindowFrameStyle }> = [
     <div v-if="isExporting" class="export-modal">
       <div class="export-box">
         <Sparkles :size="24" class="spin-icon" />
-        <h3>{{ exportType === 'gif' ? '正在纯本地编码导出 GIF 动图' : '正在纯本地极速合成 MP4 视频' }}</h3>
-        <p>渲染进度 {{ exportProgress }}%（支持后台运行不掉帧）</p>
+        <h3>{{ exportType === 'gif' ? m.exportingGifTitle : m.exportingMp4Title }}</h3>
+        <p>{{ m.exportProgressDesc(exportProgress) }}</p>
         <div class="progress-bar">
           <div class="progress-fill" :style="{ width: `${exportProgress}%` }" />
         </div>
         <button class="cancel-btn" @click="exportAbort?.abort()">
           <X :size="15" />
-          <span>取消导出</span>
+          <span>{{ m.cancelExportBtn }}</span>
         </button>
       </div>
     </div>

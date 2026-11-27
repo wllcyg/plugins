@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { ExtensionStorage } from '@100free/core';
 import { AppFooterLink } from '@100free/ui';
+import { m } from '../../src/locales';
 import { InspectorSettings, DEFAULT_SETTINGS, STORAGE_KEY } from '../../src/types';
 
 const settings = ref<InspectorSettings>({ ...DEFAULT_SETTINGS });
@@ -43,8 +44,8 @@ onMounted(() => {
           </svg>
         </div>
         <div class="title-meta">
-          <h3 class="title">CSS & Tailwind 提取器</h3>
-          <p class="subtitle">一键嗅探样式 · 极速转 Tailwind</p>
+          <h3 class="title">{{ m.extTitle }}</h3>
+          <p class="subtitle">{{ m.extSub }}</p>
         </div>
       </div>
       <span class="badge">PRO</span>
@@ -53,9 +54,9 @@ onMounted(() => {
     <!-- 主控卡片 -->
     <div class="control-card" :class="{ 'is-active': settings.enabled }">
       <div class="control-info">
-        <span class="control-label">检查器状态</span>
+        <span class="control-label">{{ m.inspectorStatusLabel }}</span>
         <span class="control-state">
-          {{ settings.enabled ? '嗅探已激活 · 移动鼠标悬浮' : '已暂停嗅探' }}
+          {{ settings.enabled ? m.statusActive : m.statusPaused }}
         </span>
       </div>
       <button
@@ -69,7 +70,7 @@ onMounted(() => {
 
     <!-- 偏好模式切换 -->
     <div class="pref-card">
-      <span class="pref-title">默认输出格式偏好</span>
+      <span class="pref-title">{{ m.prefFormatTitle }}</span>
       <div class="pref-segmented">
         <button
           class="seg-btn"
@@ -83,7 +84,7 @@ onMounted(() => {
           :class="{ 'seg-active': settings.copyMode === 'css' }"
           @click="setCopyMode('css')"
         >
-          纯 CSS 属性
+          {{ m.formatRawCss }}
         </button>
       </div>
     </div>
@@ -91,18 +92,18 @@ onMounted(() => {
     <!-- 快捷键指南 -->
     <div class="shortcuts-card">
       <div class="shortcut-row">
-        <span class="shortcut-desc">锁定当前悬浮卡片</span>
+        <span class="shortcut-desc">{{ m.shortcutFreeze }}</span>
         <kbd class="key-badge">Space</kbd>
       </div>
       <div class="shortcut-row">
-        <span class="shortcut-desc">退出检查模式</span>
+        <span class="shortcut-desc">{{ m.shortcutExit }}</span>
         <kbd class="key-badge">Esc</kbd>
       </div>
     </div>
 
     <!-- 底部保障 -->
     <footer class="footer">
-      <span>100-Free 开源生产力计划 · 无广告 · 零网络请求</span>
+      <span>{{ m.footerNote }}</span>
     </footer>
     <AppFooterLink plugin-id="css-inspector" />
   </div>

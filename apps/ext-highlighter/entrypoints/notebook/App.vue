@@ -9,6 +9,7 @@ import {
   triggerTextDownload,
   upsertHighlight
 } from '../../src/core/storage';
+import { m } from '../../src/locales';
 
 const allItems = ref<HighlightItem[]>([]);
 const searchQuery = ref('');
@@ -32,7 +33,7 @@ const showToast = (msg: string) => {
 const domainStats = computed(() => {
   const map = new Map<string, number>();
   for (const item of allItems.value) {
-    const d = item.domain || '本地页面';
+    const d = item.domain || m.localPage;
     map.set(d, (map.get(d) || 0) + 1);
   }
   return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
@@ -49,7 +50,7 @@ const totalNotesCount = computed(() => {
 const filteredItems = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   return allItems.value.filter((item) => {
-    if (selectedDomain.value !== 'all' && (item.domain || '本地页面') !== selectedDomain.value) return false;
+    if (selectedDomain.value !== 'all' && (item.domain || m.localPage) !== selectedDomain.value) return false;
     if (selectedColor.value !== 'all' && item.color !== selectedColor.value) return false;
     if (onlyWithNotes.value && !item.note?.trim()) return false;
     if (!q) return true;
@@ -74,7 +75,7 @@ const groupedByPage = computed(() => {
       map.set(item.url, {
         url: item.url,
         pageTitle: item.pageTitle || item.domain || item.url,
-        domain: item.domain || '本地页面',
+        domain: item.domain || m.localPage,
         latestAt: item.createdAt,
         items: [item]
       });
@@ -102,7 +103,7 @@ const saveNote = async (item: HighlightItem) => {
   item.updatedAt = Date.now();
   await upsertHighlight(item);
   editingId.value = null;
-  showToast('批注已更新');
+  showToast(m.toastNoteUpdated);
 };
 
 const addTag = async (item: HighlightItem) => {
@@ -125,27 +126,27 @@ const removeTag = async (item: HighlightItem, tag: string) => {
 
 const deleteItem = async (id: string) => {
   allItems.value = await deleteHighlightById(id);
-  showToast('已删除该条笔记');
+  showToast(m.toastNoteDeleted);
 };
 
-const exportMarkdown = (items = filteredItems.value, title = '我的网页荧光笔笔记本') => {
+const exportMarkdown = (items = filteredItems.value, title = m.defaultNotebookTitle) => {
   if (items.length === 0) return;
   const md = exportHighlightsToMarkdown(items, title);
   const safeName = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 32) || 'notebook';
   triggerTextDownload(md, `${safeName}-${new Date().toISOString().slice(0, 10)}.md`);
-  showToast(`已导出 ${items.length} 条笔记为 Markdown`);
+  showToast(m.toastExportedMdCount(items.length));
 };
 
 const copyMarkdown = async (items: HighlightItem[], title: string) => {
   const md = exportHighlightsToMarkdown(items, title);
   await navigator.clipboard.writeText(md);
-  showToast('已复制 Markdown 到剪贴板');
+  showToast(m.toastCopiedMd);
 };
 
 const exportJsonBackup = () => {
   const json = JSON.stringify(allItems.value, null, 2);
   triggerTextDownload(json, `100free-highlights-backup-${Date.now()}.json`, 'application/json');
-  showToast('已导出 JSON 完整备份');
+  showToast(m.toastExportedJson);
 };
 
 const importJsonBackup = (e: Event) => {
@@ -164,15 +165,16 @@ const importJsonBackup = (e: Event) => {
       const merged = Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
       await saveAllHighlights(merged);
       allItems.value = merged;
-      showToast(`成功导入恢复，当前共 ${merged.length} 条笔记`);
+      showToast(m.toastImportedJson(merged.length));
     } catch {
-      showToast('备份文件格式无效');
+      showToast(m.toastInvalidJson);
     }
   };
   reader.readAsText(file);
 };
 
 onMounted(async () => {
+  document.title = m.notebookDocTitle;
   allItems.value = await getAllHighlights();
 });
 </script>
@@ -189,8 +191,8 @@ onMounted(async () => {
           </svg>
         </div>
         <div>
-          <h1 class="sb-title">荧光笔笔记本</h1>
-          <span class="sb-sub">100% 本地离线存储</span>
+          <h1 class="sb-title">{{ m.notebookTitle }}</h1>
+          <span class="sb-sub">{{ m.notebookSub }}</span>
         </div>
       </div>
 
@@ -198,15 +200,15 @@ onMounted(async () => {
       <div class="stats-grid">
         <div class="stat-box">
           <strong>{{ totalPagesCount }}</strong>
-          <span>已读网页</span>
+          <span>{{ m.statPages }}</span>
         </div>
         <div class="stat-box">
           <strong>{{ allItems.length }}</strong>
-          <span>摘录重点</span>
+          <span>{{ m.statHighlights }}</span>
         </div>
         <div class="stat-box">
           <strong>{{ totalNotesCount }}</strong>
-          <span>个人批注</span>
+          <span>{{ m.statNotes }}</span>
         </div>
       </div>
 
@@ -220,7 +222,7 @@ onMounted(async () => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
             </svg>
-            全部摘录
+            {{ m.navAll }}
           </span>
           <span class="count-badge">{{ allItems.length }}</span>
         </button>
@@ -233,21 +235,21 @@ onMounted(async () => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
             </svg>
-            仅看有批注
+            {{ m.navOnlyNotes }}
           </span>
           <span class="count-badge">{{ totalNotesCount }}</span>
         </button>
       </div>
 
       <div class="sb-section">
-        <div class="sb-label">按荧光颜色筛选</div>
+        <div class="sb-label">{{ m.filterByColor }}</div>
         <div class="sb-colors">
           <button
             class="color-pill"
             :class="{ active: selectedColor === 'all' }"
             @click="selectedColor = 'all'"
           >
-            全色
+            {{ m.allColors }}
           </button>
           <button
             v-for="c in HIGHLIGHT_COLORS"
@@ -255,14 +257,14 @@ onMounted(async () => {
             class="color-dot"
             :class="{ active: selectedColor === c.id }"
             :style="{ backgroundColor: c.dot }"
-            :title="c.name"
+            :title="m.colorNames[c.id]"
             @click="selectedColor = c.id"
           />
         </div>
       </div>
 
       <div class="sb-section sb-domains">
-        <div class="sb-label">按网站来源 ({{ domainStats.length }})</div>
+        <div class="sb-label">{{ m.filterByDomain(domainStats.length) }}</div>
         <div class="domain-list">
           <button
             v-for="[domain, cnt] in domainStats"
@@ -278,9 +280,9 @@ onMounted(async () => {
       </div>
 
       <div class="sb-footer">
-        <button class="backup-btn" @click="exportJsonBackup">导出备份 JSON</button>
+        <button class="backup-btn" @click="exportJsonBackup">{{ m.exportBackup }}</button>
         <label class="backup-btn">
-          导入恢复
+          {{ m.importBackup }}
           <input type="file" accept=".json" hidden @change="importJsonBackup" />
         </label>
       </div>
@@ -297,39 +299,39 @@ onMounted(async () => {
             v-model="searchQuery"
             type="search"
             class="search-input"
-            placeholder="搜索高亮原文、批注笔记、网页标题或 #标签..."
+            :placeholder="m.searchPlaceholder"
           />
         </div>
 
         <div class="topbar-actions">
-          <div class="view-switcher" role="group" aria-label="视图切换">
+          <div class="view-switcher" role="group" :aria-label="m.viewSwitchLabel">
             <button
               class="view-btn"
               :class="{ active: viewMode === 'grouped' }"
-              title="按文章聚合展示"
+              :title="m.viewGroupedTitle"
               @click="viewMode = 'grouped'"
             >
-              文章聚合
+              {{ m.viewGrouped }}
             </button>
             <button
               class="view-btn"
               :class="{ active: viewMode === 'cards' }"
-              title="全部摘录卡片平铺"
+              :title="m.viewCardsTitle"
               @click="viewMode = 'cards'"
             >
-              散列卡片
+              {{ m.viewCards }}
             </button>
           </div>
 
           <button
             class="export-md-btn"
             :disabled="filteredItems.length === 0"
-            @click="exportMarkdown(filteredItems, '我的网页荧光笔笔记本')"
+            @click="exportMarkdown(filteredItems, m.defaultNotebookTitle)"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
             </svg>
-            <span>导出 Markdown ({{ filteredItems.length }})</span>
+            <span>{{ m.exportMdCount(filteredItems.length) }}</span>
           </button>
         </div>
       </header>
@@ -341,8 +343,8 @@ onMounted(async () => {
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
             </svg>
           </div>
-          <p class="empty-h">暂未找到匹配的荧光笔摘录</p>
-          <p class="empty-p">在任意网页划选文字即可瞬间高亮并自动归档到此工作台</p>
+          <p class="empty-h">{{ m.emptyNotebookTitle }}</p>
+          <p class="empty-p">{{ m.emptyNotebookHint }}</p>
         </div>
 
         <!-- 视图 1：按文章聚合展示（默认，整洁有条理） -->
@@ -353,11 +355,11 @@ onMounted(async () => {
                 <a :href="group.url" target="_blank" rel="noreferrer" class="article-title">
                   {{ group.pageTitle }}
                 </a>
-                <span class="article-sub">{{ group.domain }} · {{ group.items.length }} 条重点</span>
+                <span class="article-sub">{{ m.groupMeta(group.domain, group.items.length) }}</span>
               </div>
               <div class="article-acts">
-                <button class="art-btn" @click="copyMarkdown(group.items, group.pageTitle)">复制整篇 MD</button>
-                <button class="art-btn" @click="exportMarkdown(group.items, group.pageTitle)">导出 .md</button>
+                <button class="art-btn" @click="copyMarkdown(group.items, group.pageTitle)">{{ m.copyArticleMd }}</button>
+                <button class="art-btn" @click="exportMarkdown(group.items, group.pageTitle)">{{ m.exportArticleMd }}</button>
               </div>
             </div>
 
@@ -375,24 +377,24 @@ onMounted(async () => {
                     v-model="editingNote"
                     rows="2"
                     class="note-textarea"
-                    placeholder="写下你的批注与思考..."
+                    :placeholder="m.notebookNotePlaceholder"
                   />
                   <div class="edit-row">
                     <input
                       v-model="newTagInput"
                       type="text"
                       class="tag-input"
-                      placeholder="+ 标签回车"
+                      :placeholder="m.tagInputPlaceholder"
                       @keyup.enter="addTag(item)"
                     />
                     <div class="edit-btns">
-                      <button class="btn-ghost" @click="editingId = null">取消</button>
-                      <button class="btn-primary" @click="saveNote(item)">保存</button>
+                      <button class="btn-ghost" @click="editingId = null">{{ m.cancel }}</button>
+                      <button class="btn-primary" @click="saveNote(item)">{{ m.save }}</button>
                     </div>
                   </div>
                 </div>
                 <div v-else-if="item.note" class="note-display" @click="startEditNote(item)">
-                  <strong>批注：</strong>{{ item.note }}
+                  <strong>{{ m.notePrefix }}</strong>{{ item.note }}
                 </div>
 
                 <div class="sub-foot">
@@ -403,9 +405,9 @@ onMounted(async () => {
                     </span>
                   </div>
                   <div class="sub-actions">
-                    <button class="foot-link" @click="openSourceAtHighlight(item)">定位原文</button>
-                    <button class="foot-link" @click="startEditNote(item)">{{ item.note ? '编辑' : '批注/标签' }}</button>
-                    <button class="foot-link danger" @click="deleteItem(item.id)">删除</button>
+                    <button class="foot-link" @click="openSourceAtHighlight(item)">{{ m.locateSource }}</button>
+                    <button class="foot-link" @click="startEditNote(item)">{{ item.note ? m.edit : m.noteAndTag }}</button>
+                    <button class="foot-link danger" @click="deleteItem(item.id)">{{ m.deleteBtn }}</button>
                   </div>
                 </div>
               </div>
@@ -448,24 +450,24 @@ onMounted(async () => {
                 v-model="editingNote"
                 rows="3"
                 class="note-textarea"
-                placeholder="写下你的批注与思考..."
+                :placeholder="m.notebookNotePlaceholder"
               />
               <div class="edit-row">
                 <input
                   v-model="newTagInput"
                   type="text"
                   class="tag-input"
-                  placeholder="+ 标签回车"
+                  :placeholder="m.tagInputPlaceholder"
                   @keyup.enter="addTag(item)"
                 />
                 <div class="edit-btns">
-                  <button class="btn-ghost" @click="editingId = null">取消</button>
-                  <button class="btn-primary" @click="saveNote(item)">保存</button>
+                  <button class="btn-ghost" @click="editingId = null">{{ m.cancel }}</button>
+                  <button class="btn-primary" @click="saveNote(item)">{{ m.save }}</button>
                 </div>
               </div>
             </div>
             <div v-else-if="item.note" class="note-display" @click="startEditNote(item)">
-              <strong>批注：</strong>{{ item.note }}
+              <strong>{{ m.notePrefix }}</strong>{{ item.note }}
             </div>
 
             <div v-if="item.tags?.length" class="tags-row">
@@ -476,10 +478,10 @@ onMounted(async () => {
             </div>
 
             <div class="card-footer">
-              <button class="foot-link" @click="openSourceAtHighlight(item)">定位原文</button>
-              <button class="foot-link" @click="startEditNote(item)">{{ item.note ? '编辑' : '批注/标签' }}</button>
-              <button class="foot-link" @click="copyMarkdown([item], item.pageTitle)">复制 MD</button>
-              <button class="foot-link danger" @click="deleteItem(item.id)">删除</button>
+              <button class="foot-link" @click="openSourceAtHighlight(item)">{{ m.locateSource }}</button>
+              <button class="foot-link" @click="startEditNote(item)">{{ item.note ? m.edit : m.noteAndTag }}</button>
+              <button class="foot-link" @click="copyMarkdown([item], item.pageTitle)">{{ m.copyItemMd }}</button>
+              <button class="foot-link danger" @click="deleteItem(item.id)">{{ m.deleteBtn }}</button>
             </div>
           </article>
         </div>

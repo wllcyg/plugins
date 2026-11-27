@@ -1,4 +1,5 @@
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
+import { m } from '../locales';
 import type { RecordingProject } from '../types/recording';
 import { renderStudioFrame, resolveOutputSize } from './canvas-renderer';
 import {
@@ -54,7 +55,7 @@ export async function exportStudioGif(
   try {
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error('无法加载录制视频'));
+      video.onerror = () => reject(new Error(m.errLoadRecordedVideo));
     });
     if (cameraVideo) {
       await new Promise<void>((resolve) => {
@@ -97,7 +98,7 @@ export async function exportStudioGif(
 
     for (let i = 0; i < totalFrames; i++) {
       if (options.signal?.aborted) {
-        throw new Error('已取消导出');
+        throw new Error(m.errExportCancelled);
       }
 
       const srcTimeMs = mapOutputMsToSourceMs((i / fps) * 1000 * speed, ranges);

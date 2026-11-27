@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { m } from '../../src/locales';
 import { SniffedImage } from '../../src/types';
 import { downloadImagesAsZip, triggerFileDownload, fetchImageBlob } from '../../src/core/downloader';
 
 const images = ref<SniffedImage[]>([]);
-const pageTitle = ref('网页大图');
+const pageTitle = ref(m.defaultGalleryTitle);
 const loading = ref(true);
 
 // 过滤配置
@@ -104,13 +105,13 @@ const handleBatchDownload = async () => {
   if (selectedImages.value.length === 0 || isDownloading.value) return;
 
   isDownloading.value = true;
-  downloadProgress.value = `准备中 (0/${selectedImages.value.length})...`;
+  downloadProgress.value = m.progressPreparing(selectedImages.value.length);
 
   try {
     const zipBlob = await downloadImagesAsZip(
       selectedImages.value,
       (curr, total) => {
-        downloadProgress.value = `正在打包 (${curr}/${total})...`;
+        downloadProgress.value = m.progressPacking(curr, total);
       },
       convertToJpg.value
     );
@@ -128,6 +129,7 @@ const handleBatchDownload = async () => {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown);
+  document.title = m.galleryDocTitle(pageTitle.value);
 
   // 从本地存储中拉取当前网页嗅探到的图片
   try {
@@ -139,8 +141,8 @@ onMounted(async () => {
           format: img.format || 'jpg',
           selected: img.selected ?? true
         }));
-        pageTitle.value = data.sniffer_gallery_title || '网页大图';
-        document.title = `${pageTitle.value} · 大图画廊工作台`;
+        pageTitle.value = data.sniffer_gallery_title || m.defaultGalleryTitle;
+        document.title = m.galleryDocTitle(pageTitle.value);
       }
     }
   } catch (err) {
@@ -169,7 +171,7 @@ onUnmounted(() => {
         </div>
         <div class="page-meta">
           <h2 class="page-title" :title="pageTitle">{{ pageTitle }}</h2>
-          <span class="page-badge">共嗅探到 {{ images.length }} 张原图</span>
+          <span class="page-badge">{{ m.foundImagesSubtitle(images.length) }}</span>
         </div>
       </div>
 
@@ -190,7 +192,7 @@ onUnmounted(() => {
 
         <!-- 尺寸滑块 -->
         <div class="slider-group">
-          <span class="slider-label">宽 &ge; {{ minWidth }}px</span>
+          <span class="slider-label">{{ m.galleryMinWidthLabel(minWidth) }}</span>
           <input
             v-model.number="minWidth"
             type="range"
@@ -202,9 +204,9 @@ onUnmounted(() => {
         </div>
 
         <!-- WebP 转 JPG 开关 -->
-        <label class="convert-toggle" title="将 WebP/AVIF 等现代格式自动转为更通用的 JPG 格式，方便 PS 导入">
+        <label class="convert-toggle" :title="m.convertJpgTooltip">
           <input v-model="convertToJpg" type="checkbox" />
-          <span>自动转为 JPG</span>
+          <span>{{ m.autoConvertJpg }}</span>
         </label>
       </div>
 
@@ -219,12 +221,12 @@ onUnmounted(() => {
             :class="{ 'col-active': columns === col }"
             @click="columns = col"
           >
-            {{ col }}列
+            {{ m.columnCount(col) }}
           </button>
         </div>
 
         <button class="select-all-btn" @click="toggleSelectAll">
-          {{ isAllSelected ? '取消全选' : '全选当前' }}
+          {{ isAllSelected ? m.deselectAll : m.selectAllCurrent }}
         </button>
 
         <button
@@ -235,7 +237,7 @@ onUnmounted(() => {
           <svg v-if="!isDownloading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
-          <span>{{ isDownloading ? downloadProgress : `打包下载 ZIP (${selectedImages.length})` }}</span>
+          <span>{{ isDownloading ? downloadProgress : m.galleryDownloadZipBtn(selectedImages.length) }}</span>
         </button>
       </div>
     </header>
@@ -244,16 +246,16 @@ onUnmounted(() => {
     <main class="workbench-body">
       <div v-if="loading" class="empty-state">
         <div class="spinner" />
-        <p>正在载入大图画廊...</p>
+        <p>{{ m.galleryLoading }}</p>
       </div>
 
       <div v-else-if="images.length === 0" class="empty-state">
-        <p class="empty-title">暂未读取到网页嗅探图片</p>
-        <p class="empty-desc">请在目标网页先点击扩展图标进行嗅探，再点击「大屏浏览」</p>
+        <p class="empty-title">{{ m.galleryEmptyTitle }}</p>
+        <p class="empty-desc">{{ m.galleryEmptyDesc }}</p>
       </div>
 
       <div v-else-if="filteredImages.length === 0" class="empty-state">
-        <p>没有符合当前尺寸或格式过滤条件的图片</p>
+        <p>{{ m.emptyFiltered }}</p>
       </div>
 
       <!-- 网格大图流 -->
@@ -279,13 +281,13 @@ onUnmounted(() => {
 
             <!-- 悬浮遮罩与操作 -->
             <div class="hover-overlay">
-              <button class="action-circle zoom-btn" title="查看高清大图" @click.stop="openLightbox(idx)">
+              <button class="action-circle zoom-btn" :title="m.zoomTooltip" @click.stop="openLightbox(idx)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8" />
                   <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
                 </svg>
               </button>
-              <button class="action-circle dl-btn" title="单独下载此图" @click.stop="(e) => downloadSingle(e, img)">
+              <button class="action-circle dl-btn" :title="m.downloadSingleTooltip" @click.stop="(e) => downloadSingle(e, img)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                 </svg>
@@ -303,7 +305,7 @@ onUnmounted(() => {
           <!-- 卡片信息栏 -->
           <div class="card-footer" @click="toggleSelect(img)">
             <span class="fmt-tag">{{ (img.format || 'IMG').toUpperCase() }}</span>
-            <span class="dim-tag">{{ img.width ? `${img.width} × ${img.height}` : '高清原图' }}</span>
+            <span class="dim-tag">{{ img.width ? `${img.width} × ${img.height}` : m.hdOriginalTag }}</span>
           </div>
         </div>
       </div>
@@ -314,16 +316,16 @@ onUnmounted(() => {
       <div class="lightbox-header" @click.stop>
         <span class="lightbox-counter">
           {{ activeIndex + 1 }} / {{ filteredImages.length }} · 
-          {{ filteredImages[activeIndex].width ? `${filteredImages[activeIndex].width} × ${filteredImages[activeIndex].height}` : '高清原图' }} · 
+          {{ filteredImages[activeIndex].width ? `${filteredImages[activeIndex].width} × ${filteredImages[activeIndex].height}` : m.hdOriginalTag }} · 
           {{ (filteredImages[activeIndex].format || 'IMG').toUpperCase() }}
         </span>
         <div class="lightbox-actions">
           <button class="lb-btn" @click="downloadSingle(null, filteredImages[activeIndex])">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
-            下载此图
+            {{ m.lightboxDownload }}
           </button>
           <a :href="filteredImages[activeIndex].src" target="_blank" class="lb-btn" rel="noreferrer">
-            打开原图
+            {{ m.lightboxOpenOriginal }}
           </a>
           <button class="lb-close" @click="closeLightbox">&times;</button>
         </div>
@@ -340,10 +342,10 @@ onUnmounted(() => {
       </div>
 
       <!-- 左右翻页控制器 -->
-      <button class="nav-arrow nav-left" title="上一张 (←)" @click.stop="prevImage">
+      <button class="nav-arrow nav-left" :title="m.lightboxPrev" @click.stop="prevImage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6" /></svg>
       </button>
-      <button class="nav-arrow nav-right" title="下一张 (→)" @click.stop="nextImage">
+      <button class="nav-arrow nav-right" :title="m.lightboxNext" @click.stop="nextImage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6" /></svg>
       </button>
     </div>

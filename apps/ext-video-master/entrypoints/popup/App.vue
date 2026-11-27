@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { AppFooterLink } from '@100free/ui';
 import { VideoSettings, DEFAULT_SETTINGS } from '../../src/types';
+import { m } from '../../src/locales';
 
 const settings = ref<VideoSettings>({ ...DEFAULT_SETTINGS });
 const videoCount = ref<number>(0);
@@ -53,6 +54,7 @@ const captureFrame = async () => {
 };
 
 onMounted(async () => {
+  document.title = m.extTitle;
   try {
     // 1. 读取 storage 本地存储
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
@@ -92,9 +94,9 @@ onMounted(async () => {
           </svg>
         </div>
         <div class="brand-text">
-          <h2 class="title">网页全能视频伴侣</h2>
+          <h2 class="title">{{ m.extTitle }}</h2>
           <p class="subtitle" :class="{ 'has-video': videoCount > 0 }">
-            {{ videoCount > 0 ? `已就绪 · 检测到 ${videoCount} 个视频流` : '未检测到视频（播放时自动生效）' }}
+            {{ videoCount > 0 ? m.readyStreams(videoCount) : m.noVideo }}
           </p>
         </div>
       </div>
@@ -104,7 +106,7 @@ onMounted(async () => {
     <!-- 倍速调节主控区 -->
     <section class="section speed-section">
       <div class="section-title-row">
-        <span class="section-label">播放倍速</span>
+        <span class="section-label">{{ m.playbackSpeed }}</span>
         <div class="speed-badge">{{ settings.playbackRate.toFixed(2) }}x</div>
       </div>
 
@@ -145,7 +147,7 @@ onMounted(async () => {
     <!-- 音量突破与增强 -->
     <section class="section volume-section">
       <div class="section-title-row">
-        <span class="section-label">音量超限增强 (突破 600%)</span>
+        <span class="section-label">{{ m.volumeBoost }}</span>
         <span class="vol-badge">{{ Math.round(settings.volumeBoost * 100) }}%</span>
       </div>
 
@@ -169,7 +171,7 @@ onMounted(async () => {
           :class="{ 'pill-active': Math.abs(settings.volumeBoost - vol) < 0.05 }"
           @click="setVolume(vol)"
         >
-          {{ vol === 1.0 ? '原始 100%' : `${Math.round(vol * 100)}%` }}
+          {{ vol === 1.0 ? m.originalVolume : `${Math.round(vol * 100)}%` }}
         </button>
       </div>
     </section>
@@ -184,8 +186,8 @@ onMounted(async () => {
           </svg>
         </div>
         <div class="card-text">
-          <strong>{{ isPiP ? '退出画中画' : '独立小窗画中画' }}</strong>
-          <small>置顶悬浮 · 边办公边看</small>
+          <strong>{{ isPiP ? m.exitPip : m.enterPip }}</strong>
+          <small>{{ m.pipSub }}</small>
         </div>
       </button>
 
@@ -197,8 +199,8 @@ onMounted(async () => {
           </svg>
         </div>
         <div class="card-text">
-          <strong>原画逐帧截图</strong>
-          <small>一键保存高清课件 PNG</small>
+          <strong>{{ m.captureFrame }}</strong>
+          <small>{{ m.captureSub }}</small>
         </div>
       </button>
     </section>
@@ -207,24 +209,24 @@ onMounted(async () => {
     <section class="switches-list">
       <label class="switch-row">
         <div class="switch-info">
-          <span class="switch-title">切后台防暂停 / 伪装前台</span>
-          <span class="switch-desc">拦截页面失焦与隐藏检测，切标签页/后台播放不中断</span>
+          <span class="switch-title">{{ m.antiPauseTitle }}</span>
+          <span class="switch-desc">{{ m.antiPauseDesc }}</span>
         </div>
         <input v-model="settings.antiPause" type="checkbox" class="toggle-checkbox" @change="syncSettings" />
       </label>
 
       <label class="switch-row">
         <div class="switch-info">
-          <span class="switch-title">画面浮动调速徽章</span>
-          <span class="switch-desc">在视频左上角常驻半透明快捷胶囊，鼠标悬停直接调速</span>
+          <span class="switch-title">{{ m.osdTitle }}</span>
+          <span class="switch-desc">{{ m.osdDesc }}</span>
         </div>
         <input v-model="settings.showOsdBadge" type="checkbox" class="toggle-checkbox" @change="syncSettings" />
       </label>
 
       <label class="switch-row">
         <div class="switch-info">
-          <span class="switch-title">全局键盘快捷键</span>
-          <span class="switch-desc">D 加速 / S 减速 / R 复位 / Z/X 快退进 / C 画中画 / P 截图</span>
+          <span class="switch-title">{{ m.shortcutsTitle }}</span>
+          <span class="switch-desc">{{ m.shortcutsDesc }}</span>
         </div>
         <input v-model="settings.shortcutsEnabled" type="checkbox" class="toggle-checkbox" @change="syncSettings" />
       </label>
@@ -232,7 +234,7 @@ onMounted(async () => {
 
     <!-- 底部版权 -->
     <footer class="panel-footer">
-      <span>100-Free 开源生产力计划 · 无广告 · 零网络请求</span>
+      <span>{{ m.footerSlogan }}</span>
     </footer>
     <AppFooterLink plugin-id="video-master" />
   </div>

@@ -1,5 +1,6 @@
 import { defineContentScript } from 'wxt/sandbox';
 import { HIGHLIGHT_COLORS, HighlightColorId, HighlightItem, HighlightStyle, HighlighterSettings } from '../src/types';
+import { m } from '../src/locales';
 import {
   extractDomain,
   getPageHighlights,
@@ -212,7 +213,7 @@ export default defineContentScript({
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'color-dot';
-      btn.title = `${c.name}高亮`;
+      btn.title = m.toolbarColorTitle(m.colorNames[c.id]);
       btn.style.backgroundColor = c.dot;
       btn.addEventListener('mousedown', (e) => e.preventDefault());
       btn.addEventListener('click', () => {
@@ -228,9 +229,9 @@ export default defineContentScript({
     const styleToggleBtn = document.createElement('button');
     styleToggleBtn.type = 'button';
     styleToggleBtn.className = 'tool-btn';
-    styleToggleBtn.title = '切换荧光填充 / 下划线模式';
+    styleToggleBtn.title = m.toolbarStyleTitle;
     const syncStyleBtn = () => {
-      styleToggleBtn.innerHTML = currentStyleMode === 'underline' ? `${SVG_UNDERLINE}<span>下划线</span>` : `${SVG_FILL}<span>填充</span>`;
+      styleToggleBtn.innerHTML = currentStyleMode === 'underline' ? `${SVG_UNDERLINE}<span>${m.styleUnderline}</span>` : `${SVG_FILL}<span>${m.styleFill}</span>`;
       styleToggleBtn.classList.toggle('active', currentStyleMode === 'underline');
     };
     syncStyleBtn();
@@ -244,7 +245,7 @@ export default defineContentScript({
     const noteBtn = document.createElement('button');
     noteBtn.type = 'button';
     noteBtn.className = 'tool-btn';
-    noteBtn.innerHTML = `${SVG_NOTE}<span>批注</span>`;
+    noteBtn.innerHTML = `${SVG_NOTE}<span>${m.toolbarNote}</span>`;
     noteBtn.addEventListener('mousedown', (e) => e.preventDefault());
     noteBtn.addEventListener('click', () => {
       void createHighlightFromCurrentRange(settings.defaultColor || 'yellow', true);
@@ -254,7 +255,7 @@ export default defineContentScript({
     const copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.className = 'tool-btn';
-    copyBtn.innerHTML = `${SVG_COPY}<span>复制</span>`;
+    copyBtn.innerHTML = `${SVG_COPY}<span>${m.toolbarCopy}</span>`;
     copyBtn.addEventListener('mousedown', (e) => e.preventDefault());
     copyBtn.addEventListener('click', () => {
       const txt = currentRange?.toString() || window.getSelection()?.toString() || '';
@@ -270,15 +271,15 @@ export default defineContentScript({
     popover.innerHTML = `
       <div class="pop-head">
         <div class="pop-colors"></div>
-        <button type="button" class="pop-close" title="关闭">×</button>
+        <button type="button" class="pop-close" title="${m.close}">×</button>
       </div>
       <div class="pop-quote"></div>
-      <textarea class="pop-textarea" placeholder="写下你的想法或批注（Ctrl+Enter 快捷保存）..."></textarea>
+      <textarea class="pop-textarea" placeholder="${m.notePlaceholderShortcut}"></textarea>
       <div class="pop-actions">
-        <button type="button" class="btn-del">删除高亮</button>
+        <button type="button" class="btn-del">${m.deleteHighlight}</button>
         <div style="display:flex;gap:6px;align-items:center;">
-          <button type="button" class="tool-btn pop-style-btn" title="切换填充/下划线">${SVG_UNDERLINE}</button>
-          <button type="button" class="btn-save">保存批注</button>
+          <button type="button" class="tool-btn pop-style-btn" title="${m.popStyleTitle}">${SVG_UNDERLINE}</button>
+          <button type="button" class="btn-save">${m.saveNote}</button>
         </div>
       </div>
     `;
@@ -293,7 +294,7 @@ export default defineContentScript({
       const dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'color-dot';
-      dot.title = c.name;
+      dot.title = m.colorNames[c.id];
       dot.style.backgroundColor = c.dot;
       dot.addEventListener('click', async () => {
         if (!activeEditId) return;

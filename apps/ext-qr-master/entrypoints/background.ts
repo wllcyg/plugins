@@ -1,5 +1,6 @@
 import { defineBackground } from 'wxt/sandbox';
 import { decodeImageUrl } from '../src/core/decoder';
+import { m } from '../src/locales';
 
 export default defineBackground(() => {
   // 安装时注册右键菜单
@@ -7,7 +8,7 @@ export default defineBackground(() => {
     chrome.contextMenus.removeAll(() => {
       chrome.contextMenus.create({
         id: 'qr-master-decode-image',
-        title: '🔍 识别图中二维码 (QR Master)',
+        title: m.contextMenuDecode,
         contexts: ['image']
       });
     });

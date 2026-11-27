@@ -22,9 +22,11 @@ import {
   ZoomIn
 } from 'lucide-vue-next';
 import {
+  comparePdfPages,
   compressPdfPages,
   convertImagesToPdf,
   exportMergedPdf,
+  exportNUpPdf,
   exportPagesAsImagesZip,
   exportPagesAsLongImage,
   exportSplitZip,
@@ -33,11 +35,14 @@ import {
   renderSinglePagePreview,
   triggerDownload,
   type ImageInputItem,
+  type PageAnnotation,
   type PdfPageItem,
   type WatermarkConfig
 } from '../../src/core/pdf-engine';
+import PdfCanvasEditor from '../../src/components/PdfCanvasEditor.vue';
+import { m } from '../../src/locales';
 
-type ActiveTab = 'organize' | 'convert' | 'watermark' | 'tools';
+type ActiveTab = 'organize' | 'edit' | 'convert' | 'tools';
 
 const activeTab = ref<ActiveTab>('organize');
 const sources = new Map<string, Uint8Array>();
@@ -75,10 +80,20 @@ const rangeInput = ref('');
 const draggedPageIdx = ref<number | null>(null);
 const extractedText = ref('');
 const compressLevel = ref<'low' | 'medium' | 'high'>('medium');
+const whitenScan = ref(false);
+const nUpLayout = ref<'2up' | '4up'>('4up');
+const nUpCutLines = ref(true);
+
+// 两份 PDF 视觉找茬对比
+const diffFileA = ref<{ name: string; bytes: Uint8Array } | null>(null);
+const diffFileB = ref<{ name: string; bytes: Uint8Array } | null>(null);
+const diffPageNum = ref(1);
+const diffResult = ref<{ diffDataUrl: string; totalPagesA: number; totalPagesB: number; diffPercent: number } | null>(null);
 
 // 高清预览弹窗 & 手写签名画板
 const previewModalUrl = ref('');
 const previewModalTitle = ref('');
+const annotations = ref<PageAnnotation[]>([]);
 const sigCanvasRef = ref<HTMLCanvasElement | null>(null);
 const sigColor = ref('#0f172a');
 const isDrawingSig = ref(false);
@@ -99,22 +114,22 @@ function setStatus(type: 'ok' | 'err', text: string) {
 async function handlePdfFiles(files: FileList | File[]) {
   const list = Array.from(files).filter((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
   if (list.length === 0) {
-    setStatus('err', '请选择有效的 .pdf 文件');
+    setStatus('err', m.msgInvalidPdf);
     return;
   }
 
   isBusy.value = true;
   try {
     for (const file of list) {
-      busyText.value = `正在本地解析 ${file.name}...`;
+      busyText.value = `${file.name}...`;
       const buf = new Uint8Array(await file.arrayBuffer());
       const parsed = await loadPdfFile(file.name, buf);
       sources.set(parsed.sourceId, parsed.bytes);
       pages.value.push(...parsed.pages);
     }
-    setStatus('ok', `已加载 ${list.length} 个 PDF，共 ${pages.value.length} 页（纯本地内存处理）`);
+    setStatus('ok', m.msgLoadedPdf(list.length, pages.value.length));
   } catch (err) {
-    setStatus('err', err instanceof Error ? `解析失败：${err.message}` : 'PDF 解析失败，请确认文件未损坏');
+    setStatus('err', err instanceof Error ? err.message : m.msgInvalidPdf);
   } finally {
     isBusy.value = false;
     busyText.value = '';
@@ -180,13 +195,13 @@ function applyPageRange() {
     }
   }
   if (targets.size === 0) {
-    setStatus('err', '请输入有效的页码范围，例如：1-3, 5, 8');
+    setStatus('err', m.msgRangeInvalid);
     return;
   }
   pages.value.forEach((p, idx) => {
     p.selected = targets.has(idx + 1);
   });
-  setStatus('ok', `已按范围勾选 ${targets.size} 页`);
+  setStatus('ok', m.msgRangeApplied(targets.size));
 }
 
 function onCardDragStart(idx: number) {
@@ -231,6 +246,7 @@ function removePage(idx: number) {
 
 function clearAllPdfs() {
   pages.value = [];
+  annotations.value = [];
   sources.clear();
 }
 
@@ -359,6 +375,7 @@ async function runExportMerged(withWatermark = false) {
 
     const bytes = await exportMergedPdf(sources, selectedPages.value, {
       watermark: wm,
+      annotations: annotations.value,
       stripMetadata: stripMetadata.value,
       addPageNumbers: addPageNumbers.value
     });
@@ -465,14 +482,61 @@ async function runCompressPdf() {
     return;
   }
   isBusy.value = true;
-  busyText.value = `正在本地压缩 ${selectedPages.value.length} 页 PDF...`;
+  busyText.value = whitenScan.value
+    ? `正在本地漂白去灰底并压缩 ${selectedPages.value.length} 页 PDF...`
+    : `正在本地压缩 ${selectedPages.value.length} 页 PDF...`;
   try {
-    const bytes = await compressPdfPages(sources, selectedPages.value, compressLevel.value);
+    const bytes = await compressPdfPages(sources, selectedPages.value, compressLevel.value, whitenScan.value);
     const sizeMb = (bytes.byteLength / (1024 * 1024)).toFixed(2);
-    triggerDownload(bytes, 'compressed-100free.pdf', 'application/pdf');
-    setStatus('ok', `压缩完成（输出体积 ${sizeMb} MB）`);
+    triggerDownload(bytes, whitenScan.value ? 'whitened-100free.pdf' : 'compressed-100free.pdf', 'application/pdf');
+    setStatus('ok', `处理完成（输出体积 ${sizeMb} MB）`);
   } catch (err) {
     setStatus('err', err instanceof Error ? err.message : '压缩失败');
+  } finally {
+    isBusy.value = false;
+    busyText.value = '';
+  }
+}
+
+async function runExportNUp() {
+  if (selectedPages.value.length === 0) {
+    setStatus('err', '请先加载并勾选需要拼版的 PDF 页面（如多张发票）');
+    return;
+  }
+  isBusy.value = true;
+  busyText.value = `正在生成 A4 ${nUpLayout.value === '4up' ? '4合1' : '2合1'} 拼版 PDF...`;
+  try {
+    const bytes = await exportNUpPdf(sources, selectedPages.value, nUpLayout.value, nUpCutLines.value);
+    triggerDownload(bytes, `nup-${nUpLayout.value}-100free.pdf`, 'application/pdf');
+    setStatus('ok', `已将 ${selectedPages.value.length} 页无损拼版导出为 A4 PDF`);
+  } catch (err) {
+    setStatus('err', err instanceof Error ? err.message : '拼版失败');
+  } finally {
+    isBusy.value = false;
+    busyText.value = '';
+  }
+}
+
+async function handleDiffFile(slot: 'A' | 'B', e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (slot === 'A') diffFileA.value = { name: file.name, bytes };
+  else diffFileB.value = { name: file.name, bytes };
+  if (diffFileA.value && diffFileB.value) {
+    diffPageNum.value = 1;
+    await runPdfDiff();
+  }
+}
+
+async function runPdfDiff() {
+  if (!diffFileA.value || !diffFileB.value) return;
+  isBusy.value = true;
+  busyText.value = `正在逐像素对比第 ${diffPageNum.value} 页差异...`;
+  try {
+    diffResult.value = await comparePdfPages(diffFileA.value.bytes, diffFileB.value.bytes, diffPageNum.value);
+  } catch (err) {
+    setStatus('err', err instanceof Error ? err.message : '对比失败');
   } finally {
     isBusy.value = false;
     busyText.value = '';
@@ -538,45 +602,45 @@ onUnmounted(() => {
         <div class="brand">
           <div class="logo-box"><FileText :size="20" /></div>
           <div>
-            <h1>本地隐私 PDF 工具箱</h1>
-            <p>100% 浏览器本地离线计算 · 文件绝不上传云端 · 无次数与大小限制</p>
+            <h1>{{ m.extTitle }}</h1>
+            <p>{{ m.extFullSub }}</p>
           </div>
         </div>
 
-        <nav class="tabs" aria-label="功能切换">
+        <nav class="tabs">
           <button
             type="button"
             :class="['tab-btn', { active: activeTab === 'organize' }]"
             @click="activeTab = 'organize'"
           >
-            <Layers :size="16" /> 合并与页面整理
+            <Layers :size="16" /> {{ m.tabOrganize }}
+          </button>
+          <button
+            type="button"
+            :class="['tab-btn', { active: activeTab === 'edit' }]"
+            @click="activeTab = 'edit'"
+          >
+            <Stamp :size="16" /> {{ m.tabEdit }}
           </button>
           <button
             type="button"
             :class="['tab-btn', { active: activeTab === 'convert' }]"
             @click="activeTab = 'convert'"
           >
-            <ImageIcon :size="16" /> 图片 ↔ PDF 互转
-          </button>
-          <button
-            type="button"
-            :class="['tab-btn', { active: activeTab === 'watermark' }]"
-            @click="activeTab = 'watermark'"
-          >
-            <Stamp :size="16" /> 水印与电子盖章
+            <ImageIcon :size="16" /> {{ m.tabConvert }}
           </button>
           <button
             type="button"
             :class="['tab-btn', { active: activeTab === 'tools' }]"
             @click="activeTab = 'tools'"
           >
-            <Type :size="16" /> 文本提取与瘦身
+            <Type :size="16" /> {{ m.tabTools }}
           </button>
         </nav>
 
         <div class="privacy-pill">
           <ShieldCheck :size="15" />
-          <span>离线安全模式</span>
+          <span>{{ m.offlinePill }}</span>
         </div>
       </div>
     </header>
@@ -602,15 +666,15 @@ onUnmounted(() => {
           @change="(e) => { const f = (e.target as HTMLInputElement).files; if (f) handlePdfFiles(f); }"
         />
         <div class="upload-info">
-          <strong>{{ pages.length > 0 ? `已加载 ${pages.length} 页（已选 ${selectedPages.length} 页）` : '拖入一个或多个 PDF 文件到页面任意位置' }}</strong>
-          <span>支持多份 PDF 合并、单页勾选拆分、旋转角度与拖拽/按钮重排</span>
+          <strong>{{ pages.length > 0 ? m.uploadLoadedTitle(pages.length, selectedPages.length) : m.uploadEmptyTitle }}</strong>
+          <span>{{ m.uploadSub }}</span>
         </div>
         <div class="upload-actions">
           <button type="button" class="btn primary" @click="fileInputRef?.click()">
-            <FilePlus2 :size="16" /> {{ pages.length > 0 ? '继续添加 PDF（合并）' : '选择本地 PDF 文件' }}
+            <FilePlus2 :size="16" /> {{ pages.length > 0 ? m.addMorePdf : m.chooseLocalPdf }}
           </button>
           <button v-if="pages.length > 0" type="button" class="btn secondary" @click="clearAllPdfs">
-            <Trash2 :size="15" /> 清空
+            <Trash2 :size="15" /> {{ m.clearBtn }}
           </button>
         </div>
       </section>
@@ -619,37 +683,37 @@ onUnmounted(() => {
       <template v-if="activeTab === 'organize'">
         <div v-if="pages.length > 0" class="toolbar">
           <div class="toolbar-left">
-            <button type="button" class="chip-btn" @click="toggleSelectAll('all')">全选</button>
-            <button type="button" class="chip-btn" @click="toggleSelectAll('none')">全不选</button>
-            <button type="button" class="chip-btn" @click="toggleSelectAll('odd')">奇数页</button>
-            <button type="button" class="chip-btn" @click="toggleSelectAll('even')">偶数页</button>
+            <button type="button" class="chip-btn" @click="toggleSelectAll('all')">{{ m.selectAll }}</button>
+            <button type="button" class="chip-btn" @click="toggleSelectAll('none')">{{ m.selectNone }}</button>
+            <button type="button" class="chip-btn" @click="toggleSelectAll('odd')">{{ m.selectOdd }}</button>
+            <button type="button" class="chip-btn" @click="toggleSelectAll('even')">{{ m.selectEven }}</button>
             <form class="range-form" @submit.prevent="applyPageRange">
-              <input v-model="rangeInput" type="text" placeholder="页码如 1-3, 5" />
-              <button type="submit" class="chip-btn">应用</button>
+              <input v-model="rangeInput" type="text" :placeholder="m.rangePlaceholder" />
+              <button type="submit" class="chip-btn">{{ m.applyRange }}</button>
             </form>
           </div>
           <div class="toolbar-right">
             <label class="inline-check">
               <input v-model="stripMetadata" type="checkbox" />
-              <span>抹除隐私元数据</span>
+              <span>{{ m.stripMeta }}</span>
             </label>
             <label class="inline-check">
               <input v-model="addPageNumbers" type="checkbox" />
-              <span>加页码 (1/N)</span>
+              <span>{{ m.addPageNum }}</span>
             </label>
             <button type="button" class="btn secondary" :disabled="isBusy" @click="runExportSplitZip">
-              <FileArchive :size="16" /> 拆分为单页 ZIP
+              <FileArchive :size="16" /> {{ m.splitZipBtn }}
             </button>
             <button type="button" class="btn primary" :disabled="isBusy" @click="runExportMerged(false)">
-              <Download :size="16" /> 导出选中页为 PDF（{{ selectedPages.length }} 页）
+              <Download :size="16" /> {{ m.exportMergedBtn(selectedPages.length) }}
             </button>
           </div>
         </div>
 
         <div v-if="pages.length === 0" class="empty-drop" @click="fileInputRef?.click()">
           <Upload :size="36" />
-          <h2>把 PDF 拖到这里，或点击选择文件</h2>
-          <p>支持同时选择多个 PDF 进行合并；所有操作均在本地浏览器完成，零上传。</p>
+          <h2>{{ m.emptyDropTitle }}</h2>
+          <p>{{ m.emptyDropDesc }}</p>
         </div>
 
         <div v-else class="pages-grid">
@@ -698,47 +762,64 @@ onUnmounted(() => {
         </div>
       </template>
 
-      <!-- Tab 2: 图片 <-> PDF 互转 -->
+      <!-- Tab 2: 所见即所得填表 / 签章 / 打码 -->
+      <template v-else-if="activeTab === 'edit'">
+        <div v-if="pages.length === 0" class="empty-drop" @click="fileInputRef?.click()">
+          <Upload :size="36" />
+          <h2>{{ m.editEmptyTitle }}</h2>
+          <p>{{ m.editEmptyDesc }}</p>
+        </div>
+        <PdfCanvasEditor
+          v-else
+          v-model:annotations="annotations"
+          :pages="selectedPages.length > 0 ? selectedPages : pages"
+          :sources="sources"
+          :is-busy="isBusy"
+          @export-pdf="runExportMerged(false)"
+        />
+      </template>
+
+      <!-- Tab 3: 图片 <-> PDF 互转 -->
       <div v-else-if="activeTab === 'convert'" class="convert-grid">
         <section class="panel-card">
           <div class="panel-head">
-            <h2>1. PDF 导出为高清图片（PNG / JPG）</h2>
-            <p>将已加载并勾选的 PDF 页面渲染为高清图片并打包 ZIP 下载。</p>
+            <h2>{{ m.pdfToImgTitle }}</h2>
+            <p>{{ m.pdfToImgDesc }}</p>
           </div>
           <div class="form-grid">
             <label>
-              <span>清晰度倍率</span>
+              <span>{{ m.scaleLabel }}</span>
               <select v-model.number="imgScale">
-                <option :value="1">1x 标准（72 DPI）</option>
-                <option :value="2">2x 高清（144 DPI 推荐）</option>
-                <option :value="3">3x 超清打印级（216 DPI）</option>
+                <option :value="1">{{ m.scale1 }}</option>
+                <option :value="2">{{ m.scale2 }}</option>
+                <option :value="3">{{ m.scale3 }}</option>
               </select>
             </label>
             <label>
-              <span>输出格式</span>
+              <span>{{ m.formatLabel }}</span>
               <select v-model="imgFormat">
-                <option value="png">PNG（无损清晰）</option>
-                <option value="jpeg">JPG（体积更小）</option>
+                <option value="png">{{ m.formatPng }}</option>
+                <option value="jpeg">{{ m.formatJpg }}</option>
               </select>
             </label>
           </div>
           <div class="panel-actions">
             <button type="button" class="btn secondary" @click="fileInputRef?.click()">
-              <FilePlus2 :size="15" /> 选择/更换 PDF（当前 {{ selectedPages.length }} 页）
+              <FilePlus2 :size="15" /> {{ m.choosePdfCount(selectedPages.length) }}
             </button>
             <button type="button" class="btn primary" :disabled="isBusy || selectedPages.length === 0" @click="runExportImages">
-              <Download :size="16" /> 导出图片 ZIP
+              <Download :size="16" /> {{ m.exportImgZip }}
             </button>
             <button type="button" class="btn secondary" :disabled="isBusy || selectedPages.length === 0" @click="runExportLongImage">
-              <ImageIcon :size="16" /> 拼接导出为竖向长图
+              <ImageIcon :size="16" /> {{ m.exportLongImg }}
             </button>
           </div>
         </section>
 
         <section class="panel-card">
           <div class="panel-head">
-            <h2>2. 多张图片合成为单个 PDF</h2>
-            <p>支持 PNG、JPG、WebP，纯本地合成无水印。</p>
+            <h2>{{ m.imgToPdfTitle }}</h2>
+            <p>{{ m.imgToPdfDesc }}</p>
           </div>
           <input
             ref="imgInputRef"
@@ -750,15 +831,15 @@ onUnmounted(() => {
           />
           <div class="form-grid">
             <label>
-              <span>页面排版尺寸</span>
+              <span>{{ m.pageSizeLabel }}</span>
               <select v-model="pdfPageMode">
-                <option value="a4">统一 A4 纸张（自动居中留白）</option>
-                <option value="fit">按每张图片原尺寸自适应</option>
+                <option value="a4">{{ m.pageSizeA4 }}</option>
+                <option value="fit">{{ m.pageSizeFit }}</option>
               </select>
             </label>
             <div class="img-upload-btn-wrap">
               <button type="button" class="btn secondary" @click="imgInputRef?.click()">
-                <Upload :size="15" /> 添加图片（已选 {{ imageInputs.length }} 张）
+                <Upload :size="15" /> {{ m.addImagesCount(imageInputs.length) }}
               </button>
             </div>
           </div>
@@ -777,158 +858,120 @@ onUnmounted(() => {
 
           <div class="panel-actions">
             <button type="button" class="btn primary" :disabled="isBusy || imageInputs.length === 0" @click="runImagesToPdf">
-              <Download :size="16" /> 合成并下载 PDF
+              <Download :size="16" /> {{ m.mergeImgBtn }}
             </button>
           </div>
         </section>
       </div>
 
-      <!-- Tab 3: 水印与电子盖章 -->
-      <section v-else-if="activeTab === 'watermark'" class="panel-card watermark-panel">
-        <div class="panel-head">
-          <h2>本地文字水印 / 透明电子签名盖章</h2>
-          <p>适合简历、合同、身份证复印件加注“仅限某某用途”或盖章，全程离线不泄密。</p>
-        </div>
-
-        <div class="wm-mode-switch">
-          <button type="button" :class="['chip-btn', { active: wmMode === 'text' }]" @click="wmMode = 'text'">
-            文字水印
-          </button>
-          <button type="button" :class="['chip-btn', { active: wmMode === 'draw' }]" @click="wmMode = 'draw'">
-            手写电子签名
-          </button>
-          <button type="button" :class="['chip-btn', { active: wmMode === 'image' }]" @click="wmMode = 'image'">
-            上传印章图片
-          </button>
-        </div>
-
-        <div v-if="wmMode === 'draw'" class="sig-pad-wrap">
-          <div class="sig-toolbar">
-            <span>请在下方空白区手写签名（导出时自动生成透明背景 PNG）：</span>
-            <div class="sig-controls">
-              <input v-model="sigColor" type="color" title="签名笔迹颜色" />
-              <button type="button" class="chip-btn" @click="clearSigCanvas">清空重签</button>
-            </div>
-          </div>
-          <canvas
-            ref="sigCanvasRef"
-            width="520"
-            height="180"
-            class="sig-canvas"
-            @pointerdown="startSigDraw"
-            @pointermove="moveSigDraw"
-            @pointerup="endSigDraw"
-            @pointercancel="endSigDraw"
-          />
-          <div class="form-grid" style="margin-top: 12px">
-            <label>
-              <span>签名宽度占比 ({{ Math.round(wmStampScale * 100) }}%)</span>
-              <input v-model.number="wmStampScale" type="range" min="0.1" max="0.5" step="0.02" />
-            </label>
-          </div>
-        </div>
-
-        <div v-else-if="wmMode === 'text'" class="form-grid">
-          <label>
-            <span>水印文字（支持中英文）</span>
-            <input v-model="wmText" type="text" maxlength="60" />
-          </label>
-          <label>
-            <span>文字颜色</span>
-            <input v-model="wmColor" type="color" />
-          </label>
-          <label>
-            <span>字号 ({{ wmFontSize }}px)</span>
-            <input v-model.number="wmFontSize" type="range" min="14" max="64" />
-          </label>
-          <label>
-            <span>旋转角度 ({{ wmAngle }}°)</span>
-            <input v-model.number="wmAngle" type="range" min="-60" max="60" />
-          </label>
-        </div>
-
-        <div v-else class="form-grid">
-          <input ref="stampInputRef" type="file" accept="image/png,image/jpeg" hidden @change="handleStampFile" />
-          <div>
-            <button type="button" class="btn secondary" @click="stampInputRef?.click()">
-              <Upload :size="15" /> 上传透明 PNG 签名 / 印章图
-            </button>
-            <img v-if="wmStampPreview" :src="wmStampPreview" alt="印章预览" class="stamp-preview" />
-          </div>
-          <label>
-            <span>印章宽度占比 ({{ Math.round(wmStampScale * 100) }}%)</span>
-            <input v-model.number="wmStampScale" type="range" min="0.1" max="0.5" step="0.02" />
-          </label>
-        </div>
-
-        <div class="form-grid">
-          <label>
-            <span>位置分布</span>
-            <select v-model="wmPosition">
-              <option value="tile">全页斜向平铺（防盗用推荐）</option>
-              <option value="center">页面正中</option>
-              <option value="bottom-right">右下角（适合签名/盖章）</option>
-              <option value="top-left">左上角</option>
-            </select>
-          </label>
-          <label>
-            <span>不透明度 ({{ Math.round(wmOpacity * 100) }}%)</span>
-            <input v-model.number="wmOpacity" type="range" min="0.1" max="1" step="0.05" />
-          </label>
-        </div>
-
-        <div class="panel-actions">
-          <button type="button" class="btn primary" :disabled="isBusy || selectedPages.length === 0" @click="runExportMerged(true)">
-            <Download :size="16" /> 应用到已选 {{ selectedPages.length }} 页并导出 PDF
-          </button>
-        </div>
-      </section>
-
       <!-- Tab 4: 文本提取与瘦身压缩 -->
       <div v-else class="convert-grid">
         <section class="panel-card">
           <div class="panel-head">
-            <h2>1. 一键提取 PDF 纯文本</h2>
-            <p>纯本地解析已选 {{ selectedPages.length }} 页文字内容，支持一键复制或导出 .txt。</p>
+            <h2>{{ m.extractTextTitle }}</h2>
+            <p>{{ m.extractTextDesc(selectedPages.length) }}</p>
           </div>
           <div class="panel-actions" style="margin-bottom: 14px">
             <button type="button" class="btn primary" :disabled="isBusy || selectedPages.length === 0" @click="runExtractText">
-              <Type :size="16" /> 提取已选页文字
+              <Type :size="16" /> {{ m.extractTextBtn }}
             </button>
             <button type="button" class="btn secondary" :disabled="!extractedText" @click="copyExtractedText">
-              <Copy :size="15" /> 一键复制
+              <Copy :size="15" /> {{ m.copyBtn }}
             </button>
             <button type="button" class="btn secondary" :disabled="!extractedText" @click="downloadExtractedText">
-              <Download :size="15" /> 导出 TXT
+              <Download :size="15" /> {{ m.exportTxtBtn }}
             </button>
           </div>
           <textarea
             v-model="extractedText"
             class="extracted-box"
             rows="10"
-            placeholder="点击上方「提取已选页文字」后，提取结果将显示在这里..."
+            :placeholder="m.extractPlaceholder"
           />
         </section>
 
         <section class="panel-card">
           <div class="panel-head">
-            <h2>2. 扫描件 PDF 本地瘦身压缩</h2>
-            <p>适合手机拍照或扫描版大体积 PDF 本地减重，压缩后便于邮件/微信发送。</p>
+            <h2>{{ m.compressTitle }}</h2>
+            <p>{{ m.compressDesc }}</p>
           </div>
           <div class="form-grid">
             <label>
-              <span>压缩强度</span>
+              <span>{{ m.compressLevel }}</span>
               <select v-model="compressLevel">
-                <option value="low">极限小体积（适合微信/邮件快速发送）</option>
-                <option value="medium">均衡推荐（清晰度与体积兼顾）</option>
-                <option value="high">高清轻压缩（保留高细节）</option>
+                <option value="low">{{ m.compressLow }}</option>
+                <option value="medium">{{ m.compressMed }}</option>
+                <option value="high">{{ m.compressHigh }}</option>
               </select>
+            </label>
+            <label class="inline-check" style="align-self: end; padding-bottom: 10px">
+              <input v-model="whitenScan" type="checkbox" />
+              <span>{{ m.whitenLabel }}</span>
             </label>
           </div>
           <div class="panel-actions">
             <button type="button" class="btn primary" :disabled="isBusy || selectedPages.length === 0" @click="runCompressPdf">
-              <FileDown :size="16" /> 本地压缩已选 {{ selectedPages.length }} 页并下载
+              <FileDown :size="16" /> {{ m.compressBtn(selectedPages.length) }}
             </button>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-head">
+            <h2>{{ m.nUpTitle }}</h2>
+            <p>{{ m.nUpDesc }}</p>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>{{ m.nUpLayout }}</span>
+              <select v-model="nUpLayout">
+                <option value="4up">{{ m.nUp4 }}</option>
+                <option value="2up">{{ m.nUp2 }}</option>
+              </select>
+            </label>
+            <label class="inline-check" style="align-self: end; padding-bottom: 10px">
+              <input v-model="nUpCutLines" type="checkbox" />
+              <span>{{ m.nUpCut }}</span>
+            </label>
+          </div>
+          <div class="panel-actions">
+            <button type="button" class="btn primary" :disabled="isBusy || selectedPages.length === 0" @click="runExportNUp">
+              <Layers :size="16" /> {{ m.nUpBtn(selectedPages.length) }}
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-head">
+            <h2>{{ m.diffTitle }}</h2>
+            <p>{{ m.diffDesc }}</p>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>{{ m.diffOld }}</span>
+              <input type="file" accept=".pdf,application/pdf" @change="handleDiffFile('A', $event)" />
+            </label>
+            <label>
+              <span>{{ m.diffNew }}</span>
+              <input type="file" accept=".pdf,application/pdf" @change="handleDiffFile('B', $event)" />
+            </label>
+          </div>
+          <div v-if="diffResult" class="diff-result-box">
+            <div class="diff-bar">
+              <span>{{ m.diffStatus(diffPageNum, diffResult.diffPercent) }}</span>
+              <div class="diff-nav">
+                <button type="button" class="chip-btn" :disabled="diffPageNum <= 1" @click="diffPageNum--; runPdfDiff()">{{ m.prevPage }}</button>
+                <button
+                  type="button"
+                  class="chip-btn"
+                  :disabled="diffPageNum >= Math.max(diffResult.totalPagesA, diffResult.totalPagesB)"
+                  @click="diffPageNum++; runPdfDiff()"
+                >
+                  {{ m.nextPage }}
+                </button>
+              </div>
+            </div>
+            <img :src="diffResult.diffDataUrl" alt="PDF Diff" class="diff-img" />
           </div>
         </section>
       </div>
@@ -949,7 +992,7 @@ onUnmounted(() => {
     <div v-if="isDragging" class="drag-overlay">
       <div class="drag-box">
         <Upload :size="40" />
-        <p>松开鼠标即可在本地导入文件</p>
+        <p>{{ m.dragOverlay }}</p>
       </div>
     </div>
   </div>
@@ -1267,6 +1310,32 @@ onUnmounted(() => {
   max-width: 100%;
   height: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.diff-result-box {
+  margin-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+.diff-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.diff-bar strong {
+  color: #dc2626;
+}
+.diff-nav {
+  display: flex;
+  gap: 6px;
+}
+.diff-img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
 }
 .chip-btn {
   padding: 6px 12px;

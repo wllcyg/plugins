@@ -1,4 +1,5 @@
 import { defineBackground } from 'wxt/sandbox';
+import { m } from '../src/locales';
 
 const MENU_OPEN_PDF = 'open-in-pdf-toolkit';
 
@@ -12,7 +13,7 @@ export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
       id: MENU_OPEN_PDF,
-      title: '在本地隐私 PDF 工具箱中打开',
+      title: m.contextMenuTitle,
       contexts: ['link'],
       targetUrlPatterns: ['*://*/*.pdf*', '*://*/*.PDF*']
     });

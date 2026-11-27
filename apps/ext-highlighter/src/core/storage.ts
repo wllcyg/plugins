@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS, HighlightItem, HighlighterSettings } from '../types';
+import { m } from '../locales';
 
 const STORAGE_HIGHLIGHTS_KEY = 'hl_items_v1';
 const STORAGE_SETTINGS_KEY = 'hl_settings_v1';
@@ -76,7 +77,7 @@ export async function saveSettings(partial: Partial<HighlighterSettings>): Promi
 /**
  * 将一批高亮笔记导出为纯净 Markdown（按网页标题自动分组）
  */
-export function exportHighlightsToMarkdown(items: HighlightItem[], title = '网页荧光笔学习笔记'): string {
+export function exportHighlightsToMarkdown(items: HighlightItem[], title = m.defaultMdTitle): string {
   const grouped = new Map<string, { pageTitle: string; url: string; list: HighlightItem[] }>();
   for (const item of items) {
     const existing = grouped.get(item.url);
@@ -89,7 +90,7 @@ export function exportHighlightsToMarkdown(items: HighlightItem[], title = '网�
 
   const lines: string[] = [
     `# ${title}`,
-    `> 导出时间：${new Date().toLocaleString()} · 共 ${items.length} 条重点摘录`,
+    m.mdExportMeta(new Date().toLocaleString(), items.length),
     ''
   ];
 
@@ -99,10 +100,10 @@ export function exportHighlightsToMarkdown(items: HighlightItem[], title = '网�
     for (const item of sorted) {
       lines.push(`- > ${item.text.replace(/\n+/g, '\n  > ')}`);
       if (item.note?.trim()) {
-        lines.push(`  - **批注**：${item.note.trim()}`);
+        lines.push(`  - ${m.mdNotePrefix}${item.note.trim()}`);
       }
       if (item.tags?.length) {
-        lines.push(`  - **标签**：${item.tags.map((t) => `#${t}`).join(' ')}`);
+        lines.push(`  - ${m.mdTagsPrefix}${item.tags.map((t) => `#${t}`).join(' ')}`);
       }
       lines.push('');
     }

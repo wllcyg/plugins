@@ -1,4 +1,5 @@
 import { extractElementStyles } from './extractor';
+import { m } from '../locales';
 import { StyleSummary } from '../types';
 
 export class InspectorOverlay {
@@ -265,34 +266,34 @@ export class InspectorOverlay {
 
       <div class="props-list">
         <div class="prop-row">
-          <span class="prop-label">字体 / 大小</span>
+          <span class="prop-label">${m.propFont}</span>
           <span class="prop-val">${s.fontSize} (${s.fontWeight}) · ${s.fontFamily}</span>
         </div>
         <div class="prop-row">
-          <span class="prop-label">字色 / 背景</span>
+          <span class="prop-label">${m.propColorBg}</span>
           <span class="prop-val">
             <span class="color-dot" style="background:${s.color}"></span>
             <span class="color-dot" style="background:${s.backgroundColor}"></span>
           </span>
         </div>
         <div class="prop-row">
-          <span class="prop-label">内边距 / 圆角</span>
+          <span class="prop-label">${m.propPaddingRadius}</span>
           <span class="prop-val">${s.padding} · ${s.borderRadius}</span>
         </div>
         ${s.border !== 'none' ? `
         <div class="prop-row">
-          <span class="prop-label">边框 (Border)</span>
+          <span class="prop-label">${m.propBorder}</span>
           <span class="prop-val">${s.border}</span>
         </div>` : ''}
       </div>
 
       <div class="btn-row">
-        <button class="action-btn btn-tw" id="copy-tw">复制 Tailwind 类</button>
-        <button class="action-btn btn-css" id="copy-css">复制纯 CSS</button>
+        <button class="action-btn btn-tw" id="copy-tw">${m.copyTailwindBtn}</button>
+        <button class="action-btn btn-css" id="copy-css">${m.copyCssBtn}</button>
       </div>
 
       <div class="frozen-hint">
-        ${this.isFrozen ? '🔒 已锁定卡片 (按空格解锁 / Esc 退出)' : '💡 按 Space 锁定此卡片以自由移入操作'}
+        ${this.isFrozen ? m.hintFrozen : m.hintUnfrozen}
       </div>
     `;
 
@@ -303,15 +304,15 @@ export class InspectorOverlay {
     twBtn?.addEventListener('click', async (e) => {
       e.stopPropagation();
       await navigator.clipboard.writeText(s.tailwindClasses || '/* no tailwind classes */');
-      twBtn.textContent = '已复制 Tailwind！';
-      setTimeout(() => { if (twBtn) twBtn.textContent = '复制 Tailwind 类'; }, 1200);
+      twBtn.textContent = m.copiedTailwind;
+      setTimeout(() => { if (twBtn) twBtn.textContent = m.copyTailwindBtn; }, 1200);
     });
 
     cssBtn?.addEventListener('click', async (e) => {
       e.stopPropagation();
       await navigator.clipboard.writeText(s.rawCss || '/* no custom styles */');
-      cssBtn.textContent = '已复制 CSS！';
-      setTimeout(() => { if (cssBtn) cssBtn.textContent = '复制纯 CSS'; }, 1200);
+      cssBtn.textContent = m.copiedCss;
+      setTimeout(() => { if (cssBtn) cssBtn.textContent = m.copyCssBtn; }, 1200);
     });
   }
 

@@ -1,10 +1,11 @@
 import { defineBackground } from 'wxt/sandbox';
+import { m } from '../src/locales';
 
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
       id: '100free-hl-selection',
-      title: '🖍️ 荧光笔高亮选中文字',
+      title: m.contextMenuHighlight,
       contexts: ['selection']
     });
   });

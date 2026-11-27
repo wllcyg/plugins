@@ -1,3 +1,5 @@
+import { m } from '../src/locales';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
@@ -36,7 +38,7 @@ export default defineContentScript({
         const dot = existing.shadowRoot?.getElementById('rec-dot');
         const pauseBtn = existing.shadowRoot?.getElementById('pause-btn');
         if (dot) dot.style.background = isPaused ? '#f59e0b' : '#ef4444';
-        if (pauseBtn) pauseBtn.textContent = isPaused ? '继续' : '暂停';
+        if (pauseBtn) pauseBtn.textContent = isPaused ? m.pillResume : m.pillPause;
         return;
       }
       const container = document.documentElement || document.body;
@@ -67,9 +69,9 @@ export default defineContentScript({
         </style>
         <div class="pill">
           <span id="rec-dot" class="dot"></span>
-          <button id="mark-btn" title="在当前时间打一个重点放大标记">标重点</button>
-          <button id="pause-btn">${isPaused ? '继续' : '暂停'}</button>
-          <button id="stop-btn" class="stop">停止</button>
+          <button id="mark-btn" title="${m.pillMarkTooltip}">${m.pillMark}</button>
+          <button id="pause-btn">${isPaused ? m.pillResume : m.pillPause}</button>
+          <button id="stop-btn" class="stop">${m.pillStop}</button>
         </div>
       `;
 

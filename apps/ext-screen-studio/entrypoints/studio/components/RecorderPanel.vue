@@ -13,6 +13,8 @@ import {
   Play,
   ArrowLeft
 } from 'lucide-vue-next';
+import { isZhLocale } from '@100free/core';
+import { m } from '../../../src/locales';
 import {
   DEFAULT_STYLE_CONFIG,
   type ClickEvent,
@@ -271,7 +273,7 @@ const startCapture = async () => {
   } catch (err) {
     cleanupStreams();
     errorMessage.value =
-      err instanceof Error ? err.message : '未获取到屏幕共享权限，请重试';
+      err instanceof Error ? err.message : m.errNoScreenPermission;
   }
 };
 
@@ -329,14 +331,14 @@ const stopCapture = async () => {
   const prefs = await loadUserPreferences();
   const id = crypto.randomUUID();
   const zoomSegments = generateAutoZoomSegments(clickEvents, durationMs);
-  const nowStr = new Date().toLocaleTimeString('zh-CN', {
+  const nowStr = new Date().toLocaleTimeString(isZhLocale() ? 'zh-CN' : 'en-US', {
     hour: '2-digit',
     minute: '2-digit'
   });
 
   const project: RecordingProject = {
     id,
-    title: `跟焦录屏 ${nowStr}`,
+    title: m.defaultRecordingTitle(nowStr),
     createdAt: Date.now(),
     durationMs,
     trimStartMs: 0,
@@ -365,33 +367,33 @@ const stopCapture = async () => {
       <div class="top-row">
         <button class="back-btn" :disabled="isRecording" @click="emit('back')">
           <ArrowLeft :size="16" />
-          <span>工程库</span>
+          <span>{{ m.backToLibrary }}</span>
         </button>
-        <span class="badge">纯本地无限时长 · 自动采集鼠标跟焦</span>
+        <span class="badge">{{ m.recorderBadge }}</span>
       </div>
 
       <div class="hero">
         <div class="hero-icon" :class="{ pulsing: isRecording }">
           <Video :size="28" />
         </div>
-        <h2>{{ isRecording ? (isPaused ? '录制已暂停' : '正在录制中...') : '准备电影级跟焦录屏' }}</h2>
+        <h2>{{ isRecording ? (isPaused ? m.recordingPaused : m.recordingActive) : m.recorderReadyTitle }}</h2>
         <p v-if="!isRecording">
-          点击开始后，选择要录制的「标签页 / 窗口 / 整个屏幕」。<br />
-          切换到目标网页操作，系统会自动记录您的鼠标轨迹与点击焦点。
+          {{ m.recorderDescLine1 }}<br />
+          {{ m.recorderDescLine2 }}
         </p>
         <p v-else class="recording-stats">
           <span class="timer">{{ formatTimer(elapsedMs) }}</span>
           <span class="divider">·</span>
           <span class="clicks">
             <MousePointerClick :size="15" />
-            已捕获 {{ clickCount }} 次点击焦点
+            {{ m.capturedClicks(clickCount) }}
           </span>
         </p>
       </div>
 
       <div v-if="countdownNum > 0" class="countdown-box">
         <span class="countdown-num">{{ countdownNum }}</span>
-        <p>请切回要录制的网页窗口，即将开始录制...</p>
+        <p>{{ m.countdownHint }}</p>
       </div>
 
       <div v-else-if="!isRecording" class="options-grid">
@@ -401,7 +403,7 @@ const stopCapture = async () => {
           @click="withAudio = !withAudio"
         >
           <component :is="withAudio ? Mic : MicOff" :size="18" />
-          <span>麦克风降噪：{{ withAudio ? '开启' : '关闭' }}</span>
+          <span>{{ m.micLabel(withAudio) }}</span>
         </button>
 
         <button
@@ -410,12 +412,12 @@ const stopCapture = async () => {
           @click="withCamera = !withCamera"
         >
           <component :is="withCamera ? Camera : CameraOff" :size="18" />
-          <span>摄像头画中画：{{ withCamera ? '开启' : '关闭' }}</span>
+          <span>{{ m.camLabel(withCamera) }}</span>
         </button>
 
         <label class="countdown-toggle">
           <input v-model="withCountdown" type="checkbox" />
-          <span>开启 3 秒开场倒计时（留出切窗时间）</span>
+          <span>{{ m.countdownToggle }}</span>
         </label>
       </div>
 
@@ -438,17 +440,17 @@ const stopCapture = async () => {
           @click="startCapture"
         >
           <Disc :size="17" />
-          <span>选择屏幕并开始录制</span>
+          <span>{{ m.chooseScreenAndRecord }}</span>
         </button>
 
         <div v-else class="recording-actions">
           <button class="pause-btn" :disabled="isSaving" @click="togglePause">
             <component :is="isPaused ? Play : Pause" :size="16" />
-            <span>{{ isPaused ? '继续录制' : '暂停' }}</span>
+            <span>{{ isPaused ? m.resumeBtn : m.pauseBtn }}</span>
           </button>
           <button class="stop-btn" :disabled="isSaving" @click="stopCapture">
             <Square :size="16" />
-            <span>{{ isSaving ? '正在生成跟焦工程...' : '停止并进入剪辑台' }}</span>
+            <span>{{ isSaving ? m.savingProject : m.stopAndEditBtn }}</span>
           </button>
         </div>
       </div>

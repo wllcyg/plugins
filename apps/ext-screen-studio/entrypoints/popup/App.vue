@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue';
 import { Video, Mic, Camera, FolderOpen, Disc, Clock } from 'lucide-vue-next';
 import { AppFooterLink } from '@100free/ui';
+import { m } from '../../src/locales';
 import { listProjects } from '../../src/utils/project-store';
 import { loadUserPreferences, saveUserPreferences } from '../../src/utils/user-prefs';
 import type { RecordingProject } from '../../src/types/recording';
@@ -64,38 +65,38 @@ const formatDuration = (ms: number) => {
           <Video :size="18" />
         </div>
         <div>
-          <h1>屏幕录制</h1>
-          <p>自动跟焦 · 无限时长 · 纯本地无水印</p>
+          <h1>{{ m.extTitle }}</h1>
+          <p>{{ m.extSub }}</p>
         </div>
       </div>
-      <span class="free-tag">100% 免费</span>
+      <span class="free-tag">{{ m.freeTag }}</span>
     </header>
 
     <section class="toggles">
       <label class="toggle-item" :class="{ active: enableAudio }">
         <input v-model="enableAudio" type="checkbox" />
         <Mic :size="16" />
-        <span>录制麦克风</span>
-        <span class="pill">{{ enableAudio ? '开启' : '关闭' }}</span>
+        <span>{{ m.recordMic }}</span>
+        <span class="pill">{{ enableAudio ? m.stateOn : m.stateOff }}</span>
       </label>
 
       <label class="toggle-item" :class="{ active: enableCamera }">
         <input v-model="enableCamera" type="checkbox" />
         <Camera :size="16" />
-        <span>摄像头画中画</span>
-        <span class="pill">{{ enableCamera ? '开启' : '关闭' }}</span>
+        <span>{{ m.recordCameraPip }}</span>
+        <span class="pill">{{ enableCamera ? m.stateOn : m.stateOff }}</span>
       </label>
     </section>
 
     <button class="primary-btn" @click="startRecording">
       <Disc :size="16" />
-      <span>开始录制屏幕 / 标签页</span>
+      <span>{{ m.startRecordingBtn }}</span>
     </button>
 
     <section v-if="recentProjects.length" class="recent-box">
       <div class="recent-head">
-        <span>最近录制</span>
-        <button class="link-btn" @click="openStudio()">全部工程</button>
+        <span>{{ m.recentRecordings }}</span>
+        <button class="link-btn" @click="openStudio()">{{ m.allProjects }}</button>
       </div>
       <div class="recent-list">
         <button
@@ -116,7 +117,7 @@ const formatDuration = (ms: number) => {
     <footer class="footer">
       <button class="ghost-btn" @click="openStudio()">
         <FolderOpen :size="15" />
-        <span>打开 Studio 剪辑工作台</span>
+        <span>{{ m.openStudioBtn }}</span>
       </button>
       <AppFooterLink plugin-id="screen-studio" theme="dark" />
     </footer>

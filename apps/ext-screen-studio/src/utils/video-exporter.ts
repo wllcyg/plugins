@@ -1,4 +1,5 @@
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+import { m } from '../locales';
 import type { RecordingProject } from '../types/recording';
 import { renderStudioFrame, resolveOutputSize } from './canvas-renderer';
 import {
@@ -182,7 +183,7 @@ async function exportWithWebCodecs(
   for (let i = 0; i < totalFrames; i++) {
     if (options.signal?.aborted) {
       encoder.close();
-      throw new Error('已取消导出');
+      throw new Error(m.errExportCancelled);
     }
 
     const outTimeMs = (i / fps) * 1000;
@@ -313,7 +314,7 @@ async function exportWithMediaRecorder(
       video.pause();
       cameraVideo?.pause();
       cleanup();
-      reject(new Error('已取消导出'));
+      reject(new Error(m.errExportCancelled));
     };
 
     options.signal?.addEventListener('abort', onAbort, { once: true });
@@ -329,7 +330,7 @@ async function exportWithMediaRecorder(
       if (stopped) return;
       stopped = true;
       cleanup();
-      reject(new Error('视频编码导出失败'));
+      reject(new Error(m.errVideoEncodeFailed));
     };
 
     video.currentTime = trimStartMs / 1000;
@@ -405,7 +406,7 @@ export async function exportStudioVideo(
   try {
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error('无法加载录制视频'));
+      video.onerror = () => reject(new Error(m.errLoadRecordedVideo));
     });
     if (cameraVideo) {
       await new Promise<void>((resolve) => {
@@ -448,7 +449,7 @@ export async function exportStudioVideo(
           options
         );
       } catch (err) {
-        if (err instanceof Error && err.message === '已取消导出') throw err;
+        if (err instanceof Error && err.message === m.errExportCancelled) throw err;
       }
     }
 

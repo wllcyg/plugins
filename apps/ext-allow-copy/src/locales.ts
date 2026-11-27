@@ -1,0 +1,62 @@
+import { createMessages } from '@100free/core';
+
+export const m = createMessages({
+  zh: {
+    extTitle: '网页超级自由复制',
+    extSub: '解禁右键 · 穿透防选 · 框选极速提取',
+    siteStatusLabel: '当前站点保护状态',
+    specialPage: '系统/特殊页面',
+    noUrl: '未获取到网址',
+    noNeedUnblock: '无需解禁',
+    snippingTitle: '框选截取文字 (穿透 Canvas)',
+    snippingDesc: '遇到无法划词的图文或文库，直接拖拽框选提取',
+    floatBtnTitle: '划词快捷复制小胶囊',
+    floatBtnDesc: '选中文本时鼠标旁自动浮现一键复制按钮',
+    strictModeTitle: '强力穿透模式 (Strict Mode)',
+    strictModeDesc: '攻破百度文库、PDF 隐藏文字层与防清空选区',
+    testCardTitle: '剪贴板功能速测',
+    testSampleText: '这是一段用于测试复制的文本，选我试试看！',
+    testCopied: '已复制成功 ✓',
+    testCopyBtn: '复制测试',
+    footerNote: '100-Free 开源生产力计划 · 纯净无后台 · 100% 本地运算',
+    floatCopy: '复制',
+    floatCopied: '已复制!',
+    snippingTip: '按住鼠标左键框选文字区域，松开即刻提取 · 按 ESC 取消',
+    snippingResultTitle: (hasText: boolean, len: number) =>
+      `框选文字提取结果 (${hasText ? `${len} 字` : '未提取到文本'})`,
+    snippingEmptyTitle: '未在框选范围内检测到底层文本节点。',
+    snippingEmptyHint: '该区域可能为纯位图图片，请尝试直接右键或截图保存。',
+    closeBtn: '关闭',
+    copyAndCloseBtn: '一键复制并关闭',
+    copiedFeedback: '已复制！'
+  },
+  en: {
+    extTitle: 'Super Free Copy',
+    extSub: 'Enable Right-Click · Unblock Selection · Area Snip',
+    siteStatusLabel: 'Current Site Protection',
+    specialPage: 'System / Special Page',
+    noUrl: 'URL Unavailable',
+    noNeedUnblock: 'Not Needed',
+    snippingTitle: 'Area Text Snipping (Canvas Bypass)',
+    snippingDesc: 'Drag to extract underlying text even when selection is blocked',
+    floatBtnTitle: 'Floating Quick-Copy Pill',
+    floatBtnDesc: 'Show a one-click copy pill next to selected text',
+    strictModeTitle: 'Strict Mode (Deep Bypass)',
+    strictModeDesc: 'Reveal hidden PDF text layers & block selection-clear scripts',
+    testCardTitle: 'Clipboard Quick Test',
+    testSampleText: 'Select or copy this sample text to test clipboard access!',
+    testCopied: 'Copied ✓',
+    testCopyBtn: 'Test Copy',
+    footerNote: '100-Free Open Source · No Background Bloat · 100% Local',
+    floatCopy: 'Copy',
+    floatCopied: 'Copied!',
+    snippingTip: 'Drag with left mouse button to select an area · Press ESC to cancel',
+    snippingResultTitle: (hasText: boolean, len: number) =>
+      `Extracted Text (${hasText ? `${len} chars` : 'No text found'})`,
+    snippingEmptyTitle: 'No underlying text nodes detected in the selected area.',
+    snippingEmptyHint: 'This region may be a flat bitmap image. Try right-clicking or taking a screenshot.',
+    closeBtn: 'Close',
+    copyAndCloseBtn: 'Copy & Close',
+    copiedFeedback: 'Copied!'
+  }
+});

@@ -2,12 +2,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { ExtensionStorage } from '@100free/core';
 import { AppFooterLink } from '@100free/ui';
+import { m } from '../../src/locales';
 import { CopySettings, DEFAULT_SETTINGS, STORAGE_KEY } from '../../src/types';
 
 const settings = ref<CopySettings>({ ...DEFAULT_SETTINGS });
 const currentHost = ref<string>('');
 const isSpecialPage = ref(false);
-const testText = ref('这是一段用于测试复制的文本，选我试试看！');
+const testText = ref(m.testSampleText);
 const testCopySuccess = ref(false);
 
 const isSiteEnabled = computed(() => {
@@ -114,8 +115,8 @@ onMounted(() => {
           </svg>
         </div>
         <div class="title-meta">
-          <h3 class="title">网页超级自由复制</h3>
-          <p class="subtitle">解禁右键 · 穿透防选 · 框选极速提取</p>
+          <h3 class="title">{{ m.extTitle }}</h3>
+          <p class="subtitle">{{ m.extSub }}</p>
         </div>
       </div>
       <span class="badge">PRO</span>
@@ -124,9 +125,9 @@ onMounted(() => {
     <!-- 当前站点状态主控卡片 -->
     <div class="site-card" :class="{ 'is-active': isSiteEnabled && !isSpecialPage }">
       <div class="site-info">
-        <span class="site-label">当前站点保护状态</span>
+        <span class="site-label">{{ m.siteStatusLabel }}</span>
         <span class="site-host" :title="currentHost">
-          {{ isSpecialPage ? '系统/特殊页面' : (currentHost || '未获取到网址') }}
+          {{ isSpecialPage ? m.specialPage : (currentHost || m.noUrl) }}
         </span>
       </div>
       <button
@@ -137,7 +138,7 @@ onMounted(() => {
       >
         <span class="switch-handle" />
       </button>
-      <span v-else class="special-hint">无需解禁</span>
+      <span v-else class="special-hint">{{ m.noNeedUnblock }}</span>
     </div>
 
     <!-- 终极武器：框选提取文字按钮 -->
@@ -147,8 +148,8 @@ onMounted(() => {
         <rect x="8" y="8" width="8" height="8" rx="1" />
       </svg>
       <div class="snipping-copy">
-        <span class="snipping-title">框选截取文字 (穿透 Canvas)</span>
-        <span class="snipping-desc">遇到无法划词的图文或文库，直接拖拽框选提取</span>
+        <span class="snipping-title">{{ m.snippingTitle }}</span>
+        <span class="snipping-desc">{{ m.snippingDesc }}</span>
       </div>
     </button>
 
@@ -156,8 +157,8 @@ onMounted(() => {
     <div class="settings-group">
       <div class="setting-item" @click="toggleFloatButton">
         <div class="item-text">
-          <span class="item-title">划词快捷复制小胶囊</span>
-          <span class="item-desc">选中文本时鼠标旁自动浮现一键复制按钮</span>
+          <span class="item-title">{{ m.floatBtnTitle }}</span>
+          <span class="item-desc">{{ m.floatBtnDesc }}</span>
         </div>
         <button class="mini-switch" :class="{ 'mini-active': settings.showFloatButton }">
           <span class="mini-handle" />
@@ -166,8 +167,8 @@ onMounted(() => {
 
       <div class="setting-item" @click="toggleStrictMode">
         <div class="item-text">
-          <span class="item-title">强力穿透模式 (Strict Mode)</span>
-          <span class="item-desc">攻破百度文库、PDF 隐藏文字层与防清空选区</span>
+          <span class="item-title">{{ m.strictModeTitle }}</span>
+          <span class="item-desc">{{ m.strictModeDesc }}</span>
         </div>
         <button class="mini-switch" :class="{ 'mini-active': settings.strictMode }">
           <span class="mini-handle" />
@@ -178,20 +179,20 @@ onMounted(() => {
     <!-- 快速体验/测试卡片 -->
     <div class="test-card">
       <div class="test-header">
-        <span class="test-title">剪贴板功能速测</span>
-        <span v-if="testCopySuccess" class="copy-tag">已复制成功 ✓</span>
+        <span class="test-title">{{ m.testCardTitle }}</span>
+        <span v-if="testCopySuccess" class="copy-tag">{{ m.testCopied }}</span>
       </div>
       <div class="test-body">
         <input v-model="testText" class="test-input" readonly />
         <button class="copy-action-btn" @click="handleTestCopy">
-          复制测试
+          {{ m.testCopyBtn }}
         </button>
       </div>
     </div>
 
     <!-- 底部保障声明 -->
     <footer class="footer">
-      <span>100-Free 开源生产力计划 · 纯净无后台 · 100% 本地运算</span>
+      <span>{{ m.footerNote }}</span>
     </footer>
     <AppFooterLink plugin-id="allow-copy" />
   </div>

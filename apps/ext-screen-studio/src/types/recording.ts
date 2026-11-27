@@ -1,3 +1,5 @@
+import { m } from '../locales';
+
 export interface CursorSample {
   /** 距离录制开始的相对时间（毫秒） */
   t: number;
@@ -102,13 +104,13 @@ export interface RecordingProject {
 }
 
 export const BACKDROP_PRESETS: BackdropPreset[] = [
-  { id: 'aurora', name: '极光紫魅', stops: ['#4f46e5', '#7c3aed', '#ec4899'], angle: 135 },
-  { id: 'ocean', name: '深海蓝调', stops: ['#0f172a', '#1d4ed8', '#06b6d4'], angle: 135 },
-  { id: 'sunset', name: '落日熔金', stops: ['#f97316', '#ef4444', '#a855f7'], angle: 125 },
-  { id: 'mint', name: '薄荷微风', stops: ['#10b981', '#0d9488', '#0284c7'], angle: 135 },
-  { id: 'obsidian', name: '暗夜黑曜', stops: ['#09090b', '#18181b', '#27272a'], angle: 145 },
-  { id: 'mac-light', name: '磨砂浅灰', stops: ['#e2e8f0', '#f8fafc', '#cbd5e1'], angle: 135 },
-  { id: 'custom', name: '自定义渐变', stops: ['#6366f1', '#ec4899'], angle: 135 }
+  { id: 'aurora', name: m.backdropAurora, stops: ['#4f46e5', '#7c3aed', '#ec4899'], angle: 135 },
+  { id: 'ocean', name: m.backdropOcean, stops: ['#0f172a', '#1d4ed8', '#06b6d4'], angle: 135 },
+  { id: 'sunset', name: m.backdropSunset, stops: ['#f97316', '#ef4444', '#a855f7'], angle: 125 },
+  { id: 'mint', name: m.backdropMint, stops: ['#10b981', '#0d9488', '#0284c7'], angle: 135 },
+  { id: 'obsidian', name: m.backdropObsidian, stops: ['#09090b', '#18181b', '#27272a'], angle: 145 },
+  { id: 'mac-light', name: m.backdropMacLight, stops: ['#e2e8f0', '#f8fafc', '#cbd5e1'], angle: 135 },
+  { id: 'custom', name: m.backdropCustom, stops: ['#6366f1', '#ec4899'], angle: 135 }
 ];
 
 export const DEFAULT_STYLE_CONFIG: StudioStyleConfig = {

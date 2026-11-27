@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { FileText, ShieldCheck, Layers, Image, Stamp, ExternalLink } from 'lucide-vue-next';
 import { AppFooterLink } from '@100free/ui';
+import { m } from '../../src/locales';
 
 const currentPdfUrl = ref('');
 
@@ -33,39 +34,39 @@ function openStudio(sourceUrl?: string) {
           <FileText :size="18" />
         </div>
         <div>
-          <h1>本地隐私 PDF 工具箱</h1>
-          <p class="sub">100% 离线运算 · 零文件上传</p>
+          <h1>{{ m.extTitle }}</h1>
+          <p class="sub">{{ m.extSub }}</p>
         </div>
       </div>
     </header>
 
     <div v-if="currentPdfUrl" class="detected-box">
-      <div class="detected-title">检测到当前标签页为 PDF 文档</div>
+      <div class="detected-title">{{ m.detectedPdf }}</div>
       <button type="button" class="btn primary" @click="openStudio(currentPdfUrl)">
         <ExternalLink :size="15" />
-        <span>直接导入当前 PDF 到工作台</span>
+        <span>{{ m.importCurrentPdf }}</span>
       </button>
     </div>
 
     <div class="actions">
       <button type="button" class="btn primary" @click="openStudio()">
         <Layers :size="16" />
-        <span>打开 PDF 本地工作台</span>
+        <span>{{ m.openStudio }}</span>
       </button>
     </div>
 
     <ul class="feature-list">
-      <li><Layers :size="14" /> <span>合并 PDF、拆分提取、拖拽排序与旋转</span></li>
-      <li><Image :size="14" /> <span>PDF 转高清 PNG/JPG，多图一键合成 PDF</span></li>
-      <li><Stamp :size="14" /> <span>本地文字水印与透明电子签名盖章</span></li>
+      <li><Layers :size="14" /> <span>{{ m.feat1 }}</span></li>
+      <li><Image :size="14" /> <span>{{ m.feat2 }}</span></li>
+      <li><Stamp :size="14" /> <span>{{ m.feat3 }}</span></li>
     </ul>
 
     <div class="privacy-bar">
       <ShieldCheck :size="14" />
-      <span>所有文档均在本地浏览器内存处理，绝不上传服务器</span>
+      <span>{{ m.privacyBar }}</span>
     </div>
 
-    <AppFooterLink />
+    <AppFooterLink plugin-id="pdf-toolkit" />
   </div>
 </template>
 

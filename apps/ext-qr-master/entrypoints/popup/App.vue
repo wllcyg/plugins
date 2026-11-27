@@ -20,6 +20,7 @@ import {
   formatVCardString
 } from '../../src/core/generator';
 import { decodeImageUrl, decodeImageBlob } from '../../src/core/decoder';
+import { m } from '../../src/locales';
 
 const activeTab = ref<QRMode | 'scanner'>('url');
 const toastMsg = ref('');
@@ -72,12 +73,12 @@ const config = reactive<QRStylingConfig>({
 
 // 预设高颜值渐变配色主题
 const presetThemes = [
-  { name: '极光碧翠', start: '#10b981', end: '#06b6d4', corner: '#059669' },
-  { name: '赛博霓虹', start: '#ec4899', end: '#8b5cf6', corner: '#d946ef' },
-  { name: '深海浩瀚', start: '#3b82f6', end: '#1d4ed8', corner: '#1e40af' },
-  { name: '黑金奢华', start: '#1e293b', end: '#d97706', corner: '#b45309' },
-  { name: '烈焰活力', start: '#f97316', end: '#ef4444', corner: '#ea580c' },
-  { name: '经典商务', start: '#0f172a', end: '#0f172a', corner: '#0f172a' }
+  { name: m.themeAurora, start: '#10b981', end: '#06b6d4', corner: '#059669' },
+  { name: m.themeNeon, start: '#ec4899', end: '#8b5cf6', corner: '#d946ef' },
+  { name: m.themeOcean, start: '#3b82f6', end: '#1d4ed8', corner: '#1e40af' },
+  { name: m.themeGold, start: '#1e293b', end: '#d97706', corner: '#b45309' },
+  { name: m.themeFlame, start: '#f97316', end: '#ef4444', corner: '#ea580c' },
+  { name: m.themeClassic, start: '#0f172a', end: '#0f172a', corner: '#0f172a' }
 ];
 
 // 离线识码状态
@@ -90,7 +91,7 @@ const finalContent = computed(() => {
   if (activeTab.value === 'url') {
     return urlText.value.trim() || 'https://github.com';
   } else if (activeTab.value === 'text') {
-    return plainText.value.trim() || '100-Free 开源生产力套件';
+    return plainText.value.trim() || m.defaultPlainText;
   } else if (activeTab.value === 'wifi') {
     return formatWifiString(wifiForm);
   } else if (activeTab.value === 'vcard') {
@@ -173,10 +174,10 @@ const pasteFromClipboard = async () => {
       } else {
         plainText.value = text;
       }
-      showToast('已从剪贴板粘贴');
+      showToast(m.toastPasted);
     }
   } catch {
-    showToast('未能读取剪贴板，请允许剪贴板权限');
+    showToast(m.toastPasteFailed);
   }
 };
 
@@ -198,7 +199,7 @@ const applyFaviconAsLogo = () => {
   if (currentFavicon.value) {
     config.logoUrl = currentFavicon.value;
     config.ecc = 'H'; // 嵌入 Logo 时建议切换高纠错率
-    showToast('已嵌入网站 Logo (已自动提升纠错率至高等级)');
+    showToast(m.toastFaviconApplied);
   }
 };
 
@@ -210,7 +211,7 @@ const handleLogoUpload = (e: Event) => {
   reader.onload = (event) => {
     config.logoUrl = event.target?.result as string;
     config.ecc = 'H';
-    showToast('Logo 上传成功！');
+    showToast(m.toastLogoUploaded);
   };
   reader.readAsDataURL(file);
 };
@@ -218,7 +219,7 @@ const handleLogoUpload = (e: Event) => {
 // 清除 Logo
 const clearLogo = () => {
   config.logoUrl = '';
-  showToast('已清除 Logo');
+  showToast(m.toastLogoCleared);
 };
 
 // 复制图片到剪贴板
@@ -227,9 +228,9 @@ const copyImage = async () => {
   isCopying.value = true;
   try {
     await copyQRToClipboard(qrInstance);
-    showToast('已成功复制二维码图片到剪贴板！');
+    showToast(m.toastCopiedQr);
   } catch (err) {
-    showToast('复制失败，请直接点击下载图片');
+    showToast(m.toastCopyQrFailed);
   } finally {
     isCopying.value = false;
   }
@@ -251,23 +252,23 @@ const downloadQR = async (format: 'png' | 'svg', sizeMultiplier = 1) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
-    showToast(`正在导出 ${format.toUpperCase()} 文件...`);
+    showToast(m.toastExporting(format.toUpperCase()));
   } catch (err) {
-    showToast('导出出错，请重试');
+    showToast(m.toastExportFailed);
   }
 };
 
 // 复制文本内容
 const copyText = (txt: string) => {
   navigator.clipboard.writeText(txt).then(() => {
-    showToast('已复制内容');
+    showToast(m.toastCopiedText);
   });
 };
 
 // 离线识码 - 处理文件
 const handleFileDecode = async (file: File) => {
   if (!file.type.startsWith('image/')) {
-    showToast('请上传有效的图片文件');
+    showToast(m.toastInvalidImage);
     return;
   }
   isDecoding.value = true;
@@ -275,12 +276,12 @@ const handleFileDecode = async (file: File) => {
     const result = await decodeImageBlob(file);
     if (result) {
       decodedHistory.value.unshift(result);
-      showToast('识别成功！');
+      showToast(m.toastDecodeSuccess);
     } else {
-      showToast('未能识别到有效二维码');
+      showToast(m.toastDecodeEmpty);
     }
   } catch {
-    showToast('解码失败');
+    showToast(m.toastDecodeError);
   } finally {
     isDecoding.value = false;
   }
@@ -310,6 +311,7 @@ const handlePasteEvent = async (e: ClipboardEvent) => {
 };
 
 onMounted(async () => {
+  document.title = m.docTitle;
   await fetchCurrentTab();
   await nextTick();
   renderQR();
@@ -341,12 +343,12 @@ onMounted(async () => {
         </div>
         <div class="brand-text">
           <h1 class="brand-title">QR Master</h1>
-          <span class="brand-desc">全能艺术二维码与离线识码器</span>
+          <span class="brand-desc">{{ m.brandDesc }}</span>
         </div>
       </div>
       <div class="header-badges">
-        <span class="offline-pill" title="所有编码与识码均在本地瞬间完成，0网络请求，全面保护隐私">
-          <span class="green-dot" /> 离线安全
+        <span class="offline-pill" :title="m.offlineTitle">
+          <span class="green-dot" /> {{ m.offlineBadge }}
         </span>
       </div>
     </header>
@@ -358,35 +360,35 @@ onMounted(async () => {
         :class="{ active: activeTab === 'url' }"
         @click="activeTab = 'url'"
       >
-        <span>网址链接</span>
+        <span>{{ m.tabUrl }}</span>
       </button>
       <button
         class="tab-item"
         :class="{ active: activeTab === 'text' }"
         @click="activeTab = 'text'"
       >
-        <span>纯文本</span>
+        <span>{{ m.tabText }}</span>
       </button>
       <button
         class="tab-item"
         :class="{ active: activeTab === 'wifi' }"
         @click="activeTab = 'wifi'"
       >
-        <span>WiFi免密</span>
+        <span>{{ m.tabWifi }}</span>
       </button>
       <button
         class="tab-item"
         :class="{ active: activeTab === 'vcard' }"
         @click="activeTab = 'vcard'"
       >
-        <span>电子名片</span>
+        <span>{{ m.tabVcard }}</span>
       </button>
       <button
         class="tab-item highlight-tab"
         :class="{ active: activeTab === 'scanner' }"
         @click="activeTab = 'scanner'"
       >
-        <span>🔍 离线识码</span>
+        <span>{{ m.tabScanner }}</span>
       </button>
     </nav>
 
@@ -399,9 +401,9 @@ onMounted(async () => {
             v-model="urlText"
             type="text"
             class="input-control"
-            placeholder="请输入以 https:// 开头的网址..."
+            :placeholder="m.urlPlaceholder"
           />
-          <button class="paste-icon-btn" title="粘贴剪贴板" @click="pasteFromClipboard">
+          <button class="paste-icon-btn" :title="m.pasteTitle" @click="pasteFromClipboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
               <rect x="8" y="2" width="8" height="4" rx="1" />
@@ -409,9 +411,9 @@ onMounted(async () => {
           </button>
         </div>
         <div class="action-row">
-          <button class="text-btn" @click="fetchCurrentTab">提取当前网页</button>
+          <button class="text-btn" @click="fetchCurrentTab">{{ m.fetchCurrentTab }}</button>
           <button v-if="currentFavicon" class="text-btn" @click="applyFaviconAsLogo">
-            嵌入网页 Favicon
+            {{ m.embedFavicon }}
           </button>
         </div>
       </section>
@@ -422,11 +424,11 @@ onMounted(async () => {
           v-model="plainText"
           class="textarea-control"
           rows="3"
-          placeholder="输入任意文字内容，即刻转为二维码..."
+          :placeholder="m.textPlaceholder"
         />
         <div class="text-meta-row">
-          <span class="char-count">已输入 {{ plainText.length }} 字</span>
-          <button class="text-btn" @click="pasteFromClipboard">读取剪贴板</button>
+          <span class="char-count">{{ m.charCount(plainText.length) }}</span>
+          <button class="text-btn" @click="pasteFromClipboard">{{ m.readClipboard }}</button>
         </div>
       </section>
 
@@ -434,35 +436,35 @@ onMounted(async () => {
       <section v-else-if="activeTab === 'wifi'" class="pane-section">
         <div class="grid-form">
           <div class="form-group">
-            <label class="form-label">WiFi 名称 (SSID)</label>
+            <label class="form-label">{{ m.wifiSsidLabel }}</label>
             <input
               v-model="wifiForm.ssid"
               type="text"
               class="input-control"
-              placeholder="例如: Office_5G"
+              :placeholder="m.wifiSsidPlaceholder"
             />
           </div>
           <div class="form-group">
-            <label class="form-label">WiFi 密码</label>
+            <label class="form-label">{{ m.wifiPasswordLabel }}</label>
             <input
               v-model="wifiForm.password"
               type="text"
               class="input-control"
-              placeholder="请输入密码（无密码可留空）"
+              :placeholder="m.wifiPasswordPlaceholder"
             />
           </div>
           <div class="form-row-compact">
             <div class="form-group">
-              <label class="form-label">加密模式</label>
+              <label class="form-label">{{ m.wifiEncLabel }}</label>
               <select v-model="wifiForm.encryption" class="select-control">
-                <option value="WPA">WPA / WPA2 (推荐)</option>
+                <option value="WPA">{{ m.wifiWpa }}</option>
                 <option value="WEP">WEP</option>
-                <option value="nopass">无密码</option>
+                <option value="nopass">{{ m.wifiNoPass }}</option>
               </select>
             </div>
             <label class="checkbox-label">
               <input v-model="wifiForm.hidden" type="checkbox" />
-              <span>隐藏网络</span>
+              <span>{{ m.wifiHidden }}</span>
             </label>
           </div>
         </div>
@@ -472,23 +474,23 @@ onMounted(async () => {
       <section v-else-if="activeTab === 'vcard'" class="pane-section">
         <div class="grid-form-double">
           <div class="form-group">
-            <label class="form-label">姓名 *</label>
-            <input v-model="vcardForm.name" type="text" class="input-control" placeholder="张三" />
+            <label class="form-label">{{ m.vcardNameLabel }}</label>
+            <input v-model="vcardForm.name" type="text" class="input-control" :placeholder="m.vcardNamePlaceholder" />
           </div>
           <div class="form-group">
-            <label class="form-label">手机号码</label>
-            <input v-model="vcardForm.phone" type="text" class="input-control" placeholder="13800000000" />
+            <label class="form-label">{{ m.vcardPhoneLabel }}</label>
+            <input v-model="vcardForm.phone" type="text" class="input-control" :placeholder="m.vcardPhonePlaceholder" />
           </div>
           <div class="form-group">
-            <label class="form-label">公司 / 组织</label>
-            <input v-model="vcardForm.company" type="text" class="input-control" placeholder="科技公司" />
+            <label class="form-label">{{ m.vcardCompanyLabel }}</label>
+            <input v-model="vcardForm.company" type="text" class="input-control" :placeholder="m.vcardCompanyPlaceholder" />
           </div>
           <div class="form-group">
-            <label class="form-label">职位</label>
-            <input v-model="vcardForm.title" type="text" class="input-control" placeholder="前端专家" />
+            <label class="form-label">{{ m.vcardTitleLabel }}</label>
+            <input v-model="vcardForm.title" type="text" class="input-control" :placeholder="m.vcardTitlePlaceholder" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">电子邮箱</label>
+            <label class="form-label">{{ m.vcardEmailLabel }}</label>
             <input v-model="vcardForm.email" type="text" class="input-control" placeholder="example@100free.org" />
           </div>
         </div>
@@ -520,17 +522,17 @@ onMounted(async () => {
               <rect x="3" y="3" width="18" height="18" rx="2" />
             </svg>
             <p class="drop-tip">
-              <strong>点击上传</strong>、拖拽图片到此处，或按 <strong>Ctrl+V</strong> 粘贴图片
+              <strong>{{ m.dropTipClick }}</strong>{{ m.dropTipMiddle }}<strong>Ctrl+V</strong>{{ m.dropTipEnd }}
             </p>
-            <span class="drop-sub">网页图片更可直接鼠标右键选择「识别图中二维码」</span>
+            <span class="drop-sub">{{ m.dropSub }}</span>
           </label>
         </div>
 
         <!-- 识别结果列表 -->
         <div v-if="decodedHistory.length > 0" class="decoded-list">
           <div class="history-head">
-            <span>识别记录 ({{ decodedHistory.length }})</span>
-            <button class="clear-btn" @click="decodedHistory = []">清空</button>
+            <span>{{ m.historyCount(decodedHistory.length) }}</span>
+            <button class="clear-btn" @click="decodedHistory = []">{{ m.clearBtn }}</button>
           </div>
           <div
             v-for="(item, idx) in decodedHistory"
@@ -539,7 +541,7 @@ onMounted(async () => {
           >
             <div class="card-top">
               <span class="card-badge" :class="item.wifiInfo ? 'badge-wifi' : item.isUrl ? 'badge-url' : 'badge-text'">
-                {{ item.wifiInfo ? 'WiFi热点' : item.isUrl ? '网页链接' : '纯文本' }}
+                {{ item.wifiInfo ? m.badgeWifi : item.isUrl ? m.badgeUrl : m.badgeText }}
               </span>
               <span class="card-time">{{ new Date(item.timestamp).toLocaleTimeString() }}</span>
             </div>
@@ -548,17 +550,17 @@ onMounted(async () => {
             <div v-if="item.wifiInfo" class="wifi-result-box">
               <p><strong>SSID:</strong> {{ item.wifiInfo.ssid }}</p>
               <p v-if="item.wifiInfo.password">
-                <strong>密码:</strong> <code>{{ item.wifiInfo.password }}</code>
-                <button class="mini-copy-btn" @click="copyText(item.wifiInfo.password)">复制密码</button>
+                <strong>{{ m.wifiPassPrefix }}</strong> <code>{{ item.wifiInfo.password }}</code>
+                <button class="mini-copy-btn" @click="copyText(item.wifiInfo.password)">{{ m.copyPass }}</button>
               </p>
-              <p><strong>加密:</strong> {{ item.wifiInfo.encryption }}</p>
+              <p><strong>{{ m.wifiEncPrefix }}</strong> {{ item.wifiInfo.encryption }}</p>
             </div>
 
             <!-- 普通链接或文本 -->
             <p v-else class="decoded-text-preview" :title="item.text">{{ item.text }}</p>
 
             <div class="card-actions">
-              <button class="card-act-btn" @click="copyText(item.text)">复制全部</button>
+              <button class="card-act-btn" @click="copyText(item.text)">{{ m.copyAll }}</button>
               <a
                 v-if="item.isUrl"
                 :href="item.text"
@@ -566,13 +568,13 @@ onMounted(async () => {
                 rel="noreferrer"
                 class="card-act-btn act-open"
               >
-                直接打开
+                {{ m.openUrl }}
               </a>
               <button
                 class="card-act-btn"
                 @click="() => { urlText = item.text; activeTab = 'url'; }"
               >
-                生成二维码
+                {{ m.genQr }}
               </button>
             </div>
           </div>
@@ -589,7 +591,7 @@ onMounted(async () => {
         <!-- 艺术美化工具栏 -->
         <div class="styling-toolbar">
           <div class="style-row">
-            <span class="style-title">点阵风格:</span>
+            <span class="style-title">{{ m.dotStyleLabel }}</span>
             <div class="btn-group">
               <button
                 v-for="dot in (['rounded', 'dots', 'classy', 'square'] as DotType[])"
@@ -598,14 +600,14 @@ onMounted(async () => {
                 :class="{ active: config.dotType === dot }"
                 @click="config.dotType = dot"
               >
-                {{ dot === 'rounded' ? '圆角' : dot === 'dots' ? '圆点' : dot === 'classy' ? '复古' : '直角' }}
+                {{ dot === 'rounded' ? m.dotRounded : dot === 'dots' ? m.dotDots : dot === 'classy' ? m.dotClassy : m.dotSquare }}
               </button>
             </div>
           </div>
 
           <!-- 预设高颜值渐变配色 -->
           <div class="style-row">
-            <span class="style-title">潮流渐变:</span>
+            <span class="style-title">{{ m.gradientLabel }}</span>
             <div class="presets-row">
               <button
                 v-for="theme in presetThemes"
@@ -620,18 +622,18 @@ onMounted(async () => {
 
           <!-- 定位角形状与 Logo 控制 -->
           <div class="style-row">
-            <span class="style-title">中心嵌入:</span>
+            <span class="style-title">{{ m.centerLogoLabel }}</span>
             <div class="logo-actions">
-              <label class="upload-logo-btn" title="上传中心 Logo">
+              <label class="upload-logo-btn" :title="m.uploadLogoTitle">
                 <input type="file" accept="image/*" class="hidden-file-input" @change="handleLogoUpload" />
-                <span>+ 上传 Logo</span>
+                <span>{{ m.uploadLogoBtn }}</span>
               </label>
-              <button v-if="config.logoUrl" class="clear-logo-btn" @click="clearLogo">移除 Logo</button>
-              <select v-model="config.ecc" class="select-mini" title="纠错等级">
-                <option value="L">低纠错(7%)</option>
-                <option value="M">中纠错(15%)</option>
-                <option value="Q">较高(25%)</option>
-                <option value="H">最高(30%)</option>
+              <button v-if="config.logoUrl" class="clear-logo-btn" @click="clearLogo">{{ m.removeLogoBtn }}</button>
+              <select v-model="config.ecc" class="select-mini" :title="m.eccTitle">
+                <option value="L">{{ m.eccL }}</option>
+                <option value="M">{{ m.eccM }}</option>
+                <option value="Q">{{ m.eccQ }}</option>
+                <option value="H">{{ m.eccH }}</option>
               </select>
             </div>
           </div>
@@ -644,15 +646,15 @@ onMounted(async () => {
               <rect x="9" y="9" width="13" height="13" rx="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
-            <span>一键复制图片</span>
+            <span>{{ m.copyImageBtn }}</span>
           </button>
 
-          <button class="secondary-action-btn" title="下载高清 PNG 图片" @click="downloadQR('png', 2)">
-            <span>下载 PNG</span>
+          <button class="secondary-action-btn" :title="m.downloadPngTitle" @click="downloadQR('png', 2)">
+            <span>{{ m.downloadPngBtn }}</span>
           </button>
 
-          <button class="secondary-action-btn" title="下载无损矢量 SVG，无限放大不失真" @click="downloadQR('svg')">
-            <span>矢量 SVG</span>
+          <button class="secondary-action-btn" :title="m.downloadSvgTitle" @click="downloadQR('svg')">
+            <span>{{ m.downloadSvgBtn }}</span>
           </button>
         </div>
       </div>

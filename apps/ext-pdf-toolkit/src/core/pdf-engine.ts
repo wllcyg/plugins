@@ -1,9 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import JSZip from 'jszip';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
 
 export interface PdfPageItem {
   uid: string;
@@ -194,8 +194,95 @@ async function applyWatermarkToDoc(doc: PDFDocument, wm: WatermarkConfig) {
 
 export interface ExportPdfOptions {
   watermark?: WatermarkConfig;
+  annotations?: PageAnnotation[];
   stripMetadata?: boolean;
   addPageNumbers?: boolean;
+}
+
+export type PageAnnotation =
+  | {
+      id: string;
+      pageUid: string;
+      type: 'text';
+      xRatio: number;
+      yRatio: number;
+      text: string;
+      color: string;
+      fontSize: number;
+    }
+  | {
+      id: string;
+      pageUid: string;
+      type: 'redact';
+      xRatio: number;
+      yRatio: number;
+      wRatio: number;
+      hRatio: number;
+      color: '#000000' | '#ffffff';
+    }
+  | {
+      id: string;
+      pageUid: string;
+      type: 'stamp';
+      xRatio: number;
+      yRatio: number;
+      wRatio: number;
+      hRatio: number;
+      previewUrl: string;
+      imageBytes: Uint8Array;
+      imageMime: string;
+    }
+  | {
+      id: string;
+      pageUid: string;
+      type: 'highlight';
+      xRatio: number;
+      yRatio: number;
+      wRatio: number;
+      hRatio: number;
+      color: string;
+    }
+  | {
+      id: string;
+      pageUid: string;
+      type: 'ink';
+      xRatio: number;
+      yRatio: number;
+      points: Array<{ x: number; y: number }>;
+      color: string;
+      strokeWidth: number;
+    };
+
+function hexToRgbTuple(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return [0.98, 0.8, 0.08];
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return [r, g, b];
+}
+
+function renderAnnotationTextToPng(text: string, color: string, fontSize: number): { bytes: Uint8Array; width: number; height: number } {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return { bytes: new Uint8Array(), width: 100, height: 24 };
+  const scale = 2;
+  const font = `600 ${fontSize * scale}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+  ctx.font = font;
+  const metrics = ctx.measureText(text);
+  const w = Math.max(16, Math.ceil(metrics.width) + 12);
+  const h = Math.max(16, Math.ceil(fontSize * scale * 1.45));
+  canvas.width = w;
+  canvas.height = h;
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textBaseline = 'top';
+  ctx.fillText(text, 4, 4);
+  const dataUrl = canvas.toDataURL('image/png');
+  const bin = atob(dataUrl.split(',')[1]);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return { bytes: out, width: w / scale, height: h / scale };
 }
 
 export async function exportMergedPdf(
@@ -205,6 +292,12 @@ export async function exportMergedPdf(
 ): Promise<Uint8Array> {
   const outDoc = await PDFDocument.create();
   const loadedDocs = new Map<string, PDFDocument>();
+  const annsByPage = new Map<string, PageAnnotation[]>();
+  for (const ann of options?.annotations || []) {
+    const list = annsByPage.get(ann.pageUid) || [];
+    list.push(ann);
+    annsByPage.set(ann.pageUid, list);
+  }
 
   for (const item of pages) {
     let srcDoc = loadedDocs.get(item.sourceId);
@@ -220,6 +313,68 @@ export async function exportMergedPdf(
       copied.setRotation(degrees((prevAngle + item.rotation) % 360));
     }
     outDoc.addPage(copied);
+
+    const pageAnns = annsByPage.get(item.uid);
+    if (pageAnns?.length) {
+      const { width, height } = copied.getSize();
+      for (const ann of pageAnns) {
+        if (ann.type === 'redact') {
+          const isWhite = ann.color === '#ffffff';
+          copied.drawRectangle({
+            x: ann.xRatio * width,
+            y: height - (ann.yRatio + ann.hRatio) * height,
+            width: ann.wRatio * width,
+            height: ann.hRatio * height,
+            color: isWhite ? rgb(1, 1, 1) : rgb(0, 0, 0)
+          });
+        } else if (ann.type === 'stamp') {
+          const img =
+            ann.imageMime === 'image/jpeg'
+              ? await outDoc.embedJpg(ann.imageBytes)
+              : await outDoc.embedPng(ann.imageBytes);
+          copied.drawImage(img, {
+            x: ann.xRatio * width,
+            y: height - (ann.yRatio + ann.hRatio) * height,
+            width: ann.wRatio * width,
+            height: ann.hRatio * height
+          });
+        } else if (ann.type === 'highlight') {
+          const [r, g, b] = hexToRgbTuple(ann.color);
+          copied.drawRectangle({
+            x: ann.xRatio * width,
+            y: height - (ann.yRatio + ann.hRatio) * height,
+            width: ann.wRatio * width,
+            height: ann.hRatio * height,
+            color: rgb(r, g, b),
+            opacity: 0.38
+          });
+        } else if (ann.type === 'ink' && ann.points.length > 1) {
+          const [r, g, b] = hexToRgbTuple(ann.color);
+          for (let k = 1; k < ann.points.length; k++) {
+            const p1 = ann.points[k - 1];
+            const p2 = ann.points[k];
+            copied.drawLine({
+              start: { x: p1.x * width, y: height - p1.y * height },
+              end: { x: p2.x * width, y: height - p2.y * height },
+              thickness: ann.strokeWidth,
+              color: rgb(r, g, b),
+              opacity: 0.9
+            });
+          }
+        } else if (ann.type === 'text' && ann.text.trim()) {
+          const rendered = renderAnnotationTextToPng(ann.text, ann.color, ann.fontSize);
+          if (rendered.bytes.length > 0) {
+            const img = await outDoc.embedPng(rendered.bytes);
+            copied.drawImage(img, {
+              x: ann.xRatio * width,
+              y: Math.max(0, height - ann.yRatio * height - rendered.height),
+              width: rendered.width,
+              height: rendered.height
+            });
+          }
+        }
+      }
+    }
   }
 
   if (options?.watermark) {
@@ -354,7 +509,8 @@ export async function exportPagesAsLongImage(
 export async function compressPdfPages(
   sources: Map<string, Uint8Array>,
   pages: PdfPageItem[],
-  level: 'low' | 'medium' | 'high'
+  level: 'low' | 'medium' | 'high',
+  whiten = false
 ): Promise<Uint8Array> {
   const presets = {
     low: { scale: 1.0, quality: 0.52 },
@@ -386,6 +542,26 @@ export async function compressPdfPages(
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+
+      if (whiten) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          if (lum > 175) {
+            // 将灰暗纸张底色漂白为纯白
+            d[i] = 255;
+            d[i + 1] = 255;
+            d[i + 2] = 255;
+          } else {
+            // 轻微加深深色文字对比度
+            d[i] = Math.max(0, Math.floor(d[i] * 0.75));
+            d[i + 1] = Math.max(0, Math.floor(d[i + 1] * 0.75));
+            d[i + 2] = Math.max(0, Math.floor(d[i + 2] * 0.75));
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
     }
 
     const jpgBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
@@ -403,6 +579,165 @@ export async function compressPdfPages(
 
   outDoc.setProducer('100-Free Local PDF Toolkit');
   return outDoc.save();
+}
+
+export async function exportNUpPdf(
+  sources: Map<string, Uint8Array>,
+  pages: PdfPageItem[],
+  layout: '2up' | '4up',
+  drawCutLines = true
+): Promise<Uint8Array> {
+  const outDoc = await PDFDocument.create();
+  const loadedDocs = new Map<string, PDFDocument>();
+  const A4_W = 595.28;
+  const A4_H = 841.89;
+  const MARGIN = 20;
+  const GAP = 14;
+
+  const perSheet = layout === '2up' ? 2 : 4;
+  const cols = layout === '2up' ? 1 : 2;
+  const rows = 2;
+  const cellW = (A4_W - MARGIN * 2 - GAP * (cols - 1)) / cols;
+  const cellH = (A4_H - MARGIN * 2 - GAP * (rows - 1)) / rows;
+
+  for (let i = 0; i < pages.length; i += perSheet) {
+    const sheet = outDoc.addPage([A4_W, A4_H]);
+    const chunk = pages.slice(i, i + perSheet);
+
+    for (let slot = 0; slot < chunk.length; slot++) {
+      const item = chunk[slot];
+      let srcDoc = loadedDocs.get(item.sourceId);
+      if (!srcDoc) {
+        const raw = sources.get(item.sourceId);
+        if (!raw) continue;
+        srcDoc = await PDFDocument.load(raw, { ignoreEncryption: true });
+        loadedDocs.set(item.sourceId, srcDoc);
+      }
+      const srcPage = srcDoc.getPage(item.pageIndex);
+      const embedded = await outDoc.embedPage(srcPage);
+
+      const col = slot % cols;
+      const row = Math.floor(slot / cols);
+      const cellX = MARGIN + col * (cellW + GAP);
+      const cellY = A4_H - MARGIN - (row + 1) * cellH - row * GAP;
+
+      const scale = Math.min(cellW / embedded.width, cellH / embedded.height);
+      const drawW = embedded.width * scale;
+      const drawH = embedded.height * scale;
+      const drawX = cellX + (cellW - drawW) / 2;
+      const drawY = cellY + (cellH - drawH) / 2;
+
+      sheet.drawPage(embedded, { x: drawX, y: drawY, width: drawW, height: drawH });
+
+      if (drawCutLines) {
+        sheet.drawRectangle({
+          x: cellX,
+          y: cellY,
+          width: cellW,
+          height: cellH,
+          borderColor: rgb(0.75, 0.78, 0.82),
+          borderWidth: 0.8,
+          borderDashArray: [4, 4]
+        });
+      }
+    }
+  }
+
+  outDoc.setProducer('100-Free Local PDF Toolkit');
+  return outDoc.save();
+}
+
+export async function comparePdfPages(
+  bytesA: Uint8Array,
+  bytesB: Uint8Array,
+  pageNumber1Based: number
+): Promise<{
+  diffDataUrl: string;
+  totalPagesA: number;
+  totalPagesB: number;
+  diffPercent: number;
+}> {
+  const [docA, docB] = await Promise.all([
+    pdfjsLib.getDocument({ data: bytesA.slice() }).promise,
+    pdfjsLib.getDocument({ data: bytesB.slice() }).promise
+  ]);
+
+  const renderNorm = async (doc: pdfjsLib.PDFDocumentProxy, num: number) => {
+    const safeNum = Math.min(Math.max(1, num), doc.numPages);
+    const page = await doc.getPage(safeNum);
+    const baseVp = page.getViewport({ scale: 1 });
+    const targetScale = 900 / Math.max(1, baseVp.width);
+    const vp = page.getViewport({ scale: targetScale });
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.floor(vp.width));
+    c.height = Math.max(1, Math.floor(vp.height));
+    const ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    }
+    return c;
+  };
+
+  const [cA, cB] = await Promise.all([
+    renderNorm(docA, pageNumber1Based),
+    renderNorm(docB, pageNumber1Based)
+  ]);
+
+  const w = Math.max(cA.width, cB.width);
+  const h = Math.max(cA.height, cB.height);
+  const out = document.createElement('canvas');
+  out.width = w;
+  out.height = h;
+  const outCtx = out.getContext('2d');
+  if (!outCtx) throw new Error('Canvas 初始化失败');
+
+  const getData = (src: HTMLCanvasElement) => {
+    const tmp = document.createElement('canvas');
+    tmp.width = w;
+    tmp.height = h;
+    const tCtx = tmp.getContext('2d')!;
+    tCtx.fillStyle = '#ffffff';
+    tCtx.fillRect(0, 0, w, h);
+    tCtx.drawImage(src, 0, 0);
+    return tCtx.getImageData(0, 0, w, h);
+  };
+
+  const dA = getData(cA).data;
+  const dB = getData(cB).data;
+  const resImg = outCtx.createImageData(w, h);
+  const res = resImg.data;
+  let diffPixels = 0;
+
+  for (let i = 0; i < res.length; i += 4) {
+    const dr = Math.abs(dA[i] - dB[i]);
+    const dg = Math.abs(dA[i + 1] - dB[i + 1]);
+    const db = Math.abs(dA[i + 2] - dB[i + 2]);
+    if (dr + dg + db > 45) {
+      diffPixels++;
+      // 差异处高亮标红
+      res[i] = 220;
+      res[i + 1] = 38;
+      res[i + 2] = 38;
+      res[i + 3] = 255;
+    } else {
+      // 原内容淡化保留作背景参考
+      res[i] = Math.min(255, Math.floor(dB[i] * 0.35 + 255 * 0.65));
+      res[i + 1] = Math.min(255, Math.floor(dB[i + 1] * 0.35 + 255 * 0.65));
+      res[i + 2] = Math.min(255, Math.floor(dB[i + 2] * 0.35 + 255 * 0.65));
+      res[i + 3] = 255;
+    }
+  }
+
+  outCtx.putImageData(resImg, 0, 0);
+  const diffPercent = Number(((diffPixels / (w * h)) * 100).toFixed(2));
+  return {
+    diffDataUrl: out.toDataURL('image/png'),
+    totalPagesA: docA.numPages,
+    totalPagesB: docB.numPages,
+    diffPercent
+  };
 }
 
 export async function exportSplitZip(

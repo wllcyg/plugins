@@ -8,6 +8,7 @@ import {
   recordRedirect,
   recordCleanedParams
 } from '../src/utils/storage';
+import { m } from '../src/locales';
 
 export default defineBackground(() => {
   // 1. 初始化右键菜单
@@ -15,13 +16,13 @@ export default defineBackground(() => {
     chrome.contextMenus.removeAll(() => {
       chrome.contextMenus.create({
         id: 'clean_copy_link',
-        title: '⚡ 复制净化后的干净链接',
+        title: m.menuCopyLink,
         contexts: ['link']
       });
 
       chrome.contextMenus.create({
         id: 'clean_copy_page_url',
-        title: '⚡ 复制当前页面纯净链接',
+        title: m.menuCopyPageUrl,
         contexts: ['page']
       });
     });
@@ -68,7 +69,7 @@ export default defineBackground(() => {
         // 提示用户
         chrome.tabs.sendMessage(tab.id, {
           type: 'SHOW_TOAST',
-          text: `✨ 已复制纯净链接（已去除 ${cleaned.removedCount} 个参数）`
+          text: m.toastBgCopied(cleaned.removedCount)
         }).catch(() => {});
       } catch {
         // fallback

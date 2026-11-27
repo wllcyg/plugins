@@ -1,6 +1,7 @@
 import { VideoSettings, DEFAULT_SETTINGS } from '../types';
 import { injectAntiPause } from './anti-pause';
 import { audioBooster } from './audio-booster';
+import { m } from '../locales';
 
 export class VideoControllerManager {
   private settings: VideoSettings = { ...DEFAULT_SETTINGS };
@@ -265,15 +266,15 @@ export class VideoControllerManager {
     const osd = document.createElement('div');
     osd.className = '__100free_video_osd';
     osd.innerHTML = `
-      <div class="osd-pill" title="100-Free 视频伴侣">
+      <div class="osd-pill" title="${m.osdBrandTitle}">
         <span class="osd-icon">⚡</span>
         <span class="osd-rate">${this.settings.playbackRate.toFixed(2)}x</span>
         <div class="osd-menu">
-          <button class="osd-btn osd-slow" title="减速 0.25x (S)">-</button>
-          <button class="osd-btn osd-reset" title="重置 1.0x (R)">1x</button>
-          <button class="osd-btn osd-fast" title="加速 0.25x (D)">+</button>
-          <button class="osd-btn osd-pip" title="画中画独立小窗 (C)">⧉</button>
-          <button class="osd-btn osd-shot" title="原画截图 (P)">📷</button>
+          <button class="osd-btn osd-slow" title="${m.osdSlowTitle}">-</button>
+          <button class="osd-btn osd-reset" title="${m.osdResetTitle}">1x</button>
+          <button class="osd-btn osd-fast" title="${m.osdFastTitle}">+</button>
+          <button class="osd-btn osd-pip" title="${m.osdPipTitle}">⧉</button>
+          <button class="osd-btn osd-shot" title="${m.osdShotTitle}">📷</button>
         </div>
       </div>
     `;

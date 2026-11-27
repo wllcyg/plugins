@@ -1,3 +1,5 @@
+import { m } from '../locales';
+
 /**
  * 页面框选文本极速提取器
  * 核心原理：无论网页通过 Canvas 覆盖、透明文字层还是特殊定位，
@@ -40,7 +42,7 @@ export class SnippingExtractor {
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
       pointer-events: none;
     `;
-    tip.textContent = '按住鼠标左键框选文字区域，松开即刻提取 · 按 ESC 取消';
+    tip.textContent = m.snippingTip;
 
     this.selectionBox = document.createElement('div');
     this.selectionBox.style.cssText = `
@@ -273,19 +275,19 @@ export class SnippingExtractor {
     container.innerHTML = `
       <div class="panel">
         <div class="header">
-          <h4 class="title">框选文字提取结果 (${hasText ? text.length + ' 字' : '未提取到文本'})</h4>
+          <h4 class="title">${m.snippingResultTitle(hasText, text.length)}</h4>
           <button class="close-btn" id="close">&times;</button>
         </div>
         <div class="body">
           ${
             hasText
               ? `<textarea class="textarea" id="output">${text}</textarea>`
-              : `<div class="empty-tip">未在框选范围内检测到底层文本节点。<br><small style="color:#94a3b8">该区域可能为纯位图图片，请尝试直接右键或截图保存。</small></div>`
+              : `<div class="empty-tip">${m.snippingEmptyTitle}<br><small style="color:#94a3b8">${m.snippingEmptyHint}</small></div>`
           }
         </div>
         <div class="footer">
-          <button class="btn btn-secondary" id="cancel">关闭</button>
-          ${hasText ? `<button class="btn btn-primary" id="copy">一键复制并关闭</button>` : ''}
+          <button class="btn btn-secondary" id="cancel">${m.closeBtn}</button>
+          ${hasText ? `<button class="btn btn-primary" id="copy">${m.copyAndCloseBtn}</button>` : ''}
         </div>
       </div>
     `;
@@ -300,7 +302,7 @@ export class SnippingExtractor {
       copyBtn.addEventListener('click', async () => {
         const val = (container.querySelector('#output') as HTMLTextAreaElement)?.value || text;
         await navigator.clipboard.writeText(val);
-        copyBtn.textContent = '已复制！';
+        copyBtn.textContent = m.copiedFeedback;
         setTimeout(close, 400);
       });
     }

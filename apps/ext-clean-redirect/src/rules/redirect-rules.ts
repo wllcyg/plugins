@@ -1,4 +1,5 @@
 import type { PlatformRule } from '../types';
+import { m } from '../locales';
 
 /**
  * 尝试对目标 URL 进行安全解码（支持多层 URL 编码防护）
@@ -31,80 +32,80 @@ export function safeDecodeUrl(val: string): string | null {
 export const KNOWN_PLATFORM_RULES: PlatformRule[] = [
   {
     id: 'zhihu',
-    name: '知乎',
+    name: m.platforms.zhihu,
     domain: 'link.zhihu.com',
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('target') || '')
   },
   {
     id: 'jianshu',
-    name: '简书',
+    name: m.platforms.jianshu,
     domain: /(^|\.)jianshu\.com$/,
     pathPattern: /^\/go-wild/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('url') || '')
   },
   {
     id: 'juejin',
-    name: '稀土掘金',
+    name: m.platforms.juejin,
     domain: 'link.juejin.cn',
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('target') || '')
   },
   {
     id: 'csdn',
-    name: 'CSDN',
+    name: m.platforms.csdn,
     domain: 'link.csdn.net',
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('target') || '')
   },
   {
     id: 'gitee',
-    name: 'Gitee',
+    name: m.platforms.gitee,
     domain: /(^|\.)gitee\.com$/,
     pathPattern: /^\/link/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('target') || '')
   },
   {
     id: 'sspai',
-    name: '少数派',
+    name: m.platforms.sspai,
     domain: /(^|\.)sspai\.com$/,
     pathPattern: /^\/link/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('target') || '')
   },
   {
     id: 'segmentfault',
-    name: '思否 (SegmentFault)',
+    name: m.platforms.segmentfault,
     domain: /(^|\.)segmentfault\.com$/,
     pathPattern: /^\/check-link/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('url') || '')
   },
   {
     id: 'oschina',
-    name: '开源中国',
+    name: m.platforms.oschina,
     domain: /(^|\.)oschina\.net$/,
     pathPattern: /^\/action\/go/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('url') || url.searchParams.get('id') || '')
   },
   {
     id: 'weibo',
-    name: '微博',
+    name: m.platforms.weibo,
     domain: /(^|\.)weibo\.(com|cn)$/,
     pathPattern: /^(\/sinaurl|\/special\/redir)/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('u') || url.searchParams.get('url') || '')
   },
   {
     id: 'qq-mail',
-    name: 'QQ 邮箱中转',
+    name: m.platforms['qq-mail'],
     domain: 'mail.qq.com',
     pathPattern: /^\/cgi-bin\/readtemplate/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('gourl') || url.searchParams.get('url') || '')
   },
   {
     id: 'qq-cpc',
-    name: '腾讯 PC 链接防护',
+    name: m.platforms['qq-cpc'],
     domain: 'c.pc.qq.com',
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('pfurl') || url.searchParams.get('url') || '')
   },
   {
     id: 'baidu-tieba',
-    name: '百度贴吧 / 百度中转',
+    name: m.platforms['baidu-tieba'],
     domain: /(tieba\.baidu\.com|jump\.bdimg\.com)$/,
     targetExtractor: (url) => safeDecodeUrl(url.searchParams.get('url') || url.searchParams.get('target') || '')
   }
@@ -175,7 +176,7 @@ export function extractTargetUrl(rawUrl: string, enableHeuristic = true): { targ
             const decodedParsed = new URL(decoded);
             // 目标网址的域名不同于当前中转域名，或者具有强中转特征
             if (decodedParsed.hostname !== parsed.hostname || hasRedirectClues) {
-              return { targetUrl: decoded, platformName: '通用外链中转' };
+              return { targetUrl: decoded, platformName: m.platforms.heuristic };
             }
           } catch {
             // ignore

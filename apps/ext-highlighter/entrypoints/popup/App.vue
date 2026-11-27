@@ -11,11 +11,12 @@ import {
   triggerTextDownload,
   upsertHighlight
 } from '../../src/core/storage';
+import { m } from '../../src/locales';
 
 const pageItems = ref<HighlightItem[]>([]);
 const allCount = ref(0);
 const currentTabId = ref<number | undefined>();
-const pageTitle = ref('当前网页');
+const pageTitle = ref(m.defaultPageTitle);
 const toolbarEnabled = ref(true);
 const defaultColor = ref<HighlightColorId>('yellow');
 const defaultStyle = ref<HighlightStyle>('fill');
@@ -54,19 +55,19 @@ const syncSettingsToTab = async () => {
 const toggleToolbar = async () => {
   toolbarEnabled.value = !toolbarEnabled.value;
   await syncSettingsToTab();
-  showToast(toolbarEnabled.value ? '已开启划词浮条' : '已暂停划词浮条（仍可右键高亮）');
+  showToast(toolbarEnabled.value ? m.toastToolbarOn : m.toastToolbarOff);
 };
 
 const setDefaultBrush = async (color: HighlightColorId) => {
   defaultColor.value = color;
   await syncSettingsToTab();
-  showToast('已更新默认荧光色');
+  showToast(m.toastBrushUpdated);
 };
 
 const toggleDefaultStyle = async () => {
   defaultStyle.value = defaultStyle.value === 'fill' ? 'underline' : 'fill';
   await syncSettingsToTab();
-  showToast(defaultStyle.value === 'fill' ? '默认模式：荧光填充' : '默认模式：下划线');
+  showToast(defaultStyle.value === 'fill' ? m.toastStyleFill : m.toastStyleUnderline);
 };
 
 const locateInPage = (id: string) => {
@@ -102,7 +103,7 @@ const saveNote = async (item: HighlightItem) => {
       item: JSON.parse(JSON.stringify(item))
     }).catch(() => {});
   }
-  showToast('批注已保存');
+  showToast(m.toastNoteSaved);
 };
 
 const removeItem = async (id: string) => {
@@ -111,14 +112,14 @@ const removeItem = async (id: string) => {
   if (currentTabId.value) {
     chrome.tabs.sendMessage(currentTabId.value, { action: 'REMOVE_HIGHLIGHT', id }).catch(() => {});
   }
-  showToast('已移除高亮');
+  showToast(m.toastRemoved);
 };
 
 const copyPageMarkdown = async () => {
   if (pageItems.value.length === 0) return;
   const md = exportHighlightsToMarkdown(pageItems.value, pageTitle.value);
   await navigator.clipboard.writeText(md);
-  showToast('已复制本页 Markdown 笔记');
+  showToast(m.toastCopiedPageMd);
 };
 
 const downloadPageMarkdown = () => {
@@ -126,7 +127,7 @@ const downloadPageMarkdown = () => {
   const md = exportHighlightsToMarkdown(pageItems.value, pageTitle.value);
   const safeName = pageTitle.value.replace(/[\\/:*?"<>|]/g, '_').slice(0, 32) || 'notes';
   triggerTextDownload(md, `${safeName}.md`);
-  showToast('正在导出 Markdown 文件...');
+  showToast(m.toastExportingMd);
 };
 
 const openNotebook = async () => {
@@ -134,6 +135,7 @@ const openNotebook = async () => {
 };
 
 onMounted(async () => {
+  document.title = m.popupDocTitle;
   const settings = await getSettings();
   toolbarEnabled.value = settings.toolbarEnabled;
   defaultColor.value = settings.defaultColor;
@@ -143,7 +145,7 @@ onMounted(async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.url) {
       currentTabId.value = tab.id;
-      pageTitle.value = tab.title || '当前网页';
+      pageTitle.value = tab.title || m.defaultPageTitle;
       pageItems.value = await getPageHighlights(tab.url);
     }
     const all = await chrome.storage.local.get('hl_items_v1');
@@ -165,8 +167,8 @@ onMounted(async () => {
           </svg>
         </div>
         <div>
-          <h1 class="brand-title">网页荧光笔</h1>
-          <p class="brand-sub">本地离线 · 无限多色 · 零登录</p>
+          <h1 class="brand-title">{{ m.extTitle }}</h1>
+          <p class="brand-sub">{{ m.extSub }}</p>
         </div>
       </div>
 
@@ -174,17 +176,17 @@ onMounted(async () => {
         <button
           class="switch-pill"
           :class="{ active: toolbarEnabled }"
-          title="开启或暂停划词自动弹出荧光笔工具条"
+          :title="m.toolbarSwitchTitle"
           @click="toggleToolbar"
         >
           <span class="status-dot" />
-          <span>{{ toolbarEnabled ? '划词开启' : '已暂停' }}</span>
+          <span>{{ toolbarEnabled ? m.toolbarOn : m.toolbarOff }}</span>
         </button>
         <button class="notebook-btn" @click="openNotebook">
           <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
-          <span>笔记本 ({{ allCount }})</span>
+          <span>{{ m.notebookBtn(allCount) }}</span>
         </button>
       </div>
     </header>
@@ -192,7 +194,7 @@ onMounted(async () => {
     <!-- 默认画笔预设条 -->
     <div class="brush-bar">
       <div class="brush-left">
-        <span class="brush-label">默认画笔</span>
+        <span class="brush-label">{{ m.defaultBrush }}</span>
         <div class="brush-dots">
           <button
             v-for="c in HIGHLIGHT_COLORS"
@@ -200,7 +202,7 @@ onMounted(async () => {
             class="brush-dot"
             :class="{ active: defaultColor === c.id }"
             :style="{ backgroundColor: c.dot }"
-            :title="`默认使用${c.name}`"
+            :title="m.useColorTitle(m.colorNames[c.id])"
             @click="setDefaultBrush(c.id)"
           />
         </div>
@@ -212,18 +214,18 @@ onMounted(async () => {
         <svg v-else width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
         </svg>
-        <span>{{ defaultStyle === 'underline' ? '下划线' : '荧光填充' }}</span>
+        <span>{{ defaultStyle === 'underline' ? m.styleUnderline : m.styleFillFull }}</span>
       </button>
     </div>
 
     <!-- 本页状态与颜色筛选 -->
     <div class="subbar">
       <div class="page-info" :title="pageTitle">
-        本页已标 <strong>{{ pageItems.length }}</strong> 条重点
+        {{ m.pageCountBefore }}<strong>{{ pageItems.length }}</strong>{{ m.pageCountAfter }}
       </div>
       <div class="color-filters">
         <button class="filter-all" :class="{ active: filterColor === 'all' }" @click="filterColor = 'all'">
-          全部
+          {{ m.filterAll }}
         </button>
         <button
           v-for="c in HIGHLIGHT_COLORS"
@@ -231,7 +233,7 @@ onMounted(async () => {
           class="color-chip"
           :class="{ active: filterColor === c.id }"
           :style="{ backgroundColor: c.dot }"
-          :title="c.name"
+          :title="m.colorNames[c.id]"
           @click="filterColor = c.id"
         />
       </div>
@@ -246,8 +248,8 @@ onMounted(async () => {
             <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
           </svg>
         </div>
-        <p class="empty-title">当前页面暂无高亮记录</p>
-        <p class="empty-hint">在网页正文任意划选文字，即可浮现 6 色荧光笔与随手批注工具条</p>
+        <p class="empty-title">{{ m.emptyPopupTitle }}</p>
+        <p class="empty-hint">{{ m.emptyPopupHint }}</p>
       </div>
 
       <div v-else class="items-list">
@@ -257,7 +259,7 @@ onMounted(async () => {
           class="hl-card"
           :style="{ borderLeftColor: getColorDot(item.color) }"
         >
-          <p class="hl-quote" title="点击滚动定位到网页原句" @click="locateInPage(item.id)">
+          <p class="hl-quote" :title="m.quoteClickTitle" @click="locateInPage(item.id)">
             {{ item.text }}
           </p>
 
@@ -266,11 +268,11 @@ onMounted(async () => {
               v-model="editingNote"
               rows="2"
               class="note-input"
-              placeholder="输入批注想法..."
+              :placeholder="m.noteInputPlaceholder"
             />
             <div class="editor-btns">
-              <button class="btn-cancel" @click="editingId = null">取消</button>
-              <button class="btn-save" @click="saveNote(item)">保存</button>
+              <button class="btn-cancel" @click="editingId = null">{{ m.cancel }}</button>
+              <button class="btn-save" @click="saveNote(item)">{{ m.save }}</button>
             </div>
           </div>
 
@@ -293,9 +295,9 @@ onMounted(async () => {
               />
             </div>
             <div class="card-acts">
-              <button class="act-btn" @click="startEditNote(item)">{{ item.note ? '改批注' : '+ 批注' }}</button>
-              <button class="act-btn" @click="locateInPage(item.id)">定位</button>
-              <button class="act-btn act-del" @click="removeItem(item.id)">删除</button>
+              <button class="act-btn" @click="startEditNote(item)">{{ item.note ? m.editNoteBtn : m.addNoteBtn }}</button>
+              <button class="act-btn" @click="locateInPage(item.id)">{{ m.locateBtn }}</button>
+              <button class="act-btn act-del" @click="removeItem(item.id)">{{ m.deleteBtn }}</button>
             </div>
           </div>
         </div>
@@ -308,13 +310,13 @@ onMounted(async () => {
         <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
         </svg>
-        <span>复制 Markdown</span>
+        <span>{{ m.copyMdBtn }}</span>
       </button>
       <button class="foot-btn primary" :disabled="pageItems.length === 0" @click="downloadPageMarkdown">
         <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
         </svg>
-        <span>导出 .md 笔记</span>
+        <span>{{ m.exportMdBtn }}</span>
       </button>
     </footer>
 

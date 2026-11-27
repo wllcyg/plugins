@@ -13,18 +13,38 @@ const props = withDefaults(defineProps<Props>(), {
 
 const SITE_ORIGIN = 'https://plugins.cheatppf.xyz';
 
-const guideUrl = computed(() =>
-  props.pluginId ? `${SITE_ORIGIN}/tools/${props.pluginId}` : `${SITE_ORIGIN}/install`
-);
+const isZh = (() => {
+  try {
+    const lang =
+      (typeof chrome !== 'undefined' && chrome.i18n?.getUILanguage?.()) ||
+      (typeof navigator !== 'undefined' && navigator.language) ||
+      'zh';
+    return lang.toLowerCase().startsWith('zh');
+  } catch {
+    return true;
+  }
+})();
+
+const homeUrl = isZh ? SITE_ORIGIN : `${SITE_ORIGIN}/en`;
+const feedbackUrl = isZh ? `${SITE_ORIGIN}/feedback` : `${SITE_ORIGIN}/en/feedback`;
+
+const guideUrl = computed(() => {
+  const prefix = isZh ? '' : '/en';
+  return props.pluginId ? `${SITE_ORIGIN}${prefix}/tools/${props.pluginId}` : `${SITE_ORIGIN}${prefix}/install`;
+});
+
+const labels = isZh
+  ? { more: '更多免费插件', guide: '使用指南', feedback: '问题反馈' }
+  : { more: 'More Free Tools', guide: 'Guide', feedback: 'Feedback' };
 </script>
 
 <template>
   <footer class="app-portal-footer" :class="`theme-${theme}`">
-    <a :href="SITE_ORIGIN" target="_blank" rel="noopener noreferrer">更多免费插件</a>
+    <a :href="homeUrl" target="_blank" rel="noopener noreferrer">{{ labels.more }}</a>
     <span class="sep">·</span>
-    <a :href="guideUrl" target="_blank" rel="noopener noreferrer">使用指南</a>
+    <a :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ labels.guide }}</a>
     <span class="sep">·</span>
-    <a :href="`${SITE_ORIGIN}/feedback`" target="_blank" rel="noopener noreferrer">问题反馈</a>
+    <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">{{ labels.feedback }}</a>
   </footer>
 </template>
 

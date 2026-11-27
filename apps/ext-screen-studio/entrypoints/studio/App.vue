@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { Video, Plus, Trash2, Clock, Film, Upload } from 'lucide-vue-next';
 import RecorderPanel from './components/RecorderPanel.vue';
 import EditorWorkspace from './components/EditorWorkspace.vue';
+import { m } from '../../src/locales';
 import { deleteProject, getProject, listProjects, saveProject } from '../../src/utils/project-store';
 import { loadUserPreferences } from '../../src/utils/user-prefs';
 import type { RecordingProject } from '../../src/types/recording';
@@ -25,7 +26,7 @@ const importLocalVideo = async (file: File) => {
   try {
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error('无法解析该视频文件'));
+      video.onerror = () => reject(new Error(m.errParseVideo));
     });
 
     const prefs = await loadUserPreferences();
@@ -33,7 +34,7 @@ const importLocalVideo = async (file: File) => {
     const id = crypto.randomUUID();
     const project: RecordingProject = {
       id,
-      title: file.name.replace(/\.[^.]+$/, '') || '导入视频',
+      title: file.name.replace(/\.[^.]+$/, '') || m.defaultImportedTitle,
       createdAt: Date.now(),
       durationMs,
       trimStartMs: 0,
@@ -52,7 +53,7 @@ const importLocalVideo = async (file: File) => {
     await refreshLibrary();
     await openEditor(id);
   } catch (err) {
-    alert(err instanceof Error ? err.message : '导入视频失败');
+    alert(err instanceof Error ? err.message : m.errImportVideo);
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -69,6 +70,7 @@ const refreshLibrary = async () => {
 };
 
 onMounted(async () => {
+  document.title = m.studioDocTitle;
   const params = new URLSearchParams(window.location.search);
   const urlMode = params.get('mode');
   const urlId = params.get('id');
@@ -148,8 +150,8 @@ const formatDuration = (ms: number) => {
           <Video :size="22" />
         </div>
         <div>
-          <h1>屏幕录制 工程库</h1>
-          <p>纯本地自动跟焦录屏 · 无限时长 · 无水印高清导出</p>
+          <h1>{{ m.libraryTitle }}</h1>
+          <p>{{ m.librarySub }}</p>
         </div>
       </div>
       <div class="header-actions">
@@ -162,11 +164,11 @@ const formatDuration = (ms: number) => {
         />
         <button class="import-btn" @click="fileInputRef?.click()">
           <Upload :size="15" />
-          <span>导入本地视频美化</span>
+          <span>{{ m.importVideoBtn }}</span>
         </button>
         <button class="new-btn" @click="mode = 'record'">
           <Plus :size="16" />
-          <span>新建跟焦录制</span>
+          <span>{{ m.newRecordingBtn }}</span>
         </button>
       </div>
     </header>
@@ -174,9 +176,9 @@ const formatDuration = (ms: number) => {
     <main class="lib-grid-wrap">
       <div v-if="!projects.length" class="empty-state">
         <Film :size="40" />
-        <h2>还没有本地录制工程</h2>
-        <p>点击右上角「新建跟焦录制」，录制操作网页后即可自动生成平滑缩放镜头。</p>
-        <button class="new-btn" @click="mode = 'record'">开始首次录制</button>
+        <h2>{{ m.emptyLibraryTitle }}</h2>
+        <p>{{ m.emptyLibraryDesc }}</p>
+        <button class="new-btn" @click="mode = 'record'">{{ m.startFirstRecordingBtn }}</button>
       </div>
 
       <div v-else class="lib-grid">
@@ -184,7 +186,7 @@ const formatDuration = (ms: number) => {
           <div class="card-top" @click="openEditor(item.id)">
             <div class="thumb-badge">
               <Video :size="24" />
-              <span>{{ item.zoomSegments.length }} 个跟焦镜头</span>
+              <span>{{ m.zoomSegmentsCount(item.zoomSegments.length) }}</span>
             </div>
           </div>
           <div class="card-body">
@@ -192,7 +194,7 @@ const formatDuration = (ms: number) => {
             <div class="card-meta">
               <span><Clock :size="12" /> {{ formatDuration(item.durationMs) }}</span>
               <span>{{ new Date(item.createdAt).toLocaleDateString() }}</span>
-              <button class="del-btn" title="删除工程" @click="handleDelete(item.id)">
+              <button class="del-btn" :title="m.deleteProjectTooltip" @click="handleDelete(item.id)">
                 <Trash2 :size="14" />
               </button>
             </div>
@@ -207,7 +209,7 @@ const formatDuration = (ms: number) => {
       </a>
       <span>·</span>
       <a href="https://github.com/wllcyg/plugins" target="_blank" rel="noreferrer">
-        GitHub 开源仓库 (GPL-3.0)
+        {{ m.githubRepoLabel }}
       </a>
     </footer>
   </div>
