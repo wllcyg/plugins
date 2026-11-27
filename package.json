@@ -27,6 +27,8 @@
     "build:highlighter": "pnpm --filter @100free/ext-highlighter build",
     "dev:recorder": "pnpm --filter @100free/ext-screen-studio dev",
     "build:recorder": "pnpm --filter @100free/ext-screen-studio build",
+    "dev:pdf": "pnpm --filter @100free/ext-pdf-toolkit dev",
+    "build:pdf": "pnpm --filter @100free/ext-pdf-toolkit build",
     "dev:portal": "pnpm --filter @100free/web-portal dev",
     "build:portal": "pnpm --filter @100free/web-portal build",
     "build:all": "pnpm -r run build",

@@ -139,8 +139,8 @@ const messages = {
     roadmapStatus: '规划中',
     roadmapCta: '提交你的插件创意',
     roadmapItems: [
-      { title: '本地 PDF 工具箱', desc: '合并、拆分、压缩、页面旋转与转图片，全程 WebAssembly 本地处理，绝不上传文件。' },
-      { title: 'JSON 与接口调试助手', desc: '网页 JSON 自动格式化、字段对比与本地 Mock 拦截，零遥测的轻量开发者伴侣。' },
+      { title: '标签页工作区管家', desc: '一键将数十个标签页按项目分组收纳并休眠省内存，支持本地模糊搜索与一键恢复。' },
+      { title: 'JSON 与接口调试助手', desc: '网页 JSON 自动格式化、字段对比与一键生成 TypeScript 类型，零遥测的轻量开发者伴侣。' },
       { title: '沉浸式网页阅读器', desc: '一键去除页面杂乱侧边栏与广告，支持排版定制与本地导出干净 Markdown。' }
     ],
     siteTitleHome: '100-Free · 免费、纯净、离线优先的浏览器生产力矩阵',
@@ -249,8 +249,8 @@ const messages = {
     roadmapStatus: 'Planned',
     roadmapCta: 'Suggest a Tool',
     roadmapItems: [
-      { title: 'Local PDF Toolkit', desc: 'Merge, split, compress, rotate, and convert PDFs to images 100% locally via WebAssembly.' },
-      { title: 'JSON & API Inspector', desc: 'Auto-format JSON responses, diff payloads, and mock local APIs with zero telemetry.' },
+      { title: 'Tab Workspace Manager', desc: 'Group and hibernate dozens of tabs by project to save RAM, with instant local search and restore.' },
+      { title: 'JSON & API Inspector', desc: 'Auto-format JSON responses, diff payloads, and generate TypeScript types with zero telemetry.' },
       { title: 'Distraction-Free Reader', desc: 'Strip sidebars and clutter from any article with custom typography and clean Markdown export.' }
     ],
     siteTitleHome: '100-Free · Free, Private & Offline-First Browser Extensions',

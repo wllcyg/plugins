@@ -8,6 +8,7 @@ import qrIcon from '../../../ext-qr-master/public/icons/icon-128.png?url';
 import redirectIcon from '../../../ext-clean-redirect/public/icons/icon-128.png?url';
 import highlighterIcon from '../../../ext-highlighter/public/icons/icon-128.png?url';
 import screenStudioIcon from '../../../ext-screen-studio/public/icons/icon-128.png?url';
+import pdfToolkitIcon from '../../../ext-pdf-toolkit/public/icons/icon-128.png?url';
 
 import tablePreview from '../assets/table-export.webp';
 import editorPreview from '../assets/screenshot-editor.webp';
@@ -19,6 +20,7 @@ import qrPreview from '../assets/qr-master.webp';
 import redirectPreview from '../assets/clean-redirect.webp';
 import highlighterPreview from '../assets/highlighter.webp';
 import screenStudioPreview from '../assets/screen-studio.webp';
+import pdfToolkitPreview from '../assets/pdf-toolkit.png';
 import type { Locale } from './i18n';
 
 export interface LocalizedContent {
@@ -383,6 +385,39 @@ const rawPlugins: PluginRawItem[] = [
         'Interact naturally with your webpage while cursor movement and click focus events are captured.',
         'Stop recording to launch the Studio Editor with auto-generated zoom segments, custom gradients, and aspect ratios.',
         'Export crisp MP4/WebM video locally with zero watermarks or duration limits.'
+      ]
+    }
+  },
+  {
+    id: 'pdf-toolkit',
+    icon: pdfToolkitIcon,
+    preview: pdfToolkitPreview,
+    previewWidth: 984,
+    previewHeight: 420,
+    zh: {
+      name: '本地隐私 PDF 工具箱',
+      category: '文档与办公',
+      previewAlt: '本地隐私 PDF 工具箱展示多页缩略图整理、合并拆分、图片互转与盖章水印面板',
+      headline: '100% 离线本地处理 PDF，绝不上传文件、无次数限制',
+      summary: '纯浏览器本地内存完成 PDF 合并、单页拆分提取、旋转重排、PDF 与高清 PNG/JPG 互转，以及文字水印与透明电子签名盖章。断网也能用，合同与敏感文档不泄密。',
+      highlights: ['零上传纯离线', '合并拆分与重排', 'PDF/图片互转与盖章'],
+      steps: [
+        '点击扩展图标打开本地 PDF 工作台，或在浏览网页 PDF 时直接点击「导入当前 PDF」及右键链接打开。',
+        '拖入一个或多个 PDF 文件，预览每页缩略图，按需勾选页面、旋转或调整顺序。',
+        '一键导出合并后的 PDF、拆分为单页 ZIP、转为 2x 高清图片，或叠加本地水印/电子印章后下载。'
+      ]
+    },
+    en: {
+      name: 'Local Privacy PDF Toolkit',
+      category: 'Docs & Office',
+      previewAlt: 'Local Privacy PDF Toolkit showing page thumbnail organizer, merge/split, image conversion, and watermark controls',
+      headline: '100% offline PDF merge, split, image conversion & stamping—zero uploads',
+      summary: 'Process sensitive PDFs strictly inside your browser without uploading a single byte. Merge, split, reorder, rotate pages, convert between PDF and HD PNG/JPG, and stamp watermarks or signatures with no limits.',
+      highlights: ['Zero-Upload Privacy', 'Merge, Split & Reorder', 'PDF ↔ Image & Stamp'],
+      steps: [
+        'Open the PDF Studio from the toolbar, or import the active PDF tab / right-click any PDF link.',
+        'Drop one or more PDFs to preview page thumbnails, select pages, rotate, or reorder.',
+        'Export merged PDF, split single-page ZIP, 2x HD images, or apply local watermarks and stamps.'
       ]
     }
   }

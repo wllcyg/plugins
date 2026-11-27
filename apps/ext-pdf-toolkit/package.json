@@ -1,0 +1,31 @@
+{
+  "name": "@100free/ext-pdf-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "100款免费生产力插件计划 - 本地隐私 PDF 工具箱 (零上传合并/拆分/图片互转/签名水印)",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "compile": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@100free/core": "workspace:*",
+    "@100free/ui": "workspace:*",
+    "jszip": "^3.10.1",
+    "lucide-vue-next": "^0.460.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.10.38",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.304",
+    "@types/jszip": "^3.4.1",
+    "@wxt-dev/module-vue": "^1.0.3",
+    "typescript": "^5.7.3",
+    "vue-tsc": "^2.2.0",
+    "wxt": "^0.19.26"
+  }
+}

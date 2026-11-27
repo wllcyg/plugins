@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    ".wxt/types/**/*.d.ts",
+    "entrypoints/**/*",
+    "src/**/*"
+  ]
+}
