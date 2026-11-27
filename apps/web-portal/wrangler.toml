@@ -1,0 +1,8 @@
+name = "plugins"
+compatibility_date = "2025-11-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "100free-guestbook"
+database_id = "92425454-7ab4-41b6-8a4a-4d3a865e19a7"

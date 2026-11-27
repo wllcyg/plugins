@@ -37,6 +37,7 @@ export interface PluginRawItem {
   preview: string;
   previewWidth: number;
   previewHeight: number;
+  edgeStoreUrl?: string;
   zh: LocalizedContent;
   en: LocalizedContent;
 }
@@ -47,6 +48,7 @@ export interface PluginItem extends LocalizedContent {
   preview: string;
   previewWidth: number;
   previewHeight: number;
+  edgeStoreUrl?: string;
   downloadUrl: string;
 }
 
@@ -89,6 +91,7 @@ const rawPlugins: PluginRawItem[] = [
     preview: editorPreview,
     previewWidth: 1000,
     previewHeight: 800,
+    edgeStoreUrl: 'https://microsoftedge.microsoft.com/addons/detail/dgneaebaifmjihldjlonfeflcdolgfmb',
     zh: {
       name: '网页长截图',
       category: '截图与标注',
@@ -151,6 +154,7 @@ const rawPlugins: PluginRawItem[] = [
     preview: redirectPreview,
     previewWidth: 984,
     previewHeight: 420,
+    edgeStoreUrl: 'https://microsoftedge.microsoft.com/addons/detail/ngnafjopodjeamdkopmadmbggbibdlgb',
     zh: {
       name: '外链免拦截直达与净化',
       category: '文本与效率',
@@ -391,6 +395,7 @@ export function getLocalizedPlugins(lang: Locale): PluginItem[] {
     preview: item.preview,
     previewWidth: item.previewWidth,
     previewHeight: item.previewHeight,
+    edgeStoreUrl: item.edgeStoreUrl,
     downloadUrl: `${GITHUB_RELEASES_URL}/latest/download/100free-ext-${item.id}-chrome.zip`,
     ...item[lang]
   }));

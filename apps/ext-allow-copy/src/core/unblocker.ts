@@ -50,7 +50,7 @@ export class DomUnblocker {
     this.injectStyle();
     this.interceptEvents();
     this.cleanInlineHandlers();
-    this.injectPageContextProtector(strict);
+    this.syncPageProtector(true, strict);
   }
 
   disable() {
@@ -62,6 +62,7 @@ export class DomUnblocker {
       clearInterval(this.cleanTimer);
       this.cleanTimer = null;
     }
+    this.syncPageProtector(false, false);
   }
 
   private injectStyle() {
@@ -140,54 +141,11 @@ export class DomUnblocker {
     this.cleanTimer = window.setInterval(clean, 2500);
   }
 
-  /**
-   * 注入页面上下文保护脚本：
-   * 1. 破解定时器恶意清空选区 (removeAllRanges/empty)
-   * 2. 强力模式下重置 EventTarget 和 ShadowDOM 封闭限制
-   */
-  private injectPageContextProtector(strict: boolean) {
-    const script = document.createElement('script');
-    script.textContent = `
-      (() => {
-        try {
-          // 防御恶意代码不断调用 removeAllRanges 强行清空用户选区
-          const originalRemoveAllRanges = Selection.prototype.removeAllRanges;
-          const originalEmpty = Selection.prototype.empty;
-          
-          let lastUserMouseDownTime = 0;
-          window.addEventListener('mousedown', () => { lastUserMouseDownTime = Date.now(); }, true);
-
-          Selection.prototype.removeAllRanges = function() {
-            // 如果用户在 2 秒内正在进行鼠标划选，拦截恶意脚本的主动清空
-            if (Date.now() - lastUserMouseDownTime < 2000) {
-              return;
-            }
-            return originalRemoveAllRanges.apply(this, arguments);
-          };
-
-          if (originalEmpty) {
-            Selection.prototype.empty = function() {
-              if (Date.now() - lastUserMouseDownTime < 2000) {
-                return;
-              }
-              return originalEmpty.apply(this, arguments);
-            };
-          }
-
-          ${strict ? `
-          // 强力模式：强制解除 Shadow DOM closed 模式以穿透隐藏节点
-          const origAttachShadow = Element.prototype.attachShadow;
-          Element.prototype.attachShadow = function(init) {
-            if (init && init.mode === 'closed') {
-              init.mode = 'open';
-            }
-            return origAttachShadow.call(this, init);
-          };
-          ` : ''}
-        } catch(e) {}
-      })();
-    `;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
+  private syncPageProtector(active: boolean, strict: boolean) {
+    const detail = { active, strict };
+    if (document.documentElement) {
+      document.documentElement.dataset.superFreeCopyState = JSON.stringify(detail);
+    }
+    window.dispatchEvent(new CustomEvent('__super_free_copy_state__', { detail }));
   }
 }

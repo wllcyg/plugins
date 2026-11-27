@@ -7,6 +7,9 @@ const STORAGE_KEY = '100free_portal_lang';
 function detectInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'zh';
   try {
+    if (window.location.pathname === '/en' || window.location.pathname.startsWith('/en/')) {
+      return 'en';
+    }
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
     if (urlLang === 'zh' || urlLang === 'en') return urlLang;
@@ -47,6 +50,7 @@ const messages = {
     navPrinciples: '核心原则',
     navInstallGuide: '安装指南',
     navFeedback: '问题反馈',
+    navPrivacy: '隐私政策',
     navAbout: '关于计划',
     navAriaLabel: '主导航',
     carouselAriaLabel: '精选插件功能轮播展示',
@@ -55,7 +59,7 @@ const messages = {
     heroTitleLine1: '网页生产力，',
     heroTitleLine2: '随手带走',
     heroDesc: (count: number) =>
-      `已上线 ${count} 款高频免费浏览器扩展：覆盖长截图标注、表格转 Excel、自由复制、外链免拦截直达、CSS 提取、大图嗅探、网课倍速与离线二维码。`,
+      `已上线 ${count} 款高频免费浏览器扩展：覆盖长截图标注、表格转 Excel、自由复制、外链免拦截直达、CSS 提取、大图嗅探、网课倍速、离线二维码、网页荧光笔与跟焦录屏。`,
     heroCtaPrimary: (count: number) => `探索全部 ${count} 款插件`,
     heroCtaSecondary: '了解开源承诺',
     viewDetails: '查看详情',
@@ -76,6 +80,8 @@ const messages = {
     emptyResult: (q: string) => `没有找到匹配「${q}」的插件，试试清除关键词或切换分类。`,
     resetFilter: '重置筛选',
     backToDirectory: (count: number) => `返回全部插件 (${count})`,
+    installOnEdge: '前往 Edge 商店一键安装',
+    edgeStoreBadge: 'Edge 商店已上架',
     downloadZip: '下载最新版 ZIP 安装包',
     viewReleases: '查看 GitHub Releases',
     installTipTitle: 'Chrome / Edge 本地安装方式（3 步生效）：',
@@ -130,8 +136,19 @@ const messages = {
     footerDesc: '我们计划打造 100 款高品质、完全免费、零隐私上报的浏览器生产力工具，让效率工具重归自由。',
     footerProgress: (count: number) => `当前进度：${count} / 100`,
     footerPlatform: 'Chrome / Edge MV3 原生支持',
+    roadmapTitle: '100-Free 路线图 · 下一步规划',
+    roadmapSub: '矩阵持续扩充中，所有新工具均坚持纯本地离线与永久免费原则。',
+    roadmapStatus: '规划中',
+    roadmapCta: '提交你的插件创意',
+    roadmapItems: [
+      { title: '本地 PDF 工具箱', desc: '合并、拆分、压缩、页面旋转与转图片，全程 WebAssembly 本地处理，绝不上传文件。' },
+      { title: 'JSON 与接口调试助手', desc: '网页 JSON 自动格式化、字段对比与本地 Mock 拦截，零遥测的轻量开发者伴侣。' },
+      { title: '沉浸式网页阅读器', desc: '一键去除页面杂乱侧边栏与广告，支持排版定制与本地导出干净 Markdown。' }
+    ],
     siteTitleHome: '100-Free · 免费、纯净、离线优先的浏览器生产力矩阵',
-    siteTitleDetail: (name: string) => `${name} · 100-Free 免费生产力插件`,
+    siteTitleDetail: (name: string) => `${name} · 免费 Chrome / Edge 浏览器扩展 | 100-Free`,
+    siteTitlePrivacy: '隐私政策 · 100-Free 免费生产力插件',
+    privacyPageSubtitle: '100-Free 全系浏览器扩展严格遵守零遥测、纯本地离线处理原则，不收集、不存储也不上传您的任何个人数据或浏览记录。',
     switchLangLabel: 'EN',
     switchToDark: '切换至极客暗夜模式',
     switchToLight: '切换至暖沙日间模式'
@@ -143,6 +160,7 @@ const messages = {
     navPrinciples: 'Principles',
     navInstallGuide: 'Install Guide',
     navFeedback: 'Feedback',
+    navPrivacy: 'Privacy',
     navAbout: 'About',
     navAriaLabel: 'Main navigation',
     carouselAriaLabel: 'Featured extension previews carousel',
@@ -151,7 +169,7 @@ const messages = {
     heroTitleLine1: 'Web productivity,',
     heroTitleLine2: 'effortlessly yours',
     heroDesc: (count: number) =>
-      `${count} free, privacy-first browser extensions now available: full-page screenshots, table-to-Excel, super copy, clean redirects, CSS-to-Tailwind, bulk image sniffer, video speed booster, and offline QR tools.`,
+      `${count} free, privacy-first browser extensions now available: full-page screenshots, table-to-Excel, super copy, clean redirects, CSS-to-Tailwind, bulk image sniffer, video speed booster, offline QR tools, web highlighter, and auto-zoom screen recorder.`,
     heroCtaPrimary: (count: number) => `Explore All ${count} Tools`,
     heroCtaSecondary: 'Our Open Pledge',
     viewDetails: 'View Details',
@@ -172,6 +190,8 @@ const messages = {
     emptyResult: (q: string) => `No extensions match "${q}". Try another keyword or reset filters.`,
     resetFilter: 'Reset Filters',
     backToDirectory: (count: number) => `Back to All (${count})`,
+    installOnEdge: 'Get on Microsoft Edge Add-ons',
+    edgeStoreBadge: 'Live on Edge Store',
     downloadZip: 'Download Latest ZIP',
     viewReleases: 'GitHub Releases',
     installTipTitle: 'How to install on Chrome / Edge (3 quick steps):',
@@ -226,8 +246,19 @@ const messages = {
     footerDesc: 'On a mission to craft 100 polished, completely free, zero-telemetry browser utilities for developers and knowledge workers.',
     footerProgress: (count: number) => `Progress: ${count} / 100`,
     footerPlatform: 'Chrome & Edge MV3 Ready',
+    roadmapTitle: '100-Free Roadmap · Coming Next',
+    roadmapSub: 'Continuously shipping new offline-first, zero-paywall browser utilities.',
+    roadmapStatus: 'Planned',
+    roadmapCta: 'Suggest a Tool',
+    roadmapItems: [
+      { title: 'Local PDF Toolkit', desc: 'Merge, split, compress, rotate, and convert PDFs to images 100% locally via WebAssembly.' },
+      { title: 'JSON & API Inspector', desc: 'Auto-format JSON responses, diff payloads, and mock local APIs with zero telemetry.' },
+      { title: 'Distraction-Free Reader', desc: 'Strip sidebars and clutter from any article with custom typography and clean Markdown export.' }
+    ],
     siteTitleHome: '100-Free · Free, Private & Offline-First Browser Extensions',
-    siteTitleDetail: (name: string) => `${name} · 100-Free Extensions`,
+    siteTitleDetail: (name: string) => `${name} - Free Chrome & Edge Extension | 100-Free`,
+    siteTitlePrivacy: 'Privacy Policy · 100-Free Extensions',
+    privacyPageSubtitle: 'All 100-Free browser extensions operate strictly offline with zero telemetry—we never collect, store, or transmit your browsing data.',
     switchLangLabel: '中文',
     switchToDark: 'Switch to Dark Mode',
     switchToLight: 'Switch to Light Mode'

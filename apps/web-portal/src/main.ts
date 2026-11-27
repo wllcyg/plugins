@@ -7,7 +7,13 @@ export const routes: RouteRecordRaw[] = [
   { path: '/', component: App },
   { path: '/install', component: App },
   { path: '/feedback', component: App },
+  { path: '/privacy', component: App },
   { path: '/tools/:toolId', component: App },
+  { path: '/en', component: App },
+  { path: '/en/install', component: App },
+  { path: '/en/feedback', component: App },
+  { path: '/en/privacy', component: App },
+  { path: '/en/tools/:toolId', component: App },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];
 

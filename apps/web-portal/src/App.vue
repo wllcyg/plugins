@@ -31,22 +31,46 @@ import { theme, toggleTheme } from './data/theme';
 
 const InstallGuide = defineAsyncComponent(() => import('./components/InstallGuide.vue'));
 const FeedbackPage = defineAsyncComponent(() => import('./components/FeedbackPage.vue'));
+const PrivacyPage = defineAsyncComponent(() => import('./components/PrivacyPage.vue'));
 
 const logoUrl = import.meta.env.BASE_URL + 'logo.svg';
 const route = useRoute();
 const router = useRouter();
 const plugins = computed(() => getLocalizedPlugins(locale.value));
-const isInstallGuide = computed(() => route.path === '/install' || route.query.page === 'install');
-const isFeedbackPage = computed(() => route.path === '/feedback');
+const cleanPath = computed(() => route.path.replace(/^\/en(?=\/|$)/, '') || '/');
+const isInstallGuide = computed(() => cleanPath.value === '/install' || route.query.page === 'install');
+const isFeedbackPage = computed(() => cleanPath.value === '/feedback');
+const isPrivacyPage = computed(() => cleanPath.value === '/privacy');
 const activeToolId = computed(() => (route.params.toolId as string | undefined) || (route.query.tool as string | undefined));
 const selected = computed(() =>
-  isInstallGuide.value || isFeedbackPage.value
+  isInstallGuide.value || isFeedbackPage.value || isPrivacyPage.value
     ? undefined
     : plugins.value.find((plugin) => plugin.id === activeToolId.value)
 );
 const pageRoot = ref<HTMLElement>();
 let homeGsapCtx: { revert: () => void } | null = null;
-const detailUrl = (id: string) => `/tools/${id}`;
+const localizedPath = (path: string) =>
+  locale.value === 'en' ? (path === '/' ? '/en' : `/en${path}`) : path;
+const detailUrl = (id: string) => localizedPath(`/tools/${id}`);
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/en' || path.startsWith('/en/')) {
+      locale.value = 'en';
+    }
+  },
+  { immediate: true }
+);
+
+function handleToggleLocale() {
+  const nextLocale = locale.value === 'zh' ? 'en' : 'zh';
+  toggleLocale();
+  const targetPath = nextLocale === 'en' ? (cleanPath.value === '/' ? '/en' : `/en${cleanPath.value}`) : cleanPath.value;
+  if (route.path !== targetPath) {
+    void router.push({ path: targetPath, hash: route.hash });
+  }
+}
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // 首屏轮播图：覆盖全部插件，支持自动播放、悬停暂停与左右切换
@@ -119,38 +143,58 @@ function setLinkHref(selector: string, href: string) {
   if (el) el.href = href;
 }
 
-watch([selected, isInstallGuide, isFeedbackPage, locale], ([plugin, installPage, feedbackPage]) => {
+watch([selected, isInstallGuide, isFeedbackPage, isPrivacyPage, locale], ([plugin, installPage, feedbackPage, privacyPage]) => {
   if (typeof document === 'undefined') return;
   const title = installPage
     ? t.value.siteTitleInstall
     : feedbackPage
       ? t.value.siteTitleFeedback
-      : plugin
-        ? t.value.siteTitleDetail(plugin.name)
-        : t.value.siteTitleHome;
+      : privacyPage
+        ? t.value.siteTitlePrivacy
+        : plugin
+          ? t.value.siteTitleDetail(plugin.name)
+          : t.value.siteTitleHome;
   const description = installPage
     ? t.value.installPageSubtitle
     : feedbackPage
       ? t.value.feedbackPageSubtitle
-      : plugin
-        ? `${plugin.headline}：${plugin.summary}`
-        : t.value.heroDesc(plugins.value.length);
-  const canonicalUrl = installPage
-    ? `${SITE_ORIGIN}/install`
+      : privacyPage
+        ? t.value.privacyPageSubtitle
+        : plugin
+          ? `${plugin.headline}${locale.value === 'en' ? ': ' : '：'}${plugin.summary}`
+          : t.value.heroDesc(plugins.value.length);
+  const pathSuffix = installPage
+    ? '/install'
     : feedbackPage
-      ? `${SITE_ORIGIN}/feedback`
-      : plugin
-        ? `${SITE_ORIGIN}/tools/${plugin.id}`
-        : `${SITE_ORIGIN}/`;
-  const enUrl = `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=en`;
+      ? '/feedback'
+      : privacyPage
+        ? '/privacy'
+        : plugin
+          ? `/tools/${plugin.id}`
+          : '/';
+  const zhUrl = `${SITE_ORIGIN}${pathSuffix}`;
+  const enUrl = `${SITE_ORIGIN}${pathSuffix === '/' ? '/en' : `/en${pathSuffix}`}`;
+  const canonicalUrl = locale.value === 'en' ? enUrl : zhUrl;
   const ogImage = plugin?.preview?.startsWith('http')
     ? plugin.preview
     : plugin?.preview
       ? `${SITE_ORIGIN}${plugin.preview.startsWith('/') ? '' : '/'}${plugin.preview}`
       : `${SITE_ORIGIN}/og-cover.png`;
 
+  const keywords = plugin
+    ? [
+        plugin.name,
+        plugin.category,
+        ...plugin.highlights,
+        locale.value === 'en' ? 'free Chrome extension,Edge add-on,100-Free' : '免费Chrome扩展,Edge插件,100-Free'
+      ].join(',')
+    : locale.value === 'en'
+      ? '100-Free,free browser extensions,Chrome extension,Edge add-on,full-page screenshot,table to Excel,allow copy,clean redirect,CSS to Tailwind,image sniffer,video speed booster,offline QR code,web highlighter,screen recorder'
+      : '100-Free,免费浏览器插件,Chrome扩展,Edge扩展,网页长截图,表格导出Excel,自由复制,外链直达,CSS提取,Tailwind,大图嗅探,视频倍速,离线二维码,网页荧光笔,屏幕录制';
+
   document.title = title;
   setMetaContent('meta[name="description"]', description);
+  setMetaContent('meta[name="keywords"]', keywords);
   setMetaContent('meta[property="og:title"]', title);
   setMetaContent('meta[property="og:description"]', description);
   setMetaContent('meta[property="og:url"]', canonicalUrl);
@@ -158,10 +202,10 @@ watch([selected, isInstallGuide, isFeedbackPage, locale], ([plugin, installPage,
   setMetaContent('meta[name="twitter:title"]', title);
   setMetaContent('meta[name="twitter:description"]', description);
   setMetaContent('meta[name="twitter:image"]', ogImage);
-  setLinkHref('link[rel="canonical"]', locale.value === 'en' ? enUrl : canonicalUrl);
-  setLinkHref('link[rel="alternate"][hreflang="zh-CN"]', canonicalUrl);
+  setLinkHref('link[rel="canonical"]', canonicalUrl);
+  setLinkHref('link[rel="alternate"][hreflang="zh-CN"]', zhUrl);
   setLinkHref('link[rel="alternate"][hreflang="en"]', enUrl);
-  setLinkHref('link[rel="alternate"][hreflang="x-default"]', canonicalUrl);
+  setLinkHref('link[rel="alternate"][hreflang="x-default"]', zhUrl);
 }, { immediate: true });
 
 function moveToLocation(focusTarget?: HTMLElement) {
@@ -175,14 +219,14 @@ function moveToLocation(focusTarget?: HTMLElement) {
 async function initHomeAnimations() {
   homeGsapCtx?.revert();
   homeGsapCtx = null;
-  if (typeof window === 'undefined' || reduceMotion() || selected.value || isInstallGuide.value || isFeedbackPage.value || !pageRoot.value) return;
+  if (typeof window === 'undefined' || reduceMotion() || selected.value || isInstallGuide.value || isFeedbackPage.value || isPrivacyPage.value || !pageRoot.value) return;
 
   const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
     import('gsap'),
     import('gsap/ScrollTrigger')
   ]);
   gsap.registerPlugin(ScrollTrigger);
-  if (selected.value || isInstallGuide.value || isFeedbackPage.value || !pageRoot.value) return;
+  if (selected.value || isInstallGuide.value || isFeedbackPage.value || isPrivacyPage.value || !pageRoot.value) return;
 
   homeGsapCtx = gsap.context(() => {
     gsap.from('.principle-card', {
@@ -264,18 +308,18 @@ onUnmounted(() => {
 
   <header class="site-header">
     <div class="shell topbar">
-      <RouterLink class="brand" :to="{ path: '/', hash: '' }" translate="no">
+      <RouterLink class="brand" :to="{ path: localizedPath('/'), hash: '' }" translate="no">
         <img :src="logoUrl" alt="" width="34" height="34" />
         <span>100<span class="brand-hyphen">-</span>Free</span>
         <span class="brand-badge">{{ t.brandBadge(plugins.length) }}</span>
       </RouterLink>
       <nav :aria-label="t.navAriaLabel">
-        <RouterLink :to="{ path: '/', hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
-        <RouterLink to="/install"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
-        <RouterLink to="/feedback"><MessageSquare :size="15" aria-hidden="true" />{{ t.navFeedback }}</RouterLink>
-        <RouterLink :to="{ path: '/', hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
+        <RouterLink :to="{ path: localizedPath('/'), hash: '#directory' }"><LayoutGrid :size="15" aria-hidden="true" />{{ t.navAllPlugins }}</RouterLink>
+        <RouterLink :to="localizedPath('/install')"><FileArchive :size="15" aria-hidden="true" />{{ t.navInstallGuide }}</RouterLink>
+        <RouterLink :to="localizedPath('/feedback')"><MessageSquare :size="15" aria-hidden="true" />{{ t.navFeedback }}</RouterLink>
+        <RouterLink :to="{ path: localizedPath('/'), hash: '#principles' }"><ShieldCheck :size="15" aria-hidden="true" />{{ t.navPrinciples }}</RouterLink>
         <a href="#about"><CircleHelp :size="15" aria-hidden="true" />{{ t.navAbout }}</a>
-        <button type="button" class="lang-btn" :title="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="toggleLocale">
+        <button type="button" class="lang-btn" :title="locale === 'zh' ? 'Switch to English' : '切换为中文'" @click="handleToggleLocale">
           <Languages :size="14" aria-hidden="true" />
           <span>{{ t.switchLangLabel }}</span>
         </button>
@@ -301,6 +345,10 @@ onUnmounted(() => {
 
     <main v-else-if="isFeedbackPage" id="main" key="feedback-page" ref="pageRoot" class="shell" tabindex="-1">
       <FeedbackPage />
+    </main>
+
+    <main v-else-if="isPrivacyPage" id="main" key="privacy-page" ref="pageRoot" class="shell" tabindex="-1">
+      <PrivacyPage />
     </main>
 
     <main v-else-if="!selected" id="main" key="home" ref="pageRoot" tabindex="-1">
@@ -457,7 +505,10 @@ onUnmounted(() => {
               <div class="card-top">
                 <img :src="tool.icon" alt="" width="46" height="46" />
                 <div class="card-title-wrap">
-                  <span class="card-category">{{ tool.category }}</span>
+                  <div class="card-meta-row">
+                    <span class="card-category">{{ tool.category }}</span>
+                    <span v-if="tool.edgeStoreUrl" class="store-badge">{{ t.edgeStoreBadge }}</span>
+                  </div>
                   <h3>{{ tool.name }}</h3>
                 </div>
                 <ChevronRight :size="18" class="card-arrow" aria-hidden="true" />
@@ -471,10 +522,31 @@ onUnmounted(() => {
           </li>
         </ul>
       </section>
+
+      <section class="principles roadmap-section" aria-labelledby="roadmap-title">
+        <div class="shell">
+          <div class="roadmap-head">
+            <div>
+              <h2 id="roadmap-title">{{ t.roadmapTitle }}</h2>
+              <p class="section-sub">{{ t.roadmapSub }}</p>
+            </div>
+            <RouterLink :to="localizedPath('/feedback')" class="secondary-link">
+              <MessageSquare :size="16" aria-hidden="true" />{{ t.roadmapCta }}
+            </RouterLink>
+          </div>
+          <div class="principles-grid">
+            <article v-for="item in t.roadmapItems" :key="item.title" class="principle-card">
+              <span class="roadmap-pill">{{ t.roadmapStatus }}</span>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.desc }}</p>
+            </article>
+          </div>
+        </div>
+      </section>
     </main>
 
     <main v-else id="main" :key="selected.id" ref="pageRoot" class="shell detail" tabindex="-1">
-      <RouterLink :to="{ path: '/', hash: '#directory' }" class="text-link">
+      <RouterLink :to="{ path: localizedPath('/'), hash: '#directory' }" class="text-link">
         <ArrowLeft :size="16" aria-hidden="true" />{{ t.backToDirectory(plugins.length) }}
       </RouterLink>
 
@@ -501,7 +573,21 @@ onUnmounted(() => {
 
       <div class="detail-download-box">
         <div class="detail-download-actions">
-          <a :href="selected.downloadUrl" class="primary-link" target="_blank" rel="noopener noreferrer">
+          <a
+            v-if="selected.edgeStoreUrl"
+            :href="selected.edgeStoreUrl"
+            class="primary-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink :size="17" aria-hidden="true" />{{ t.installOnEdge }}
+          </a>
+          <a
+            :href="selected.downloadUrl"
+            :class="selected.edgeStoreUrl ? 'secondary-link' : 'primary-link'"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Download :size="17" aria-hidden="true" />{{ t.downloadZip }}
           </a>
           <a :href="GITHUB_RELEASES_URL" class="secondary-link" target="_blank" rel="noopener noreferrer">
@@ -511,7 +597,7 @@ onUnmounted(() => {
         <div class="install-tip">
           <strong>{{ t.installTipTitle }}</strong>
           <span>{{ t.installTipDesc }}</span>
-          <RouterLink to="/install" class="text-link guide-inline-link">
+          <RouterLink :to="localizedPath('/install')" class="text-link guide-inline-link">
             {{ t.viewFullInstallGuide }} <ChevronRight :size="14" aria-hidden="true" />
           </RouterLink>
         </div>
@@ -557,7 +643,9 @@ onUnmounted(() => {
         <p>{{ t.footerDesc }}</p>
       </div>
       <div class="footer-meta">
-        <RouterLink to="/feedback" class="text-link">{{ t.navFeedback }}</RouterLink>
+        <RouterLink :to="localizedPath('/feedback')" class="text-link">{{ t.navFeedback }}</RouterLink>
+        <span>·</span>
+        <RouterLink :to="localizedPath('/privacy')" class="text-link">{{ t.navPrivacy }}</RouterLink>
         <span>·</span>
         <a :href="GITHUB_REPO_URL" target="_blank" rel="noopener noreferrer" class="text-link">GitHub</a>
         <span>·</span>
@@ -869,7 +957,37 @@ h2 { margin: 0; font-size: clamp(23px, 2.8vw, 32px); font-weight: 800; letter-sp
 .card-top { display: flex; align-items: center; gap: 12px; }
 .card-top img { border-radius: 10px; flex-shrink: 0; }
 .card-title-wrap { flex: 1; min-width: 0; }
-.card-category { display: inline-block; font-size: 11px; font-weight: 700; color: var(--color-action); margin-bottom: 2px; }
+.card-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.card-category { display: inline-block; font-size: 11px; font-weight: 700; color: var(--color-action); }
+.store-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #10b981 14%, var(--color-paper));
+  color: #059669;
+  border: 1px solid color-mix(in srgb, #10b981 30%, transparent);
+}
+.roadmap-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.roadmap-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  color: var(--color-action);
+  margin-bottom: 10px;
+}
 .card-title-wrap h3 { margin: 0; font-size: 17px; font-weight: 780; color: var(--color-ink); }
 .card-arrow { color: var(--color-muted); transition: transform .16s ease; }
 .plugin-card:hover .card-arrow { transform: translateX(3px); color: var(--color-action); }
