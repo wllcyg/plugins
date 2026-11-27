@@ -78,6 +78,10 @@ async function main() {
 
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, pageHtml, 'utf-8');
+    if (url !== '/') {
+      const flatHtmlPath = path.join(distDir, `${url.replace(/^\//, '')}.html`);
+      fs.writeFileSync(flatHtmlPath, pageHtml, 'utf-8');
+    }
     console.log(`[SSG] pre-rendered ${url} -> ${path.relative(rootDir, outPath)}`);
   }
 

@@ -31,7 +31,7 @@ watch(
       document.documentElement.classList.toggle('dark', val === 'dark');
       const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
       if (meta) {
-        meta.content = val === 'dark' ? '#0b1120' : '#f4f0e8';
+        meta.content = val === 'dark' ? '#000000' : '#ffffff';
       }
     }
   },

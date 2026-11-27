@@ -103,10 +103,10 @@ const copy = computed(() =>
 
 <style scoped>
 .privacy-page {
-  padding-block: 36px 76px;
+  padding-block: 48px 96px;
 }
 .privacy-header {
-  margin-top: 22px;
+  margin-top: 24px;
   max-width: 72ch;
 }
 .privacy-badge {
@@ -114,66 +114,78 @@ const copy = computed(() =>
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
-  color: var(--color-action);
+  border-radius: 980px;
+  background: var(--apple-surface);
+  color: var(--apple-blue);
   font-size: 12.5px;
-  font-weight: 700;
-  margin-bottom: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
 }
 h1 {
   margin: 0;
-  font-size: clamp(28px, 4.2vw, 42px);
-  font-weight: 850;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: var(--apple-text);
 }
 .privacy-sub {
-  margin: 10px 0 0;
-  color: var(--color-muted);
-  font-size: 14.5px;
+  margin: 12px 0 0;
+  color: var(--apple-subtle);
+  font-size: 15px;
 }
 .privacy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 28px;
+  gap: 20px;
+  margin-top: 36px;
 }
 .privacy-card {
-  padding: 22px;
-  border-radius: 14px;
-  border: 1px solid var(--color-line);
-  background: var(--color-paper);
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--apple-surface);
 }
 .privacy-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--color-sand);
-  border: 1px solid var(--color-line);
-  color: var(--color-action);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--apple-card);
+  color: var(--apple-blue);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .privacy-card h2 {
   margin: 0 0 8px;
-  font-size: 17px;
-  font-weight: 750;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--apple-text);
 }
 .privacy-card p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--color-muted);
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: var(--apple-muted);
 }
 .privacy-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 32px;
+}
+.secondary-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 22px;
+  border-radius: 980px;
+  background: var(--apple-surface);
+  color: var(--apple-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+.secondary-link:hover {
+  background: color-mix(in srgb, var(--apple-text) 8%, var(--apple-surface));
 }
 @media (max-width: 860px) {
   .privacy-grid {

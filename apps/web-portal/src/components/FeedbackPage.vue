@@ -397,38 +397,39 @@ async function copyText(type: 'qq' | 'email', text: string) {
 
 <style scoped>
 .feedback-page {
-  padding: 40px 0 80px;
-  max-width: 1020px;
+  padding: 48px 0 96px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
 .feedback-header {
-  margin-top: 20px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--color-line);
+  margin-top: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--apple-divider);
 }
 
 .feedback-header h1 {
   margin: 0;
-  font-size: clamp(28px, 4vw, 38px);
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: var(--color-ink);
+  line-height: 1.12;
+  color: var(--apple-text);
 }
 
 .feedback-subtitle {
-  margin: 12px 0 0;
-  font-size: 16px;
-  color: var(--color-muted);
+  margin: 14px 0 0;
+  font-size: 17px;
+  color: var(--apple-subtle);
   max-width: 700px;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 .channels-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  margin-top: 28px;
+  margin-top: 32px;
 }
 
 @media (max-width: 900px) {
@@ -440,18 +441,22 @@ async function copyText(type: 'qq' | 'email', text: string) {
 .channel-card {
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  border-radius: 16px;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
-  box-shadow: 0 4px 16px var(--color-card-shadow);
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--apple-surface);
+  transition: transform 0.35s var(--apple-ease), box-shadow 0.35s var(--apple-ease);
+}
+
+.channel-card:hover {
+  transform: scale(1.012);
+  box-shadow: var(--apple-shadow-hover);
 }
 
 .channel-head {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .channel-icon {
@@ -465,49 +470,48 @@ async function copyText(type: 'qq' | 'email', text: string) {
 }
 
 .channel-icon.qq {
-  background: rgba(14, 165, 233, 0.14);
-  color: #0284c7;
+  background: color-mix(in srgb, var(--apple-blue) 14%, transparent);
+  color: var(--apple-blue);
 }
 
 .channel-icon.github {
-  background: rgba(100, 116, 139, 0.14);
-  color: var(--color-ink);
+  background: color-mix(in srgb, var(--apple-text) 10%, transparent);
+  color: var(--apple-text);
 }
 
 .channel-icon.mail {
-  background: rgba(239, 68, 68, 0.14);
-  color: #dc2626;
+  background: rgba(255, 59, 48, 0.12);
+  color: #ff3b30;
 }
 
 .channel-head h2 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--apple-text);
 }
 
 .channel-desc {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--color-muted);
+  color: var(--apple-muted);
 }
 
 .qq-qr-wrap {
   display: flex;
   justify-content: center;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 14px;
+  border-radius: 16px;
   background: #ffffff;
-  border: 1px solid var(--color-line);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .qq-qr-img {
   display: block;
   width: 190px;
   height: auto;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .qq-meta {
@@ -515,30 +519,29 @@ async function copyText(type: 'qq' | 'email', text: string) {
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--color-muted);
-  margin-bottom: 14px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: var(--color-stone);
+  color: var(--apple-muted);
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--apple-card);
 }
 
 .qq-meta strong {
-  color: var(--color-ink);
+  color: var(--apple-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .info-pill {
   padding: 12px 14px;
-  border-radius: 10px;
-  background: var(--color-stone);
-  border: 1px solid var(--color-line);
-  margin-bottom: 16px;
+  border-radius: 12px;
+  background: var(--apple-card);
+  margin-bottom: 18px;
   overflow-x: auto;
 }
 
 .info-pill code {
   font-size: 13px;
-  color: var(--color-ink);
+  color: var(--apple-text);
   word-break: break-all;
 }
 
@@ -557,42 +560,39 @@ async function copyText(type: 'qq' | 'email', text: string) {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 980px;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s, transform 0.15s;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
+  transition: background-color 0.2s var(--apple-ease), transform 0.2s var(--apple-ease);
 }
 
 .action-btn.primary {
-  background: var(--color-action);
+  background: var(--apple-blue);
   color: #ffffff;
-  border: 1px solid var(--color-action);
 }
 
 .action-btn.primary:hover {
-  background: var(--color-action-hover);
-  border-color: var(--color-action-hover);
+  background: var(--apple-blue-hover);
 }
 
 .action-btn.secondary {
-  background: var(--color-stone);
-  color: var(--color-ink);
-  border: 1px solid var(--color-line);
+  background: var(--apple-card);
+  color: var(--apple-text);
+}
+
+.action-btn.secondary:hover {
+  background: color-mix(in srgb, var(--apple-text) 8%, var(--apple-card));
 }
 
 .tips-card {
-  margin-top: 28px;
-  padding: 20px 24px;
-  border-radius: 16px;
-  background: var(--color-stone);
-  border: 1px solid var(--color-line);
+  margin-top: 24px;
+  padding: 24px 28px;
+  border-radius: 24px;
+  background: var(--apple-surface);
 }
 
 .tips-title {
@@ -600,8 +600,12 @@ async function copyText(type: 'qq' | 'email', text: string) {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  font-size: 15px;
-  color: var(--color-ink);
+  font-size: 16px;
+  color: var(--apple-text);
+}
+
+.tips-title svg {
+  color: var(--apple-blue);
 }
 
 .tips-card ul {
@@ -609,50 +613,49 @@ async function copyText(type: 'qq' | 'email', text: string) {
   padding-left: 18px;
   font-size: 14px;
   line-height: 1.75;
-  color: var(--color-muted);
+  color: var(--apple-muted);
 }
 
 .guestbook-card {
-  margin-top: 28px;
-  padding: 24px;
-  border-radius: 16px;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
+  margin-top: 24px;
+  padding: 32px;
+  border-radius: 24px;
+  background: var(--apple-surface);
 }
 
 .guestbook-head h2 {
   margin: 0;
-  font-size: 20px;
-  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--apple-text);
 }
 
 .guestbook-head p {
   margin: 6px 0 0;
-  font-size: 14px;
-  color: var(--color-muted);
+  font-size: 14.5px;
+  color: var(--apple-muted);
 }
 
 .guestbook-hint {
   margin: 14px 0 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--color-stone);
-  border: 1px dashed var(--color-line);
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--apple-card);
   font-size: 13px;
-  color: var(--color-muted);
+  color: var(--apple-muted);
 }
 
 .guestbook-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 18px;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .field {
@@ -661,26 +664,27 @@ async function copyText(type: 'qq' | 'email', text: string) {
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-ink);
+  color: var(--apple-text);
 }
 
 .field input,
 .field select,
 .field textarea {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--color-line);
-  background: var(--color-sand);
-  color: var(--color-ink);
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--apple-card);
+  color: var(--apple-text);
   font-size: 14px;
   font-family: inherit;
+  transition: box-shadow 0.2s var(--apple-ease);
 }
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  outline: 2px solid var(--color-action);
-  border-color: transparent;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--apple-blue) 28%, transparent);
 }
 
 .form-actions {
@@ -694,13 +698,13 @@ async function copyText(type: 'qq' | 'email', text: string) {
   font-size: 13px;
   font-weight: 600;
 }
-.status-text.ok { color: #059669; }
-.status-text.err { color: #dc2626; }
+.status-text.ok { color: #30d158; }
+.status-text.err { color: #ff453a; }
 
 .guestbook-list {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-line);
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--apple-divider);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -708,15 +712,14 @@ async function copyText(type: 'qq' | 'email', text: string) {
 
 .list-empty {
   margin: 0;
-  font-size: 13.5px;
-  color: var(--color-muted);
+  font-size: 14px;
+  color: var(--apple-subtle);
 }
 
 .message-item {
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--color-sand);
-  border: 1px solid var(--color-line);
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--apple-card);
 }
 
 .message-meta {
@@ -728,30 +731,29 @@ async function copyText(type: 'qq' | 'email', text: string) {
 }
 
 .message-meta strong {
-  color: var(--color-ink);
+  color: var(--apple-text);
 }
 
 .message-tag {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--color-paper);
-  border: 1px solid var(--color-line);
-  color: var(--color-action);
+  padding: 2px 10px;
+  border-radius: 980px;
+  background: var(--apple-surface);
+  color: var(--apple-blue);
 }
 
 .message-meta time {
   margin-left: auto;
   font-size: 12px;
-  color: var(--color-muted);
+  color: var(--apple-subtle);
 }
 
 .message-body {
   margin: 8px 0 0;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--color-ink);
+  color: var(--apple-text);
   white-space: pre-wrap;
   word-break: break-word;
 }

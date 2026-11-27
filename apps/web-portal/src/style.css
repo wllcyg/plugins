@@ -1,45 +1,82 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sand: #f4f0e8;
-  --color-paper: #fffcf7;
-  --color-stone: #ebe5da;
-  --color-line: #d7d0c3;
-  --color-taupe: #a69a87;
-  --color-ink: #24272d;
-  --color-muted: #595650;
-  --color-action: #2454e6;
-  --color-action-hover: #1941bf;
-  --color-safe: #059669;
-  --color-hero-glow: rgba(36, 84, 230, 0.06);
-  --color-card-shadow: rgba(36, 39, 45, 0.08);
+  /* Apple Design System Tokens (Light Mode default) */
+  --apple-bg: #ffffff;
+  --apple-surface: #f5f5f7;
+  --apple-card: #ffffff;
+  --apple-card-alt: #f5f5f7;
+  --apple-text: #1d1d1f;
+  --apple-text-secondary: #424245;
+  --apple-muted: #6e6e73;
+  --apple-subtle: #86868b;
+  --apple-blue: #0071e3;
+  --apple-blue-hover: #0077ed;
+  --apple-divider: rgba(0, 0, 0, 0.08);
+  --apple-header-bg: rgba(255, 255, 255, 0.72);
+  --apple-shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.10);
+  --apple-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --apple-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  /* Legacy tokens mapped to Apple Design System for sub-pages */
+  --color-sand: #ffffff;
+  --color-paper: #f5f5f7;
+  --color-stone: #e8e8ed;
+  --color-line: rgba(0, 0, 0, 0.08);
+  --color-taupe: #86868b;
+  --color-ink: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-action: #0071e3;
+  --color-action-hover: #0077ed;
+  --color-safe: #0071e3;
+  --color-hero-glow: rgba(0, 113, 227, 0.05);
+  --color-card-shadow: rgba(0, 0, 0, 0.08);
 }
 
 :root[data-theme="dark"] {
-  --color-sand: #0b1120;
-  --color-paper: #131c31;
-  --color-stone: #1e293b;
-  --color-line: #24324b;
-  --color-taupe: #475569;
-  --color-ink: #f1f5f9;
-  --color-muted: #94a3b8;
-  --color-action: #3b82f6;
-  --color-action-hover: #2563eb;
-  --color-safe: #10b981;
-  --color-hero-glow: rgba(56, 189, 248, 0.11);
-  --color-card-shadow: rgba(0, 0, 0, 0.42);
+  --apple-bg: #000000;
+  --apple-surface: #161617;
+  --apple-card: #1d1d1f;
+  --apple-card-alt: #161617;
+  --apple-text: #f5f5f7;
+  --apple-text-secondary: #d2d2d7;
+  --apple-muted: #86868b;
+  --apple-subtle: #86868b;
+  --apple-blue: #2997ff;
+  --apple-blue-hover: #40a3ff;
+  --apple-divider: rgba(255, 255, 255, 0.12);
+  --apple-header-bg: rgba(22, 22, 23, 0.72);
+  --apple-shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --apple-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  /* Legacy tokens mapped to Dark Mode */
+  --color-sand: #000000;
+  --color-paper: #161617;
+  --color-stone: #1d1d1f;
+  --color-line: rgba(255, 255, 255, 0.12);
+  --color-taupe: #6e6e73;
+  --color-ink: #f5f5f7;
+  --color-muted: #86868b;
+  --color-action: #2997ff;
+  --color-action-hover: #40a3ff;
+  --color-safe: #2997ff;
+  --color-hero-glow: rgba(41, 151, 255, 0.08);
+  --color-card-shadow: rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 
 @layer base {
   html {
     scroll-padding-top: 6.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background-color: var(--color-sand);
-    color: var(--color-ink);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    background-color: var(--apple-bg);
+    color: var(--apple-text);
+    transition: background-color 0.35s var(--apple-ease), color 0.35s var(--apple-ease);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -49,7 +86,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-action);
+    outline: 2px solid var(--apple-blue);
     outline-offset: 3px;
   }
 }

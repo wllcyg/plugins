@@ -51,7 +51,7 @@ function getSeoMetaForUrl(url: string): PageSeoMeta {
       : isPrivacy
         ? t.value.privacyPageSubtitle
         : plugin
-          ? `${plugin.headline}${isEn ? ': ' : '：'}${plugin.summary}`
+          ? `${plugin.tagline}${isEn ? ': ' : '：'}${plugin.summary}`
           : t.value.heroDesc(plugins.length);
 
   const pathSuffix = isInstall
@@ -101,7 +101,7 @@ function getSeoMetaForUrl(url: string): PageSeoMeta {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
       name: plugin.name,
-      description: `${plugin.headline}${isEn ? ': ' : '：'}${plugin.summary}`,
+      description: `${plugin.tagline}${isEn ? ': ' : '：'}${plugin.summary}`,
       url: canonical,
       image: ogImage,
       applicationCategory: 'BrowserApplication',
@@ -135,7 +135,7 @@ function getSeoMetaForUrl(url: string): PageSeoMeta {
     ? [
         plugin.name,
         plugin.category,
-        ...plugin.highlights,
+        ...plugin.highlights.map((h) => h.title),
         isEn ? 'free Chrome extension,Edge add-on,100-Free' : '免费Chrome扩展,Edge插件,100-Free'
       ].join(',')
     : isEn
@@ -175,7 +175,7 @@ export function generateLlmsFiles() {
     '## Extensions',
     ...enPlugins.map((p) => {
       const storeNote = p.edgeStoreUrl ? ` ([Edge Store](${p.edgeStoreUrl}))` : '';
-      return `- [${p.name}](${SITE_ORIGIN}/en/tools/${p.id})${storeNote}: ${p.headline} — ${p.summary}`;
+      return `- [${p.name}](${SITE_ORIGIN}/en/tools/${p.id})${storeNote}: ${p.tagline} — ${p.summary}`;
     }),
     '',
     '## Source & License',
@@ -203,10 +203,10 @@ export function generateLlmsFiles() {
         `- Chinese Page: ${SITE_ORIGIN}/tools/${enItem.id}`,
         ...(enItem.edgeStoreUrl ? [`- Microsoft Edge Store: ${enItem.edgeStoreUrl}`] : []),
         `- Direct ZIP Download: ${enItem.downloadUrl}`,
-        `- Highlights (EN): ${enItem.highlights.join(' · ')}`,
-        `- Highlights (ZH): ${zhItem.highlights.join(' · ')}`,
-        `- Summary (EN): ${enItem.headline}. ${enItem.summary}`,
-        `- Summary (ZH): ${zhItem.headline}。${zhItem.summary}`,
+        `- Highlights (EN): ${enItem.highlights.map((h) => h.title).join(' · ')}`,
+        `- Highlights (ZH): ${zhItem.highlights.map((h) => h.title).join(' · ')}`,
+        `- Summary (EN): ${enItem.tagline}. ${enItem.summary}`,
+        `- Summary (ZH): ${zhItem.tagline}。${zhItem.summary}`,
         '- Quick Start (EN):',
         ...enItem.steps.map((s, i) => `  ${i + 1}. ${s}`),
         '- Quick Start (ZH):',
