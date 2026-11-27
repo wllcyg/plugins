@@ -54,10 +54,12 @@ const localizedPath = (path: string) =>
 const detailUrl = (id: string) => localizedPath(`/tools/${id}`);
 
 watch(
-  () => route.path,
-  (path) => {
-    if (path === '/en' || path.startsWith('/en/')) {
+  () => [route.path, route.query.lang] as const,
+  ([path, queryLang]) => {
+    if (path === '/en' || path.startsWith('/en/') || queryLang === 'en') {
       locale.value = 'en';
+    } else {
+      locale.value = 'zh';
     }
   },
   { immediate: true }
